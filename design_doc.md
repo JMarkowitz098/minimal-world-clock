@@ -4,6 +4,8 @@
 - Window with a clock that can be set to different time zones
 - Window where you can easily and intuitively compare two different time zones
 - Widget that shows the time for a specific time zone on the Mac desktop
+- Accessible: works with screen readers (VoiceOver), for people with color blindness, and with the system's contrast and motion settings
+- Lightweight and minimal: small, quiet on CPU and memory, with a minimal interface
 
 ## Technical requirements
 - Built and designed by AI, so the repo is optimized for that (CLAUDE.md, a roadmap with tests as acceptance criteria, small files)
@@ -21,4 +23,6 @@
 - **Zone search:** ignores case and diacritics, treats `_` and space alike, and matches city, region or identifier by substring, or the abbreviation in effect on the given date by exact match only (many zones only have `GMT+9`-style abbreviations, so substring matches would flood the results). Cities starting with the query rank first, then city order.
 - **Widget:** WidgetKit with the zone chosen in the widget's own edit screen (App Intents), so no App Group or shared storage is needed at first.
 - **Bundle ID:** `com.jaredmarkowitz.worldclock` (permanent once on the App Store). Widget: `com.jaredmarkowitz.worldclock.widget`.
+- **Lightweight:** no third-party dependencies; the clock ticks once a minute unless seconds are shown; budgets checked in M8 (ROADMAP.md).
+- **Color blindness:** color is decoration only. Every state also has text or a symbol, and views are checked with the macOS color filters (M7).
 - **Minimum macOS:** 14 (Sonoma), the first version with desktop widgets.

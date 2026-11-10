@@ -29,7 +29,8 @@ A minimal macOS world clock: a Clock window, a Compare window for two time zones
 - **App and widget targets stay thin.** Anything shareable goes in WorldClockKit.
 - **Views are small reusable pieces** that read display-ready values from a view model.
 - **Saved data stays backward compatible:** decoding is lenient and falls back to defaults.
-- **Accessible by default:** every control has a VoiceOver label; color is never the only signal; respect Reduce Motion.
+- **Accessible by default:** every control has a VoiceOver label; color is never the only signal (assume color-blind users); respect Reduce Motion, Increase Contrast, and Reduce Transparency.
+- **Lightweight and minimal:** no third-party dependencies; no timers faster than the display needs (once a minute unless seconds are shown); no feature or UI element that the requirements don't call for.
 
 ## Workflow
 

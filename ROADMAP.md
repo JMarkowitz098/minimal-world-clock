@@ -10,7 +10,7 @@ Each milestone runs in a new chat, so this section carries what the next session
 
 - **Last session (2026-11-10):** M1 done: `Zone` and `ZoneCatalog` in `WorldClockCore` (19 core tests green). The draft tests from `docs/handoff/` were moved into `Tests/WorldClockCoreTests/` and the drafts folder deleted. Earlier: M0 plus AI tooling (`/milestone` skill, snapshot renderer, pre-commit hook running `check.sh`).
 - **Next:** M2 (time math), run with `/milestone`. No draft tests exist; write them from the M2 entry. Reuse `TestSupport.swift` (`jan15Noon`, `jul15Noon`, `utc(…)`, `zone(…)`) and add new fixed instants there (e.g. the March weeks when New York and London differ by 4 h). Functions take `Zone` and `at now: Date`; `zone.timeZone` gives the `TimeZone`.
-- **Open with the user:** not yet confirmed: Dock app (not menu bar), bundle ID `com.jaredmarkowitz.worldclock`, macOS 14 minimum (see design_doc.md). `gh` isn't installed, so no GitHub CLI (CI and PRs wait on it).
+- **Open with the user:** the lightweight budget numbers in M8 (10 MB bundle, 50 MB memory) are proposals; confirm or change them. Also not yet confirmed: Dock app (not menu bar), bundle ID `com.jaredmarkowitz.worldclock`, macOS 14 minimum (see design_doc.md). `gh` isn't installed, so no GitHub CLI (CI and PRs wait on it).
 - **Notes:**
   - `swift test` prints "Test run with…" twice (once per test runner); that's normal.
   - A fresh clone needs `./scripts/setup.sh` once to install the git hook.
@@ -34,8 +34,8 @@ Pure functions over `(zone, instant)`: wall-clock time, UTC offset text (`UTC−
 - Done when: core tests pass.
 
 ## [ ] M3: Clock window
-`ClockViewModel` (in WorldClockUI) driven by an injected clock and ticker. Reusable views: `TimeDisplay` (large time, date, zone name, offset), `ZonePicker` (search field + results list from M1). The Clock window shows one zone (defaults to the Mac's current zone); the chosen zone persists across launches via a `SettingsStore` protocol in Core with a UserDefaults implementation.
-- Tests: view model display strings at fixed instants, minute rollover on tick, changing zone, persistence round trip, missing or corrupt saved data → defaults.
+`ClockViewModel` (in WorldClockUI) driven by an injected clock and ticker. The ticker fires on minute boundaries, not every second (lightweight: the app should be idle between ticks). Reusable views: `TimeDisplay` (large time, date, zone name, offset), `ZonePicker` (search field + results list from M1). The Clock window shows one zone (defaults to the Mac's current zone); the chosen zone persists across launches via a `SettingsStore` protocol in Core with a UserDefaults implementation.
+- Tests: view model display strings at fixed instants, minute rollover on tick, next tick scheduled for the next minute boundary, changing zone, persistence round trip, missing or corrupt saved data → defaults.
 - Done when: tests pass; the window shows a live time, and picking a zone sticks after relaunch.
 
 ## [ ] M4: Compare window
@@ -50,18 +50,19 @@ A WidgetKit extension (`WorldClockWidget`, small and medium sizes) showing the t
 - Risk: macOS may hide widgets from ad-hoc-signed apps. If so, test with a development-signed build and record the steps in README.
 
 ## [ ] M6: Settings
-Settings window (⌘,): 12/24-hour time (default: follow the system), show seconds, and launch at login.
+Settings window (⌘,): 12/24-hour time (default: follow the system), show seconds, and launch at login. Only showing seconds makes the ticker fire every second.
 - Tests: settings defaults, round trip, lenient decoding (missing keys → defaults); display strings honor 12/24 h and seconds.
 - Done when: tests pass; changes apply live in both windows and the widget.
 
 ## [ ] M7: Accessibility
-VoiceOver labels everywhere ("Tokyo, 3:42 PM, tomorrow, 14 hours ahead"), scrubber adjustable with arrow keys, keyboard-only use of both windows, contrast meeting WCAG AA in light and dark, Reduce Motion respected, no information carried by color alone.
+VoiceOver labels everywhere ("Tokyo, 3:42 PM, tomorrow, 14 hours ahead"), scrubber adjustable with arrow keys, keyboard-only use of both windows, contrast meeting WCAG AA in light and dark, Increase Contrast and Reduce Transparency respected, Reduce Motion respected, no information carried by color alone (day relation and ahead/behind always have text or a symbol; any colors pass the macOS color-filter checks for red/green and blue/yellow color blindness).
 - Tests: spoken text for clock and compare views.
-- Done when: an Accessibility Inspector audit passes and a VoiceOver-only walkthrough works.
+- Done when: an Accessibility Inspector audit passes, a VoiceOver-only walkthrough works, and both windows stay readable with Display color filters on (Protanopia, Deuteranopia, Tritanopia, Grayscale) and with Increase Contrast. Snapshots render the views in an increased-contrast variant too.
 
 ## [ ] M8: Polish & packaging
-App icon drawn by `scripts/make-icon.swift` (no SF Symbols in the icon: Apple's license forbids it), version 1.0.0, `scripts/install.sh` (Release build → /Applications).
-- Done when: the installed app and widget run from /Applications, and the icon shows in Finder and the Dock.
+Lightweight check, then the icon. App icon drawn by `scripts/make-icon.swift` (no SF Symbols in the icon: Apple's license forbids it), version 1.0.0, `scripts/install.sh` (Release build → /Applications).
+- Lightweight budget (measured on the Release build, recorded in README): no third-party dependencies; app bundle under 10 MB; idle CPU near 0% with both windows open (Activity Monitor); memory under 50 MB. Fix any regressions before packaging.
+- Done when: the installed app and widget run from /Applications, the icon shows in Finder and the Dock, and the lightweight budget is met.
 
 ## [ ] M9: App Store readiness
 Privacy manifest, App Store entitlements (separate file if any need a provisioning profile), `scripts/release.sh` (check → bump build → archive → sign → upload → tag, as in pomodoro_timer), screenshot generator, listing draft in `docs/app-store/`, privacy policy and support pages.

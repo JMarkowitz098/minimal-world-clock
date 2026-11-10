@@ -13,3 +13,5 @@
 - Will eventually be launched on the apple app store
 - Should use github
 - Can reference ~/Projects/pomodoro_timer for previous approach
+- Made for accessibility, e.x. screen readers, color blindness, and other things
+- Lightweight and minimal. 
