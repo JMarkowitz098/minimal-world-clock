@@ -59,3 +59,9 @@ import Testing
 @Test func searchWithNoMatchIsEmpty() {
     #expect(ZoneCatalog.system.search("zzzz", at: jan15Noon).isEmpty)
 }
+
+@Test func abbreviationMustMatchExactly() {
+    // Many abbreviations are "GMT+9"-style text; substring matches would flood results.
+    let catalog = ZoneCatalog(zones: [zone("America/Los_Angeles")])
+    #expect(catalog.search("PS", at: jan15Noon).isEmpty)
+}

@@ -34,3 +34,8 @@ import Testing
     let json = Data(#""Mars/Olympus_Mons""#.utf8)
     #expect(throws: (any Error).self) { try JSONDecoder().decode(Zone.self, from: json) }
 }
+
+@Test func rejectsAbbreviationAsIdentifier() {
+    // TimeZone(identifier: "PST") succeeds, but a Zone must be a real IANA name.
+    #expect(Zone(identifier: "PST") == nil)
+}

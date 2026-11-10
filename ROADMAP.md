@@ -8,22 +8,24 @@ Shared commands: `./scripts/check.sh` (all tests + app build). Use `swift test -
 
 Each milestone runs in a new chat, so this section carries what the next session needs and the code and git history can't show.
 
-- **Last session (2026-11-10):** M0 done, plus AI tooling: `/milestone` skill, snapshot renderer (`Tools/Snapshots`), pre-approved commands (`.claude/settings.json`), pre-commit hook running `check.sh`, warnings as errors. Remote `origin` = github.com/JMarkowitz098/minimal-world-clock, pushed.
-- **Next:** M1, run with `/milestone`. Draft tests are already written in `docs/handoff/M1-draft-tests/` (red, never run against an implementation): move them to `Packages/WorldClockKit/Tests/WorldClockCoreTests/`, confirm they fail, implement `Zone` and `ZoneCatalog` in `WorldClockCore`, then delete the drafts folder.
+- **Last session (2026-11-10):** M1 done: `Zone` and `ZoneCatalog` in `WorldClockCore` (19 core tests green). The draft tests from `docs/handoff/` were moved into `Tests/WorldClockCoreTests/` and the drafts folder deleted. Earlier: M0 plus AI tooling (`/milestone` skill, snapshot renderer, pre-commit hook running `check.sh`).
+- **Next:** M2 (time math), run with `/milestone`. No draft tests exist; write them from the M2 entry. Reuse `TestSupport.swift` (`jan15Noon`, `jul15Noon`, `utc(…)`, `zone(…)`) and add new fixed instants there (e.g. the March weeks when New York and London differ by 4 h). Functions take `Zone` and `at now: Date`; `zone.timeZone` gives the `TimeZone`.
 - **Open with the user:** not yet confirmed: Dock app (not menu bar), bundle ID `com.jaredmarkowitz.worldclock`, macOS 14 minimum (see design_doc.md). `gh` isn't installed, so no GitHub CLI (CI and PRs wait on it).
 - **Notes:**
   - `swift test` prints "Test run with…" twice (once per test runner); that's normal.
   - A fresh clone needs `./scripts/setup.sh` once to install the git hook.
-  - `TimeZone.abbreviation(for:)` returns `GMT+9`-style text for many zones, so abbreviation search only helps for zones with real abbreviations (PST, CET…).
+  - `TimeZone.abbreviation(for:)` returns `GMT+9`-style text for many zones (Tokyo included), so abbreviation search only helps for zones with real abbreviations (PST, CET…). That's why it's exact-match only.
+  - `TimeZone(identifier:)` accepts abbreviations (`"PST"`) and resolves `"UTC"` to `"GMT"`; `knownTimeZoneIdentifiers` (443 on this Mac) lists `GMT` but not `UTC`. `Zone` validates against that list plus `UTC`.
+  - Search sorts with `localizedStandardCompare`, so order follows the user's locale; tests compare against the same call rather than a hard-coded list.
 
 ## [x] M0: Scaffold
 Shared `WorldClockKit` package (Core + UI), XcodeGen project with a `WorldClockMac` target (sandboxed, ad-hoc signed), a single placeholder window, `scripts/check.sh`, and the docs (README, CLAUDE.md, ARCHITECTURE.md, design_doc.md, this roadmap). Git repo on `main`.
 - Tests: `coreModuleLoads`, `uiModuleLoads`
 - Done when: `./scripts/check.sh` passes; the app launches with a Dock icon and a window.
 
-## [ ] M1: Zones and search
-`Zone` (a validated IANA identifier with display `city` and `region`, Codable) and `ZoneCatalog` (every known zone, with search). Search ignores case and diacritics, treats `_` and space alike, and matches city, region, full identifier, or the abbreviation in effect on a given date (PST vs. PDT). Cities that start with the query rank first, then alphabetical order.
-- Tests: `cityAndRegionComeFromIdentifier`, `nestedIdentifierUsesLastComponentAsCity`, `singleComponentIdentifierHasNoRegion`, `rejectsUnknownIdentifier`, `zoneIsCodableRoundTrip`, `decodingUnknownIdentifierFails`, `catalogListsEveryKnownZone`, `emptyQueryReturnsAllZonesSortedByCity`, `searchMatchesCityIgnoringCase`, `searchIgnoresDiacritics`, `searchTreatsUnderscoreAndSpaceAlike`, `searchMatchesRegion`, `searchMatchesFullIdentifier`, `cityPrefixMatchesRankBeforeOtherMatches`, `searchMatchesAbbreviationForThatDate`, `searchWithNoMatchIsEmpty`
+## [x] M1: Zones and search
+`Zone` (a validated IANA identifier with display `city` and `region`, Codable) and `ZoneCatalog` (every known zone, with search). Search ignores case and diacritics, treats `_` and space alike, and matches city, region, full identifier, or the abbreviation in effect on a given date (PST vs. PDT; exact match only). Cities that start with the query rank first, then alphabetical order.
+- Tests: `cityAndRegionComeFromIdentifier`, `nestedIdentifierUsesLastComponentAsCity`, `singleComponentIdentifierHasNoRegion`, `rejectsUnknownIdentifier`, `zoneIsCodableRoundTrip`, `decodingUnknownIdentifierFails`, `catalogListsEveryKnownZone`, `emptyQueryReturnsAllZonesSortedByCity`, `searchMatchesCityIgnoringCase`, `searchIgnoresDiacritics`, `searchTreatsUnderscoreAndSpaceAlike`, `searchMatchesRegion`, `searchMatchesFullIdentifier`, `cityPrefixMatchesRankBeforeOtherMatches`, `searchMatchesAbbreviationForThatDate`, `searchWithNoMatchIsEmpty`, plus `rejectsAbbreviationAsIdentifier`, `abbreviationMustMatchExactly`
 - Done when: core tests pass.
 
 ## [ ] M2: Time math
