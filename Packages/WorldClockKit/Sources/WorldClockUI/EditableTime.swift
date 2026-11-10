@@ -22,25 +22,28 @@ struct EditableTime: View {
     @FocusState private var isFocused: Bool
     private var size: CGFloat { TimeStyle.windowTimeSize * scale }
 
+    /// The typed text's size. A text field can't draw AM/PM smaller, so the whole entry is a
+    /// bit smaller than the time instead; at full size it looked much bigger (user, M6).
+    private var editSize: CGFloat { size * 0.8 }
+
     var body: some View {
         Group {
             if let draft {
-                // The field draws AM/PM full size, so it's sized by a hidden copy of the typed
-                // text (plus room for the cursor) rather than by the shown time.
-                Text(draft.isEmpty ? " " : draft)
-                    .font(TimeStyle.timeFont(size: size))
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .fixedSize()
-                    .padding(.trailing, 8 * scale)
-                    .hidden()
-                    .overlay { field }
+                // Keeps the shown time's height (so the date doesn't move) and grows only as
+                // wide as the typed text needs, plus room for the cursor.
+                ZStack {
+                    shownTime.hidden()
+                    Text(draft.isEmpty ? " " : draft)
+                        .font(TimeStyle.timeFont(size: editSize))
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .fixedSize()
+                        .padding(.trailing, 6 * scale)
+                        .hidden()
+                }
+                .overlay { field }
             } else {
-                Text(TimeStyle.shrinkingDayPeriod(time, timeSize: size))
-                    .font(TimeStyle.timeFont(size: size))
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
+                shownTime
             }
         }
         .padding(.horizontal, 10 * scale)
@@ -62,11 +65,19 @@ struct EditableTime: View {
         .accessibilityAction { begin() }
     }
 
+    private var shownTime: some View {
+        Text(TimeStyle.shrinkingDayPeriod(time, timeSize: size))
+            .font(TimeStyle.timeFont(size: size))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+    }
+
     private var field: some View {
         TextField(label, text: Binding(get: { draft ?? "" }, set: { draft = $0 }))
             .labelsHidden()
             .textFieldStyle(.plain)
-            .font(TimeStyle.timeFont(size: size))
+            .font(TimeStyle.timeFont(size: editSize))
             .monospacedDigit()
             .multilineTextAlignment(.center)
             .tint(theme.accent)
