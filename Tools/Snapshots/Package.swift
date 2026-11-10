@@ -2,7 +2,7 @@
 import PackageDescription
 
 // Renders the shared SwiftUI views to PNGs so an AI agent (or a human) can check UI
-// without launching the app. Later reused for App Store screenshots (M9).
+// without launching the app. Later reused for App Store screenshots (M10).
 // Run: swift run --package-path Tools/Snapshots Snapshots [name-filter]
 let package = Package(
     name: "Snapshots",

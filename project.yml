@@ -40,7 +40,7 @@ targets:
         PRODUCT_NAME: Minimal World Clock
         # Permanent once on the App Store; shared with a future iPhone app (Universal Purchase).
         PRODUCT_BUNDLE_IDENTIFIER: com.jaredmarkowitz.worldclock
-        # Local builds are ad-hoc signed; the release script (M9) signs with the developer team.
+        # Local builds are ad-hoc signed; the release script (M10) signs with the developer team.
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "-"
         ENABLE_HARDENED_RUNTIME: YES

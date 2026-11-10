@@ -10,18 +10,17 @@ Each milestone runs in a new chat, so this section carries what the next session
 
 - **Last session (2026-11-10):** M3 done: the Clock window, then a code audit (below). `SettingsStore` (Core), `Ticker`/`DispatchTicker`, `ClockViewModel`, `ZonePickerViewModel`, `TimeDisplay`, `ZonePicker`, `ClockView` (UI); `PlaceholderView` removed. 67 package tests green. The user checked in the app: live time, zone picking, persistence across relaunch, and (after a fix) the window reopening from the Dock.
 - **Next:** M4 (Compare window), run with `/milestone`. Reuse `TimeDisplay` (its `title` slot takes a zone button like `ClockView`'s) and `ZonePicker` in a popover. Add `compareZones` (or two keys) to `SettingsKey` and a typed accessor beside `clockZone`. Inject clock, ticker and store like `ClockViewModel` and add a `live()` factory. The Window menu needs entries for both windows (⌘1 Clock, ⌘2 Compare): with `Window` scenes SwiftUI lists them automatically, but check the shortcuts.
-- **Confirmed by the user:** Dock app; bundle ID `com.jaredmarkowitz.worldclock`; macOS 14 minimum; the M8 lightweight budget; minimal UI matters a lot (they find existing clock apps too feature-heavy), so keep every view to what its milestone needs.
+- **Confirmed by the user:** a design pass after Settings, once every UI element exists (now M7; later milestones renumbered: Accessibility M8, Polish M9, App Store M10, Supporter unlock M11), so keep M4–M6 visuals plain and consistent rather than polished; Dock app; bundle ID `com.jaredmarkowitz.worldclock`; macOS 14 minimum; the M9 lightweight budget; minimal UI matters a lot (they find existing clock apps too feature-heavy), so keep every view to what its milestone needs.
 - **Open with the user:**
-  - **Design iteration:** the user wants to iterate on the visual design later (not now). Ask when: after M4, when both windows exist, is the natural point. Not yet a roadmap milestone.
-  - M10 price (the user will decide later).
+  - M11 price (the user will decide later).
   - `gh` isn't installed, so no GitHub CLI (CI and PRs wait on it).
 - **Code audit (2026-11-10, after M3):** fixed: `SettingsStore` helpers renamed `load`/`save` (`setValue(_:forKey:)` read like NSObject's KVC method), and a value that fails to encode no longer erases the saved one; `ZonePickerViewModel`'s `Identifiable` moved into its own file; `DispatchTicker` got real-time tests. Deferred to the milestone that owns them:
   - **M6:** the time format is fixed when the model is created, so changing the system's 12/24-hour setting needs a relaunch. When M6 adds "follow the system", rebuild the formatters on `NSLocale.currentLocaleDidChangeNotification`.
-  - **M8:** pause the ticker while the window is minimized (see below).
+  - **M9:** pause the ticker while the window is minimized (see below).
   - **Later (localization):** Core's user-facing strings (`Same time`, `UTC`, `h`, `min`) are plain Swift strings, not localizable.
 - **Notes:**
   - A SwiftUI app whose only scene is a `Window` quits when that window closes. `AppDelegate.applicationShouldTerminateAfterLastWindowClosed` returns `false`, and SwiftUI then reopens the `Window` on a Dock click by itself. Verified by script: close via System Events, then `open` the running app (sends a reopen event); count windows with `CGWindowListCopyWindowInfo`.
-  - The ticker stops on `onDisappear` (window closed) but probably not when the window is minimized. M8's budget requires no timer activity then; check it there (e.g. `NSWindow.didMiniaturizeNotification` or `scenePhase`).
+  - The ticker stops on `onDisappear` (window closed) but probably not when the window is minimized. M9's budget requires no timer activity then; check it there (e.g. `NSWindow.didMiniaturizeNotification` or `scenePhase`).
   - `DispatchTicker` uses `asyncAfter(wallDeadline:)`, which keeps counting while the Mac sleeps; `Timer` and `Task.sleep` use uptime clocks and would fire late after wake.
   - en_US time text has a narrow no-break space (U+202F) before AM/PM; tests use `nnbsp`. Time uses the `jmm` template, so 12/24 h follows the locale (en_GB → `21:00`) until M6.
   - `ImageRenderer` draws AppKit-backed controls (TextField, List, Slider) as yellow placeholders. The snapshot tool now draws through an offscreen `NSHostingView` + `cacheDisplay` instead.
@@ -71,21 +70,26 @@ Settings window (⌘,): 12/24-hour time (default: follow the system), show secon
 - Tests: settings defaults, round trip, lenient decoding (missing keys → defaults); display strings honor 12/24 h and seconds.
 - Done when: tests pass; changes apply live in both windows and the widget.
 
-## [ ] M7: Accessibility
+## [ ] M7: Design pass
+Decided 2026-11-10: once every UI element exists (Clock, Compare, Settings, widget), iterate on the visual design with the user. Work from snapshots: propose changes, render them in light and dark, and revise until the user approves. Keep the minimal-UI rule: refine what's there, add nothing the requirements don't call for. Shared styling (type sizes, spacing) goes in WorldClockUI so every window and the widget match.
+- Tests: existing view model tests stay green; every changed view keeps a snapshot entry.
+- Done when: the user approves the snapshots of each window and the widget, and the running app matches.
+
+## [ ] M8: Accessibility
 VoiceOver labels everywhere ("Tokyo, 3:42 PM, tomorrow, 14 hours ahead"), scrubber adjustable with arrow keys, keyboard-only use of both windows, contrast meeting WCAG AA in light and dark, Increase Contrast and Reduce Transparency respected, Reduce Motion respected, no information carried by color alone (day relation and ahead/behind always have text or a symbol; any colors pass the macOS color-filter checks for red/green and blue/yellow color blindness).
 - Tests: spoken text for clock and compare views.
 - Done when: an Accessibility Inspector audit passes, a VoiceOver-only walkthrough works, and both windows stay readable with Display color filters on (Protanopia, Deuteranopia, Tritanopia, Grayscale) and with Increase Contrast. Snapshots render the views in an increased-contrast variant too.
 
-## [ ] M8: Polish & packaging
+## [ ] M9: Polish & packaging
 Lightweight check, then the icon. App icon drawn by `scripts/make-icon.swift` (no SF Symbols in the icon: Apple's license forbids it), version 1.0.0, `scripts/install.sh` (Release build → /Applications).
 - Lightweight budget (measured on the Release build, recorded in README): no third-party dependencies; app bundle under 10 MB; idle CPU near 0% and Energy Impact low with both windows open (Activity Monitor → CPU and Energy tabs); no timer activity while windows are hidden or minimized; memory under 50 MB. Fix any regressions before packaging.
 - Done when: the installed app and widget run from /Applications, the icon shows in Finder and the Dock, and the lightweight budget is met.
 
-## [ ] M9: App Store readiness
+## [ ] M10: App Store readiness
 Privacy manifest, App Store entitlements (separate file if any need a provisioning profile), `scripts/release.sh` (check → bump build → archive → sign → upload → tag, as in pomodoro_timer), screenshot generator, listing draft in `docs/app-store/`, privacy policy and support pages.
 - Done when: `./scripts/release.sh --local` archives, and the listing draft exists. Upload once the App Store Connect app record exists.
 
-## [ ] M10: Supporter unlock (daily reminder)
+## [ ] M11: Supporter unlock (daily reminder)
 Decided 2026-11-10: mirror pomodoro_timer's M13 as closely as possible (`~/Projects/pomodoro_timer/ROADMAP.md`; re-read it before starting and follow any decisions made there since). v1.0 ships free with no reminder. In an update, the app stays fully functional and free, shows a gentle reminder once a day, and a one-time in-app purchase (StoreKit 2, non-consumable) removes it for good. No feature paywall. Price: the user decides later.
 - Reminder design: a small card inside the Clock window (pomodoro's in-popover card; not a separate window); never while the user is scrubbing in Compare; starts after a few days of use; **never on first launch**; one-click "Not now"; Restore Purchase for reinstalls. It must stay easy to dismiss to meet App Review rules.
 - `Entitlements` protocol in Core with a fake for tests; reminder scheduling logic test-first (once per day, grace period, never on first launch); StoreKit configuration file for local testing.
