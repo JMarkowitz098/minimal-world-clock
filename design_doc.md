@@ -6,6 +6,7 @@
 - Widget that shows the time for a specific time zone on the Mac desktop
 - Accessible: works with screen readers (VoiceOver), for people with color blindness, and with the system's contrast and motion settings
 - Lightweight and minimal: never affects the user's computer unexpectedly (low battery and CPU use, small size), and a minimal UI. Many world clock apps pile on features until they're hard to use; this one does the three things above and does them simply.
+- A non-intrusive prompt asking users to buy the app, like the one planned for `~/Projects/pomodoro_timer` (its ROADMAP M13): the app stays fully usable either way.
 
 ## Technical requirements
 - Built and designed by AI, so the repo is optimized for that (CLAUDE.md, a roadmap with tests as acceptance criteria, small files)
@@ -21,9 +22,11 @@
 - **App shape (confirmed by the user):** a regular windowed app with a Dock icon (not menu bar only), since two of the three features are windows, including the Compare conversion tool. Clock and Compare are separate windows.
 - **Time zones:** IANA identifiers from `TimeZone.knownTimeZoneIdentifiers`. The city shown is the last part of the identifier (`America/Argentina/Buenos_Aires` → "Buenos Aires"). City aliases and localized names come later. `UTC` is accepted alongside the system's list; abbreviations (`PST`) are not valid zones.
 - **Zone search:** ignores case and diacritics, treats `_` and space alike, and matches city, region or identifier by substring, or the abbreviation in effect on the given date by exact match only (many zones only have `GMT+9`-style abbreviations, so substring matches would flood the results). Cities starting with the query rank first, then city order.
+- **Time math:** offsets read `UTC−5`, `UTC+5:30`, `UTC` and differences read `+9 h`, `−3 h 30 min`, `+15 min`, `Same time` (a typographic minus, hours always in hours, so Apia vs. Pago Pago is `+24 h`). A wall time skipped by a DST gap moves forward by the gap; a repeated one resolves to the first occurrence. Day relation is yesterday / today / tomorrow, plus a two-day case: zones 25 h apart (Kiritimati vs. Pago Pago) sit on dates two days apart for one hour each day.
 - **Widget:** WidgetKit with the zone chosen in the widget's own edit screen (App Intents), so no App Group or shared storage is needed at first.
 - **Bundle ID (confirmed):** `com.jaredmarkowitz.worldclock` (permanent once on the App Store). Widget: `com.jaredmarkowitz.worldclock.widget`.
 - **Lightweight (budget confirmed by the user):** no third-party dependencies; the clock ticks once a minute unless seconds are shown; no background work when nothing is visible (App Nap allowed, timers paused for hidden windows); budgets checked in M8 (ROADMAP.md): bundle under 10 MB, idle CPU near 0%, Energy Impact low, memory under 50 MB.
 - **Minimal UI:** each window shows only what its job needs. New features, options and settings need a clear reason from the requirements; when in doubt, leave it out. Prefer one obvious way to do something over several configurable ones.
 - **Color blindness:** color is decoration only. Every state also has text or a symbol, and views are checked with the macOS color filters (M7).
 - **Minimum macOS (confirmed):** 14 (Sonoma), the first version with desktop widgets.
+- **Supporter unlock (added 2026-11-10, details open):** follows pomodoro_timer's plan: every feature stays free and usable; a gentle reminder, easy to dismiss with one click, asks people to buy a one-time in-app purchase (StoreKit 2, non-consumable) that removes it for good, with Restore Purchase. No feature paywall. Scheduled as M10, after v1.0 ships. Still to decide: popup vs. a small card inside a window, how often, and whether to ask on first launch (risks bad reviews before people have tried the app).

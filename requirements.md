@@ -15,3 +15,4 @@
 - Can reference ~/Projects/pomodoro_timer for previous approach
 - Made for accessibility, e.x. screen readers, color blindness, and other things
 - Lightweight and minimal. 
+- Nonobtrusive popup to ask users to buy the app, similar to the pomodor app

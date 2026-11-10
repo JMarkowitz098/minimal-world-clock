@@ -8,16 +8,20 @@ Shared commands: `./scripts/check.sh` (all tests + app build). Use `swift test -
 
 Each milestone runs in a new chat, so this section carries what the next session needs and the code and git history can't show.
 
-- **Last session (2026-11-10):** M1 done: `Zone` and `ZoneCatalog` in `WorldClockCore` (19 core tests green). The draft tests from `docs/handoff/` were moved into `Tests/WorldClockCoreTests/` and the drafts folder deleted. Earlier: M0 plus AI tooling (`/milestone` skill, snapshot renderer, pre-commit hook running `check.sh`).
-- **Next:** M2 (time math), run with `/milestone`. No draft tests exist; write them from the M2 entry. Reuse `TestSupport.swift` (`jan15Noon`, `jul15Noon`, `utc(…)`, `zone(…)`) and add new fixed instants there (e.g. the March weeks when New York and London differ by 4 h). Functions take `Zone` and `at now: Date`; `zone.timeZone` gives the `TimeZone`.
+- **Last session (2026-11-10):** M2 done: `WallTime.swift`, `Offsets.swift`, `DayRelation.swift` in `WorldClockCore` (40 package tests green). The user also added a requirement mid-session: a non-intrusive prompt asking users to buy the app, like pomodoro_timer's planned M13. Recorded in `design_doc.md` and scheduled as **M10** (after v1.0 ships, as pomodoro did).
+- **Next:** M3 (Clock window), run with `/milestone`. Build display strings from the M2 functions (`wallTime`, `utcOffsetText`); use `DateFormatter` with `timeZone = zone.timeZone` for localized time text. Inject the clock (`() -> Date`) and the ticker; the next tick is at the next minute boundary.
 - **Confirmed by the user:** Dock app; bundle ID `com.jaredmarkowitz.worldclock`; macOS 14 minimum; the M8 lightweight budget; minimal UI matters a lot (they find existing clock apps too feature-heavy), so keep every view to what its milestone needs.
-- **Open with the user:** nothing blocking. `gh` isn't installed, so no GitHub CLI (CI and PRs wait on it).
+- **Open with the user (not blocking M3–M9):**
+  - M10 purchase reminder: popup window or a small card inside the Clock window? How often (pomodoro's plan: at most once a day, after a few days of use)? Ask on first launch (risks bad reviews)? Price? Ship v1.0 free without it (current plan) or include it in 1.0?
+  - `gh` isn't installed, so no GitHub CLI (CI and PRs wait on it).
 - **Notes:**
   - `swift test` prints "Test run with…" twice (once per test runner); that's normal.
   - A fresh clone needs `./scripts/setup.sh` once to install the git hook.
+  - The system catalog uses old IANA names: `Asia/Calcutta` (not `Asia/Kolkata`), and `Etc/GMT±N` zones are not listed (only `GMT`). `zone(…)` in tests traps on unknown identifiers, so check names with `TimeZone.knownTimeZoneIdentifiers` first.
   - `TimeZone.abbreviation(for:)` returns `GMT+9`-style text for many zones (Tokyo included), so abbreviation search only helps for zones with real abbreviations (PST, CET…). That's why it's exact-match only.
   - `TimeZone(identifier:)` accepts abbreviations (`"PST"`) and resolves `"UTC"` to `"GMT"`; `knownTimeZoneIdentifiers` (443 on this Mac) lists `GMT` but not `UTC`. `Zone` validates against that list plus `UTC`.
   - Search sorts with `localizedStandardCompare`, so order follows the user's locale; tests compare against the same call rather than a hard-coded list.
+  - `instant(for:)` samples the zone's offset around the wall time, keeps the candidates that read back as that wall time (earliest wins), and in a gap uses the smaller (pre-jump) offset. It doesn't use `Calendar.date(from:)`, whose gap and overlap behavior isn't documented.
 
 ## [x] M0: Scaffold
 Shared `WorldClockKit` package (Core + UI), XcodeGen project with a `WorldClockMac` target (sandboxed, ad-hoc signed), a single placeholder window, `scripts/check.sh`, and the docs (README, CLAUDE.md, ARCHITECTURE.md, design_doc.md, this roadmap). Git repo on `main`.
@@ -29,9 +33,9 @@ Shared `WorldClockKit` package (Core + UI), XcodeGen project with a `WorldClockM
 - Tests: `cityAndRegionComeFromIdentifier`, `nestedIdentifierUsesLastComponentAsCity`, `singleComponentIdentifierHasNoRegion`, `rejectsUnknownIdentifier`, `zoneIsCodableRoundTrip`, `decodingUnknownIdentifierFails`, `catalogListsEveryKnownZone`, `emptyQueryReturnsAllZonesSortedByCity`, `searchMatchesCityIgnoringCase`, `searchIgnoresDiacritics`, `searchTreatsUnderscoreAndSpaceAlike`, `searchMatchesRegion`, `searchMatchesFullIdentifier`, `cityPrefixMatchesRankBeforeOtherMatches`, `searchMatchesAbbreviationForThatDate`, `searchWithNoMatchIsEmpty`, plus `rejectsAbbreviationAsIdentifier`, `abbreviationMustMatchExactly`
 - Done when: core tests pass.
 
-## [ ] M2: Time math
-Pure functions over `(zone, instant)`: wall-clock time, UTC offset text (`UTC−5`, `UTC+5:30`, `UTC`), offset difference between two zones (`+9 h`, `−3 h 30 min`, `Same time`), and day relation to a reference zone (yesterday / today / tomorrow). Also the reverse: turn "09:00 on this date in zone A" into an instant, handling DST gaps (skipped hour moves forward) and overlaps (repeated hour picks the first).
-- Tests: offsets in winter and summer, half- and quarter-hour zones (India, Nepal), differences across DST changes (New York ↔ London differ by 4 h for part of March), date-line day relations (Kiribati ↔ Samoa), DST gap and overlap conversion.
+## [x] M2: Time math
+Pure functions on `Zone` taking `at now: Date`: `wallTime(at:)`, `utcOffset`/`utcOffsetText` (`UTC−5`, `UTC+5:30`, `UTC`), `offset`/`offsetText(from:at:)` (`+9 h`, `−3 h 30 min`, `+15 min`, `Same time`), and `dayRelation(from:at:)` (yesterday / today / tomorrow, or `.days(±2)` for zones 25 h apart). The reverse, `instant(for: WallTime)`, handles DST gaps (skipped time moves forward) and overlaps (repeated time picks the first).
+- Tests: `utcOffsetTextInWinterAndSummer`, `utcOffsetTextForUTCIsPlain`, `utcOffsetTextForHalfAndQuarterHourZones`, `differenceTextInWholeHours`, `differenceTextWithMinutes`, `differenceTextUnderAnHour`, `differenceTextSameTime`, `differenceChangesAcrossDSTTransitions` (New York ↔ London 4 h apart in March and late October), `differenceFlipsAcrossHemispheres`, `wallTimeInZone`, `wallTimeKeepsSeconds`, `instantFromWallTime`, `dstGapMovesForward`, `dstGapMovesForwardInLondon`, `dstOverlapPicksFirst`, `skippedDayMovesForward` (Samoa, 2011), `sameZoneIsToday`, `dayRelationChangesAtMidnight`, `kiribatiIsTomorrowFromAmericanSamoa`, `samoaAndAmericanSamoaShareClockTimeButNotDate`, `extremeZonesCanBeTwoDaysApart`
 - Done when: core tests pass.
 
 ## [ ] M3: Clock window
@@ -68,6 +72,13 @@ Lightweight check, then the icon. App icon drawn by `scripts/make-icon.swift` (n
 ## [ ] M9: App Store readiness
 Privacy manifest, App Store entitlements (separate file if any need a provisioning profile), `scripts/release.sh` (check → bump build → archive → sign → upload → tag, as in pomodoro_timer), screenshot generator, listing draft in `docs/app-store/`, privacy policy and support pages.
 - Done when: `./scripts/release.sh --local` archives, and the listing draft exists. Upload once the App Store Connect app record exists.
+
+## [ ] M10: Supporter unlock (purchase reminder)
+Requirement added 2026-11-10: a non-intrusive prompt asking users to buy the app, like pomodoro_timer's planned M13. The app stays fully functional; a one-time in-app purchase (StoreKit 2, non-consumable, price to decide) removes the reminder for good. No feature paywall.
+- Design (to confirm with the user before starting): a gentle reminder at most once a day, starting after a few days of use; one-click "Not now"; Restore Purchase for reinstalls; never steals focus while the user is mid-scrub in Compare. Easy dismissal is also an App Review requirement.
+- `Entitlements` protocol in Core with a fake for tests; reminder scheduling logic test-first; StoreKit configuration file for local testing.
+- Tests: reminder schedule (grace period, at most once a day, never after purchase), purchase and restore through the fake entitlements, lenient decoding of the saved reminder state.
+- Done when: tests pass; with the StoreKit test configuration, buying removes the reminder and it stays gone after relaunch.
 
 ## Later (not scheduled)
 - City aliases for search (e.g. "San Francisco" → Los Angeles), since IANA names only cover one city per zone.

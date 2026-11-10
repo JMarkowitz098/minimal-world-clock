@@ -22,7 +22,10 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Package targets | `Packages/WorldClockKit/Package.swift` |
 | Time zone value (validation, city/region names, Codable) | `WorldClockCore/Zone.swift` |
 | Zone list and search (matching, ranking) | `WorldClockCore/ZoneCatalog.swift` |
-| Fixed test instants and helpers (`jan15Noon`, `utc(…)`, `zone(…)`) | `Tests/WorldClockCoreTests/TestSupport.swift` |
+| Wall-clock time at an instant, and wall time → instant (DST gaps and overlaps) | `WorldClockCore/WallTime.swift` |
+| UTC offset text (`UTC+5:30`) and difference between zones (`−3 h 30 min`, `Same time`) | `WorldClockCore/Offsets.swift` |
+| Yesterday / today / tomorrow relative to another zone | `WorldClockCore/DayRelation.swift` |
+| Fixed test instants and helpers (`jan15Noon`, `mar15Noon`, `utc(…)`, `wall(…)`, `zone(…)`) | `Tests/WorldClockCoreTests/TestSupport.swift` |
 | Placeholder window content (replaced in M3) | `WorldClockUI/PlaceholderView.swift` |
 | Views rendered for visual checks (and later App Store screenshots) | `Tools/Snapshots/Sources/Snapshots/Catalog.swift` |
 | What the pre-commit check runs | `scripts/check.sh` (hook: `scripts/hooks/pre-commit`) |
@@ -37,6 +40,7 @@ Update this table as milestones add files.
 - `WorldClockCore` builds with Foundation alone.
 - Compiler warnings are errors (package via `check.sh`, app via `SWIFT_TREAT_WARNINGS_AS_ERRORS` in `project.yml`).
 - A `Zone` always holds a valid identifier (known IANA zones plus `UTC`), so `zone.timeZone` never fails. Abbreviations like `PST` are not identifiers.
+- Time math is computed from offsets in seconds and a UTC Gregorian calendar, never `Calendar.current` or `TimeZone.current`. Minus signs in user-facing text are U+2212 (`−`), not hyphens.
 - No package resources (the App Store export doesn't re-sign SwiftPM resource bundles). Images go in each app's asset catalog.
 
 ## Recipes
