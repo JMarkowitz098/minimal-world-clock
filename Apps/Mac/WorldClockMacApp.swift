@@ -12,8 +12,15 @@ struct WorldClockMacApp: App {
     /// scene (Clock) is the one that opens at launch and on a Dock click.
     var body: some Scene {
         Window("Clock", id: "clock") {
-            ClockView(model: clock)
+            ClockView(model: clock, theme: .solarizedLight)
         }
+        // The content can grow (its text scales with the window), so without a default size
+        // the window opens large. This is below the content's natural size, which is the
+        // minimum, so a new window opens at exactly its natural size.
+        .defaultSize(width: 200, height: 100)
+        // No title bar (the close/minimize buttons stay); drag anywhere to move the window.
+        .windowStyle(.hiddenTitleBar)
+        .windowBackgroundDragBehavior(.enabled)
         .windowResizability(.contentSize)
         .keyboardShortcut("1")
 

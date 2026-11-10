@@ -3,12 +3,13 @@ import SwiftUI
 /// A zone's time: a title (the zone name, or a control showing it), the time in large type,
 /// and the date and UTC offset below. Reused by the Clock and Compare windows.
 public struct TimeDisplay<Title: View>: View {
-    let time: String
+    let time: AttributedString
     let date: String
     let offset: String
     let title: Title
 
-    public init(time: String, date: String, offset: String, @ViewBuilder title: () -> Title) {
+    /// - Parameter time: the formatted time with its parts marked (`ZoneDisplay.time`).
+    public init(time: AttributedString, date: String, offset: String, @ViewBuilder title: () -> Title) {
         self.time = time
         self.date = date
         self.offset = offset
@@ -19,8 +20,8 @@ public struct TimeDisplay<Title: View>: View {
         VStack(spacing: 4) {
             title
             VStack(spacing: 4) {
-                Text(time)
-                    .font(.system(size: 56, weight: .light))
+                Text(TimeStyle.shrinkingDayPeriod(time, timeSize: TimeStyle.windowTimeSize))
+                    .font(TimeStyle.timeFont(size: TimeStyle.windowTimeSize))
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
@@ -29,7 +30,7 @@ public struct TimeDisplay<Title: View>: View {
                     .foregroundStyle(.secondary)
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(time), \(date), \(offset)")
+            .accessibilityLabel("\(String(time.characters)), \(date), \(offset)")
         }
     }
 }

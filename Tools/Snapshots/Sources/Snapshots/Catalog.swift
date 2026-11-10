@@ -54,12 +54,16 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
 }
 
 @MainActor let catalog: [Snapshot] = [
-    Snapshot(name: "clock", size: CGSize(width: 320, height: 170)) {
-        AnyView(ClockView(model: clockModel("Asia/Tokyo")))
+    Snapshot(name: "clock", size: CGSize(width: 300, height: 162)) {
+        AnyView(ClockView(model: clockModel("Asia/Tokyo"), theme: .solarizedLight).safeAreaPadding(.top, 28))
     },
     // Longest city name in the catalog, to check it fits.
-    Snapshot(name: "clock-long-name", size: CGSize(width: 320, height: 170)) {
-        AnyView(ClockView(model: clockModel("America/Bahia_Banderas")))
+    Snapshot(name: "clock-long-name", size: CGSize(width: 300, height: 162)) {
+        AnyView(ClockView(model: clockModel("America/Bahia_Banderas"), theme: .solarizedLight).safeAreaPadding(.top, 28))
+    },
+    // Resized larger than natural: the time and date scale up with the window.
+    Snapshot(name: "clock-resized", size: CGSize(width: 560, height: 300)) {
+        AnyView(ClockView(model: clockModel("Asia/Tokyo"), theme: .solarizedLight).safeAreaPadding(.top, 28))
     },
     Snapshot(name: "compare", size: CGSize(width: 640, height: 260)) {
         AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo")))
@@ -94,4 +98,4 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
     Snapshot(name: "widget-medium-long", size: CGSize(width: 388, height: 194)) {
         widget("America/St_Johns", .medium, at: Date(timeIntervalSince1970: 1_790_784_000))
     },
-]
+] + clockOptionSnapshots

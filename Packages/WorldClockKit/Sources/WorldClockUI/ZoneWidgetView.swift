@@ -25,7 +25,7 @@ public struct ZoneWidgetView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             time
-                .font(.system(size: size == .small ? 34 : 48, weight: .light))
+                .font(TimeStyle.timeFont(size: timeSize))
                 .monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
@@ -42,6 +42,13 @@ public struct ZoneWidgetView: View {
         .accessibilityElement(children: .combine)
     }
 
+    private var timeSize: CGFloat {
+        size == .small ? TimeStyle.smallWidgetTimeSize : TimeStyle.mediumWidgetTimeSize
+    }
+
+    /// The system draws the widget from an archived copy of this view, so the live time must
+    /// use a system format (`Date.FormatStyle`): with a custom `DiscreteFormatStyle` the widget
+    /// stays on its placeholder. That's why AM/PM isn't drawn smaller here, unlike the windows.
     @ViewBuilder private var time: some View {
         if let frozenTime {
             Text(frozenTime, format: display.timeFormat)

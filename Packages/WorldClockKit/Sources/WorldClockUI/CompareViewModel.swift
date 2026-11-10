@@ -37,6 +37,15 @@ import WorldClockCore
         return wall.hour * 60 + wall.minute
     }
 
+    /// Labels under the scrubber every six hours: "12 AM", "6 AM"… (or "00", "06"… in 24-hour
+    /// locales), at their minute of the day.
+    public let scrubberMarks: [ScrubberMark]
+
+    public struct ScrubberMark: Hashable, Sendable {
+        public let minuteOfDay: Int
+        public let label: String
+    }
+
     @ObservationIgnored private let store: SettingsStore
     @ObservationIgnored private let clock: () -> Date
     @ObservationIgnored private let ticker: Ticker
@@ -58,6 +67,11 @@ import WorldClockCore
         now = clock()
         formatterA = ZoneFormatter(zone: a, locale: locale)
         formatterB = ZoneFormatter(zone: b, locale: locale)
+        let utc = TimeZone(identifier: "UTC")!
+        let hour = Date.FormatStyle(locale: locale, timeZone: utc).hour()
+        scrubberMarks = stride(from: 0, to: 24 * 60, by: 6 * 60).map { minute in
+            ScrubberMark(minuteOfDay: minute, label: hour.format(Date(timeIntervalSince1970: Double(minute * 60))))
+        }
     }
 
     /// Refreshes the time and ticks on every minute boundary until `stop`. Call when the window appears.

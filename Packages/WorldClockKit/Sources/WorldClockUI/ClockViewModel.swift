@@ -11,6 +11,8 @@ import WorldClockCore
     private var display: ZoneDisplay { formatter.display(at: now) }
     /// "9:00 PM" or "21:00", following the locale's 12/24-hour preference.
     public var timeText: String { display.timeText }
+    /// `timeText` with its parts marked, for drawing AM/PM smaller.
+    public var time: AttributedString { display.time }
     /// "Thursday, January 15", the date in `zone`.
     public var dateText: String { display.dateText }
     /// "Tokyo"

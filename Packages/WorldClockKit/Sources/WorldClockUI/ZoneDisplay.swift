@@ -5,6 +5,9 @@ import WorldClockCore
 public struct ZoneDisplay: Equatable, Sendable {
     /// "9:00 PM" or "21:00", following the locale's 12/24-hour preference.
     public var timeText: String
+    /// `timeText` with its parts marked (`dateField`), so views can draw AM/PM smaller
+    /// (`TimeStyle.shrinkingDayPeriod`).
+    public var time: AttributedString
     /// "Thursday, January 15", the date in the zone.
     public var dateText: String
     /// "Tokyo"
@@ -23,18 +26,20 @@ final class ZoneFormatter {
         }
     }
 
-    private let time: DateFormatter
+    private var time: Date.FormatStyle
     private let date: DateFormatter
 
     init(zone: Zone, locale: Locale) {
         self.zone = zone
-        time = Self.formatter(template: "jmm", locale: locale, zone: zone)
+        time = Date.FormatStyle(locale: locale, timeZone: zone.timeZone).hour().minute()
         date = Self.formatter(template: "EEEEMMMMd", locale: locale, zone: zone)
     }
 
     func display(at instant: Date) -> ZoneDisplay {
-        ZoneDisplay(
-            timeText: time.string(from: instant),
+        let time = time.attributedStyle.format(instant)
+        return ZoneDisplay(
+            timeText: String(time.characters),
+            time: time,
             dateText: date.string(from: instant),
             cityText: zone.city,
             offsetText: zone.utcOffsetText(at: instant)
