@@ -3,7 +3,8 @@ import SwiftUI
 /// The Compare window's scrubber: a 24-hour track drawn in the theme's colors (the system slider
 /// ignores the tint on macOS), with a tick per hour, labels every six hours, and an accent fill
 /// and thumb. Dragging or clicking snaps to quarter hours; arrow keys and VoiceOver's adjust
-/// step by 15 minutes. Hovering darkens the track and rings the thumb (the keyboard focus ring).
+/// step by 15 minutes. Hovering darkens and thickens the track (gray and accent parts), rings the
+/// thumb (the keyboard focus ring), and marks the quarter hour a click would jump to.
 struct TimeStrip: View {
     /// The thumb's position, in minutes since midnight.
     let minuteOfDay: Int
@@ -23,24 +24,34 @@ struct TimeStrip: View {
     private var trackY: CGFloat { 12 * scale }
     @FocusState private var isFocused: Bool
     @State private var isHovered = false
+    /// The quarter hour under the pointer (where a click moves the thumb), while hovering.
+    @State private var hoverMinute: Int?
+    private var trackHeight: CGFloat { (isHovered ? 5 : 3) * scale }
 
     var body: some View {
         GeometryReader { proxy in
             let track = proxy.size.width - 2 * inset
             let x = { (minute: Int) in inset + track * CGFloat(minute) / CGFloat(24 * 60) }
             ZStack(alignment: .topLeading) {
+                Capsule().fill(theme.text.opacity(isHovered ? 0.35 : 0.15))
+                    .frame(width: track, height: trackHeight)
+                    .position(x: inset + track / 2, y: trackY)
+                // Over the gray track (the hover thickens it), under the accent fill.
                 ForEach(0..<25) { hour in
                     let major = hour % 6 == 0
                     Rectangle().fill(theme.text.opacity(major ? 0.5 : 0.25))
                         .frame(width: 1, height: (major ? 10 : 6) * scale)
                         .position(x: x(hour * 60), y: trackY)
                 }
-                Capsule().fill(theme.text.opacity(isHovered ? 0.25 : 0.15))
-                    .frame(width: track, height: 3 * scale)
-                    .position(x: inset + track / 2, y: trackY)
                 Capsule().fill(theme.accent)
-                    .frame(width: x(minuteOfDay) - inset, height: 3 * scale)
+                    .frame(width: x(minuteOfDay) - inset, height: trackHeight)
                     .position(x: (inset + x(minuteOfDay)) / 2, y: trackY)
+                if let hoverMinute, hoverMinute != minuteOfDay {
+                    // Text color: it shows on the gray track and on the accent fill.
+                    Capsule().fill(theme.text.opacity(0.8))
+                        .frame(width: 2 * scale, height: 16 * scale)
+                        .position(x: x(hoverMinute), y: trackY)
+                }
                 Circle().fill(theme.accent)
                     .frame(width: 14 * scale, height: 14 * scale)
                     // Keyboard focus and hover: a soft ring around the thumb (instead of the
@@ -58,8 +69,15 @@ struct TimeStrip: View {
                 }
             }
             .contentShape(Rectangle())
-            .onHover { hovering in
-                withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
+            .onContinuousHover { phase in
+                switch phase {
+                case .active(let point):
+                    hoverMinute = Self.snapped(Double(point.x - inset) / Double(track) * Double(24 * 60))
+                    if !isHovered { withAnimation(.easeOut(duration: 0.15)) { isHovered = true } }
+                case .ended:
+                    hoverMinute = nil
+                    withAnimation(.easeOut(duration: 0.15)) { isHovered = false }
+                }
             }
             .gesture(
                 DragGesture(minimumDistance: 0).onChanged { drag in
