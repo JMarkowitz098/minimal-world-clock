@@ -6,7 +6,7 @@ How the code fits together and where things live. Rules are in [CLAUDE.md](CLAUD
 
 ```
 Apps/Mac (thin shell)    ──uses──▶  WorldClockUI  ──uses──▶  WorldClockCore
-Apps/Widget (from M5)               view models,             zones, search, time math,
+Apps/Widget (WidgetKit)             view models,             zones, search, time math,
                                     shared views             settings (Foundation only)
 ```
 
@@ -18,13 +18,17 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 |---|---|
 | App entry point, windows (Clock ⌘1, Compare ⌘2), app delegate (stay open when the last window closes) | `Apps/Mac/WorldClockMacApp.swift` |
 | App sandbox entitlements | `Apps/Mac/WorldClock.entitlements` |
-| Targets, bundle IDs, versions, Info.plist keys | `project.yml` |
+| Desktop widget: `Widget`, zone parameter (`SelectZoneIntent`, `ZoneEntity`, `ZoneEntityQuery`), timeline provider, entry view. Thin: wraps the package types below | `Apps/Widget/MinimalWorldClockWidget.swift` |
+| Widget sandbox entitlements | `Apps/Widget/MinimalWorldClockWidget.entitlements` |
+| Targets, bundle IDs, versions, Info.plist keys, signing (development team for every build) and the widget's "Require team signing" build step | `project.yml` |
 | Package targets | `Packages/WorldClockKit/Package.swift` |
 | Time zone value (validation, city/region names, Codable) | `WorldClockCore/Zone.swift` |
 | Zone list and search (matching, ranking) | `WorldClockCore/ZoneCatalog.swift` |
 | Wall-clock time at an instant, and wall time → instant (DST gaps and overlaps) | `WorldClockCore/WallTime.swift` |
 | UTC offset text (`UTC+5:30`) and difference between zones (`−3 h 30 min`, `Same time`) | `WorldClockCore/Offsets.swift` |
 | Yesterday / today / tomorrow relative to another zone | `WorldClockCore/DayRelation.swift` |
+| When a zone's date or offset next changes (next midnight or DST transition): the widget's timeline dates | `WorldClockCore/DisplayChanges.swift` |
+| The widget's zone lookups (resolve identifiers, search, suggestions, default) and `Zone(systemZone:)` (the Mac's zone or UTC) | `WorldClockCore/ZoneQuery.swift` |
 | Saved settings: the `SettingsStore` protocol, its keys, typed accessors (`clockZone`, `compareZoneA`, `compareZoneB`), UserDefaults and in-memory stores | `WorldClockCore/SettingsStore.swift` |
 | Fixed test instants and helpers (`jan15Noon`, `mar15Noon`, `utc(…)`, `wall(…)`, `zone(…)`) | `Tests/WorldClockCoreTests/TestSupport.swift` |
 | Ticking on minute boundaries: the `Ticker` protocol, the app's `DispatchTicker`, `Date.nextMinuteBoundary` | `WorldClockUI/Ticker.swift` |
@@ -33,13 +37,15 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Clock window layout (start/stop on appear/disappear) | `WorldClockUI/ClockView.swift` |
 | Compare window: two zones at one instant, live vs. scrubbed, swap, Now, difference and day-relation text, persistence; `live()` | `WorldClockUI/CompareViewModel.swift` |
 | Compare window layout (two time displays, swap button, scrubber slider, Now) | `WorldClockUI/CompareView.swift` |
+| The widget's strings at an entry date (city, date, short date, offset) and its live time format | `WorldClockUI/WidgetDisplay.swift` |
+| The widget's layout, small and medium (no WidgetKit import; snapshots can freeze the time) | `WorldClockUI/ZoneWidgetView.swift` |
 | City name button that opens the zone picker in a popover (title of each time display) | `WorldClockUI/ZoneButton.swift` |
 | Large time + date + offset under a title (shared with Compare) | `WorldClockUI/TimeDisplay.swift` |
 | Zone search rows (`city`, `Asia · UTC+9`) | `WorldClockUI/ZonePickerViewModel.swift` |
 | Zone search field and results list | `WorldClockUI/ZonePicker.swift` |
 | UI test helpers (`FakeClock`, `FakeTicker`, `makeClock(…)`, `makeCompare(…)`, `nnbsp`) | `Tests/WorldClockUITests/TestSupport.swift` |
 | Views rendered for visual checks (and later App Store screenshots) | `Tools/Snapshots/Sources/Snapshots/Catalog.swift` |
-| What the pre-commit check runs | `scripts/check.sh` (hook: `scripts/hooks/pre-commit`) |
+| What the pre-commit check runs (tests, app build, team-signing check, snapshot tool build) | `scripts/check.sh` (hook: `scripts/hooks/pre-commit`) |
 | Commands pre-approved for Claude Code | `.claude/settings.json` |
 | The `/milestone` workflow | `.claude/skills/milestone/SKILL.md` |
 | Work handed from one session to the next (e.g. draft tests; create when needed) | `docs/handoff/` (see ROADMAP.md → Handoff) |
@@ -56,6 +62,11 @@ Update this table as milestones add files.
 - View models take their clock (`() -> Date`), `Ticker`, `SettingsStore`, and `Locale` as init parameters; only the `live()` factories touch `Date()`, `TimeZone.current`, or `UserDefaults.standard`.
 - A view model schedules one tick at a time, at the next minute boundary, and only between `start()` and `stop()`, which views call from `onAppear` / `onDisappear`. Nothing repeats on its own.
 - Display strings for a zone come from `ZoneFormatter`, so the Clock and Compare windows format time and date identically. Keep one formatter per shown zone (creating a `DateFormatter` is costly) and update its `zone` rather than rebuilding it.
+- The widget's time is live text (`Text(.currentDate, format:)`, macOS 15+); its timeline has entries only when the date or offset changes (`Zone.displayChanges`), so the extension runs about once a day. Never add per-minute entries.
+- SwiftUI's `Text(_:format:)` formats dates in the environment's `\.timeZone`, ignoring the format style's own zone, so a view showing another zone's time with it must set `.environment(\.timeZone, …)`. (The windows format strings with `ZoneFormatter` instead.) Snapshots won't catch a miss when the zone shown matches the Mac's.
+- Names the system sees (targets, products, widget kind, gallery name) start with "Minimal World Clock" / `MinimalWorldClock…`: Apple's Clock app already ships a "World Clock" widget whose extension is `WorldClockWidget`. Bundle IDs: `com.jaredmarkowitz.minimalworldclock` and `….widget` (permanent once on the App Store).
+- Every build is signed with the development team. Ad-hoc signed, the widget shows up but macOS silently drops the zone picked in its edit screen. The widget target's "Require team signing" build step and `check.sh`'s signature check enforce this.
+- App Intents types (`AppEntity`, `WidgetConfigurationIntent`) live in the widget target, where Xcode extracts their metadata; their logic lives in the package (`ZoneQuery`).
 - Settings are read leniently: missing, corrupt, or unknown data reads as `nil` and the caller uses its default. `SettingsKey` values are never renamed.
 
 ## Recipes
@@ -68,4 +79,6 @@ Update this table as milestones add files.
 
 **Add a window:** add a `Window` scene in `Apps/Mac/WorldClockMacApp.swift` with `.keyboardShortcut` (it gets a Window menu item automatically) and `.defaultSize` if the content has a greedy control (a `Slider`'s ideal width is 900 pt; `frame(idealWidth:)` doesn't help). The first scene opens at launch. macOS autosaves each window's frame (`NSWindow Frame <id>` in the app's defaults), so after changing a default size, delete that key before checking it.
 
-**Add a file to the app target:** create it under `Apps/Mac/`, then run `xcodegen generate`.
+**Add a file to the app or widget target:** create it under `Apps/Mac/` or `Apps/Widget/`, then run `xcodegen generate`.
+
+**Change the widget:** content and strings go in `WidgetDisplay` / `ZoneWidgetView` (tested and snapshotted: `widget-*` entries, which pass `frozenTime`); WidgetKit glue in `Apps/Widget/MinimalWorldClockWidget.swift`. Bump the widget's `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `project.yml` with the app's. To try it, install to /Applications (CLAUDE.md → Commands).

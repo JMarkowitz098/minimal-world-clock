@@ -6,7 +6,7 @@ import PackageDescription
 // WorldClockUI: cross-platform SwiftUI views + view models.
 let package = Package(
     name: "WorldClockKit",
-    platforms: [.macOS(.v14), .iOS(.v17)],
+    platforms: [.macOS(.v15), .iOS(.v18)],
     products: [
         .library(name: "WorldClockCore", targets: ["WorldClockCore"]),
         .library(name: "WorldClockUI", targets: ["WorldClockUI"]),

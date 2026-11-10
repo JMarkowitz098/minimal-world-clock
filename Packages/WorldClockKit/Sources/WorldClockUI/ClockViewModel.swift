@@ -73,9 +73,8 @@ extension ClockViewModel {
 }
 
 extension Zone {
-    /// The Mac's zone, or UTC when it's missing from the known list (e.g. `Asia/Kolkata` on a
-    /// system that lists `Asia/Calcutta`). Only for `live()` factories.
+    /// The Mac's zone, or UTC when it's missing from the known list. Only for `live()` factories.
     static var macZoneOrUTC: Zone {
-        Zone(identifier: TimeZone.current.identifier) ?? Zone(identifier: "UTC")!
+        Zone(systemZone: .current)
     }
 }

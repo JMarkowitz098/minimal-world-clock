@@ -41,6 +41,18 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
     return model
 }
 
+/// The widget at a fixed instant, on a rounded background like the desktop's widget container
+/// (the real one comes from WidgetKit). Sizes are macOS's small and medium widgets.
+@MainActor func widget(_ identifier: String, _ size: ZoneWidgetView.Size, at now: Date = jan15Noon) -> AnyView {
+    let display = WidgetDisplay(zone: Zone(identifier: identifier)!, at: now, locale: Locale(identifier: "en_US"))
+    return AnyView(
+        ZoneWidgetView(display: display, size: size, frozenTime: now)
+            .padding(16)
+            .background(.background, in: RoundedRectangle(cornerRadius: 20))
+            .padding(12)
+    )
+}
+
 @MainActor let catalog: [Snapshot] = [
     Snapshot(name: "clock", size: CGSize(width: 320, height: 170)) {
         AnyView(ClockView(model: clockModel("Asia/Tokyo")))
@@ -68,5 +80,18 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
     },
     Snapshot(name: "zone-picker-empty", size: CGSize(width: 300, height: 380)) {
         AnyView(ZonePicker(model: pickerModel(query: "zzz"), selected: nil) { _ in })
+    },
+    Snapshot(name: "widget-small", size: CGSize(width: 194, height: 194)) {
+        widget("Asia/Tokyo", .small)
+    },
+    Snapshot(name: "widget-medium", size: CGSize(width: 388, height: 194)) {
+        widget("Asia/Tokyo", .medium)
+    },
+    // Longest city name, and the longest date ("Wednesday, September 30") with a half-hour offset.
+    Snapshot(name: "widget-small-long", size: CGSize(width: 194, height: 194)) {
+        widget("America/Bahia_Banderas", .small)
+    },
+    Snapshot(name: "widget-medium-long", size: CGSize(width: 388, height: 194)) {
+        widget("America/St_Johns", .medium, at: Date(timeIntervalSince1970: 1_790_784_000))
     },
 ]

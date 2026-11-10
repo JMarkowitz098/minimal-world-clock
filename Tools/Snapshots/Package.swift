@@ -6,7 +6,7 @@ import PackageDescription
 // Run: swift run --package-path Tools/Snapshots Snapshots [name-filter]
 let package = Package(
     name: "Snapshots",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v15)],
     dependencies: [.package(path: "../../Packages/WorldClockKit")],
     targets: [
         .executableTarget(

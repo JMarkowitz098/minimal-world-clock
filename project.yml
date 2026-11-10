@@ -4,8 +4,8 @@ name: WorldClock
 options:
   bundleIdPrefix: com.jaredmarkowitz
   deploymentTarget:
-    macOS: "14.0"
-    iOS: "17.0"
+    macOS: "15.0"
+    iOS: "18.0"
 
 packages:
   WorldClockKit:
@@ -15,6 +15,12 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+    # Every build, local ones included, is signed with the Apple Development certificate.
+    # Ad-hoc signing ("-") isn't enough: macOS shows the widget but silently drops the zone
+    # picked in its edit screen (found in M5). The release script (M10) signs for distribution.
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: Apple Development
+    DEVELOPMENT_TEAM: Y7W4DC22F6
 
 targets:
   WorldClockMac:
@@ -26,6 +32,7 @@ targets:
         product: WorldClockCore
       - package: WorldClockKit
         product: WorldClockUI
+      - target: MinimalWorldClockWidget  # embedded in Contents/PlugIns
     info:
       path: Apps/Mac/Info.plist
       properties:
@@ -39,11 +46,46 @@ targets:
       base:
         PRODUCT_NAME: Minimal World Clock
         # Permanent once on the App Store; shared with a future iPhone app (Universal Purchase).
-        PRODUCT_BUNDLE_IDENTIFIER: com.jaredmarkowitz.worldclock
-        # Local builds are ad-hoc signed; the release script (M10) signs with the developer team.
-        CODE_SIGN_STYLE: Manual
-        CODE_SIGN_IDENTITY: "-"
+        PRODUCT_BUNDLE_IDENTIFIER: com.jaredmarkowitz.minimalworldclock
         ENABLE_HARDENED_RUNTIME: YES
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         CODE_SIGN_ENTITLEMENTS: Apps/Mac/WorldClock.entitlements
+
+  # Named after the app: Apple's Clock app ships an extension called WorldClockWidget.
+  MinimalWorldClockWidget:
+    type: app-extension
+    platform: macOS
+    sources: [Apps/Widget]
+    preBuildScripts:
+      # An ad-hoc signed widget registers and draws, but macOS silently drops the zone picked in
+      # its edit screen (found in M5). Fail the build instead of producing one.
+      - name: Require team signing
+        basedOnDependencyAnalysis: false
+        script: |
+          if [ "$CODE_SIGN_IDENTITY" = "-" ] || [ -z "$DEVELOPMENT_TEAM" ]; then
+            echo "error: The widget must be signed with a development team (CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY, DEVELOPMENT_TEAM=$DEVELOPMENT_TEAM). Ad-hoc signed widgets lose the zone the user picks. See project.yml."
+            exit 1
+          fi
+    dependencies:
+      - package: WorldClockKit
+        product: WorldClockCore
+      - package: WorldClockKit
+        product: WorldClockUI
+    info:
+      path: Apps/Widget/Info.plist
+      properties:
+        CFBundleDisplayName: Minimal World Clock
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_NAME: MinimalWorldClockWidget
+        PRODUCT_BUNDLE_IDENTIFIER: com.jaredmarkowitz.minimalworldclock.widget
+        ENABLE_HARDENED_RUNTIME: YES
+        # Must match the app's versions, or App Store validation rejects the upload.
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        CODE_SIGN_ENTITLEMENTS: Apps/Widget/MinimalWorldClockWidget.entitlements

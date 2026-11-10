@@ -1,6 +1,6 @@
 # Minimal World Clock
 
-A minimal macOS world clock: a Clock window, a Compare window for two time zones, and a desktop widget. Headed for the App Store.
+A minimal macOS world clock (macOS 15+): a Clock window, a Compare window for two time zones, and a desktop widget. Headed for the App Store.
 
 - [ARCHITECTURE.md](ARCHITECTURE.md): file map, layers, invariants, recipes (read before non-trivial changes)
 - [ROADMAP.md](ROADMAP.md): milestones and their acceptance tests
@@ -11,12 +11,13 @@ A minimal macOS world clock: a Clock window, a Compare window for two time zones
 | Task | Command |
 |---|---|
 | **Run a milestone end to end** | `/milestone` (skill in `.claude/skills/milestone/`) |
-| **Pre-commit check** (all tests + app build + snapshot tool build; warnings fail; prints only failures) | `./scripts/check.sh` |
+| **Pre-commit check** (all tests + app build + team-signing check + snapshot tool build; warnings fail; prints only failures) | `./scripts/check.sh` |
 | Tests only (fast, use for TDD) | `swift test --package-path Packages/WorldClockKit` |
 | Regenerate Xcode project (after editing `project.yml` or adding/removing app files) | `xcodegen generate` |
 | Build Debug app | `xcodebuild -project WorldClock.xcodeproj -scheme WorldClockMac -configuration Debug -derivedDataPath build build` |
 | Run Debug app | `open "build/Build/Products/Debug/Minimal World Clock.app"` |
 | Quit it | `pkill -x "Minimal World Clock"` |
+| Try the widget (macOS only offers widgets from /Applications) | build, then `rm -rf "/Applications/Minimal World Clock.app" && cp -R "build/Build/Products/Debug/Minimal World Clock.app" /Applications/ && open "/Applications/Minimal World Clock.app"`; unregister the build copy with `pluginkit -r "build/Build/Products/Debug/Minimal World Clock.app/Contents/PlugIns/MinimalWorldClockWidget.appex"`; check with `pluginkit -m -p com.apple.widgetkit-extension \| grep worldclock`. The user checks the desktop (agents can't see it). |
 | **Render views to PNG** (light + dark, into `build/snapshots/`; then Read them) | `swift run --package-path Tools/Snapshots Snapshots [name-filter]` |
 | One-time setup after cloning (git hooks + Xcode project) | `./scripts/setup.sh` |
 
@@ -28,6 +29,7 @@ A minimal macOS world clock: a Clock window, a Compare window for two time zones
 - **Time is injected.** Core never calls `Date()`; time-dependent functions take `at now: Date`. Tests use fixed instants, never the Mac's own time zone (`TimeZone.current`).
 - **App and widget targets stay thin.** Anything shareable goes in WorldClockKit.
 - **Views are small reusable pieces** that read display-ready values from a view model.
+- **Builds are signed with the development team** (`project.yml`), never ad-hoc: macOS drops an ad-hoc widget's settings. A build step and `check.sh` enforce it; don't remove them.
 - **Saved data stays backward compatible:** decoding is lenient and falls back to defaults.
 - **Accessible by default:** every control has a VoiceOver label; color is never the only signal (assume color-blind users); respect Reduce Motion, Increase Contrast, and Reduce Transparency.
 - **Lightweight and minimal:** no third-party dependencies; no timers faster than the display needs (once a minute unless seconds are shown); no background work while windows are hidden; no feature, option, or UI element that the requirements don't call for (the user dislikes feature-heavy clock apps).

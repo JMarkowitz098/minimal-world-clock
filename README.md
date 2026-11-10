@@ -14,6 +14,7 @@ Status: early development. See [ROADMAP.md](ROADMAP.md) for what's done and what
   - `WorldClockCore`: time zone logic, no UI
   - `WorldClockUI`: SwiftUI views and view models
 - `Apps/Mac/`: macOS app entry point, kept small
+- `Apps/Widget/`: desktop widget extension (embedded in the app), kept small
 - `project.yml`: XcodeGen spec. Generates `WorldClock.xcodeproj`, which isn't committed.
 - `scripts/`: setup, check, install, and release scripts; `scripts/hooks/`: git hooks
 - `Tools/Snapshots/`: renders the SwiftUI views to PNG for visual checks
@@ -22,7 +23,7 @@ Status: early development. See [ROADMAP.md](ROADMAP.md) for what's done and what
 
 ## Setup
 
-Requires macOS 14 or later, Xcode, and XcodeGen.
+Requires macOS 15 or later, Xcode, XcodeGen, and the **Apple Development certificate for team Y7W4DC22F6** in your keychain (Xcode → Settings → Accounts). Every build is signed with it: an ad-hoc signed widget appears on the desktop but forgets the zone you pick, so the build refuses to produce one ("error: The widget must be signed with a development team"). On another team, change `DEVELOPMENT_TEAM` in `project.yml`.
 
 ```sh
 brew install xcodegen
@@ -34,7 +35,7 @@ The pre-commit hook runs `./scripts/check.sh`, so a commit fails if tests fail, 
 ## Testing locally
 
 ```sh
-# Everything: all tests + a Debug build of the app. Run before every commit.
+# Everything: all tests + a Debug build of the app + a check that it's team-signed. Run before every commit.
 ./scripts/check.sh
 
 # Tests only (fast)
@@ -46,6 +47,16 @@ open "build/Build/Products/Debug/Minimal World Clock.app"
 
 # Quit it
 pkill -x "Minimal World Clock"
+
+# Try the desktop widget: macOS only offers widgets from apps in /Applications.
+# Build first (above), then install the Debug build over any older copy and launch it once.
+pkill -x "Minimal World Clock"; rm -rf "/Applications/Minimal World Clock.app"
+cp -R "build/Build/Products/Debug/Minimal World Clock.app" /Applications/
+open "/Applications/Minimal World Clock.app"
+pluginkit -r "build/Build/Products/Debug/Minimal World Clock.app/Contents/PlugIns/MinimalWorldClockWidget.appex"  # only /Applications' copy stays registered
+pluginkit -m -p com.apple.widgetkit-extension | grep worldclock   # registered?
+# Then right-click the desktop → Edit Widgets → search "Minimal World Clock".
+# After a signing change, remove and re-add the widget before judging it.
 
 # Render views to PNG (light + dark) in build/snapshots/
 swift run --package-path Tools/Snapshots Snapshots [name-filter]
@@ -65,5 +76,5 @@ The repo is built one roadmap milestone per chat. Start a new chat and run `/mil
 
 Not set up yet. These arrive with the roadmap:
 
-- **M9:** `./scripts/install.sh` installs a Release build to /Applications (needed to try the desktop widget).
+- **M9:** `./scripts/install.sh` installs a Release build to /Applications (until then, copy the Debug build as in Testing locally).
 - **M10:** `./scripts/release.sh` checks, bumps the build number, archives, signs, uploads to App Store Connect, and tags the release. It follows the same process as `~/Projects/pomodoro_timer`, whose README has the full App Store Connect and TestFlight steps. This section will hold this app's copy of them.
