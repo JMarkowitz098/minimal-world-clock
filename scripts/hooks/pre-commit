@@ -1,0 +1,5 @@
+#!/bin/bash
+# Blocks commits that fail tests or break the build (CLAUDE.md → Git).
+# Installed by scripts/setup.sh (git config core.hooksPath scripts/hooks).
+# Emergency bypass: git commit --no-verify (don't make a habit of it).
+exec "$(git rev-parse --show-toplevel)/scripts/check.sh"

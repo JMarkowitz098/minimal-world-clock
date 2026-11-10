@@ -8,13 +8,12 @@ Shared commands: `./scripts/check.sh` (all tests + app build). Use `swift test -
 
 Each milestone runs in a new chat, so this section carries what the next session needs and the code and git history can't show.
 
-- **Last session (2026-11-10):** M0 done. Repo is local only (`main`).
-- **Next:** M1. Draft tests are already written in `docs/handoff/M1-draft-tests/` (red, never run against an implementation): move them to `Packages/WorldClockKit/Tests/WorldClockCoreTests/`, confirm they fail, implement `Zone` and `ZoneCatalog` in `WorldClockCore`, then delete the drafts folder.
-- **Open with the user:**
-  - GitHub remote not set up yet: `gh` isn't installed. The user will either install it (`brew install gh && gh auth login`) or create an empty repo and give the URL. Ask whether it should be public or private. Then `git remote add origin …` and push.
-  - User hasn't confirmed: Dock app (not menu bar), bundle ID `com.jaredmarkowitz.worldclock`, macOS 14 minimum (see design_doc.md).
+- **Last session (2026-11-10):** M0 done, plus AI tooling: `/milestone` skill, snapshot renderer (`Tools/Snapshots`), pre-approved commands (`.claude/settings.json`), pre-commit hook running `check.sh`, warnings as errors. Remote `origin` = github.com/JMarkowitz098/minimal-world-clock, pushed.
+- **Next:** M1, run with `/milestone`. Draft tests are already written in `docs/handoff/M1-draft-tests/` (red, never run against an implementation): move them to `Packages/WorldClockKit/Tests/WorldClockCoreTests/`, confirm they fail, implement `Zone` and `ZoneCatalog` in `WorldClockCore`, then delete the drafts folder.
+- **Open with the user:** not yet confirmed: Dock app (not menu bar), bundle ID `com.jaredmarkowitz.worldclock`, macOS 14 minimum (see design_doc.md). `gh` isn't installed, so no GitHub CLI (CI and PRs wait on it).
 - **Notes:**
   - `swift test` prints "Test run with…" twice (once per test runner); that's normal.
+  - A fresh clone needs `./scripts/setup.sh` once to install the git hook.
   - `TimeZone.abbreviation(for:)` returns `GMT+9`-style text for many zones, so abbreviation search only helps for zones with real abbreviations (PST, CET…).
 
 ## [x] M0: Scaffold

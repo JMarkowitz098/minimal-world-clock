@@ -1,11 +1,11 @@
 #!/bin/bash
-# Pre-commit check: all package tests, then a Debug build of the macOS app.
-# Prints only failures and a summary line per step.
+# Pre-commit check: all package tests, a Debug build of the macOS app, and a build of the
+# snapshot tool. Compiler warnings fail the check. Prints only failures and a summary per step.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo "== Tests"
-if ! swift test --package-path Packages/WorldClockKit > build-test.log 2>&1; then
+if ! swift test --package-path Packages/WorldClockKit -Xswiftc -warnings-as-errors > build-test.log 2>&1; then
     grep -E "error:|✘" build-test.log | head -40
     echo "TESTS FAILED (full log: build-test.log)"
     exit 1
@@ -22,4 +22,12 @@ if ! xcodebuild -project WorldClock.xcodeproj -scheme WorldClockMac -configurati
 fi
 grep -E "warning: " build-app.log | grep -vi appintents || true
 echo "BUILD SUCCEEDED"
-rm -f build-test.log build-app.log
+
+echo "== Snapshot tool build"
+if ! swift build --package-path Tools/Snapshots > build-snapshots.log 2>&1; then
+    grep -E "error:" build-snapshots.log | head -40
+    echo "SNAPSHOT TOOL BUILD FAILED (full log: build-snapshots.log)"
+    exit 1
+fi
+echo "SNAPSHOT TOOL BUILD SUCCEEDED"
+rm -f build-test.log build-app.log build-snapshots.log

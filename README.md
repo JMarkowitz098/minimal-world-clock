@@ -15,7 +15,9 @@ Status: early development. See [ROADMAP.md](ROADMAP.md) for what's done and what
   - `WorldClockUI`: SwiftUI views and view models
 - `Apps/Mac/`: macOS app entry point, kept small
 - `project.yml`: XcodeGen spec. Generates `WorldClock.xcodeproj`, which isn't committed.
-- `scripts/`: check, install, and release scripts
+- `scripts/`: setup, check, install, and release scripts; `scripts/hooks/`: git hooks
+- `Tools/Snapshots/`: renders the SwiftUI views to PNG for visual checks
+- `.claude/`: Claude Code settings and the `/milestone` skill
 - `ROADMAP.md`: milestones. `design_doc.md`: requirements and decisions. `ARCHITECTURE.md`: how the code fits together. `CLAUDE.md`: instructions for AI agents working in the repo.
 
 ## Setup
@@ -24,8 +26,10 @@ Requires macOS 14 or later, Xcode, and XcodeGen.
 
 ```sh
 brew install xcodegen
-xcodegen generate
+./scripts/setup.sh   # installs the pre-commit hook and generates the Xcode project
 ```
+
+The pre-commit hook runs `./scripts/check.sh`, so a commit fails if tests fail, the build breaks, or the compiler warns.
 
 ## Testing locally
 
@@ -43,12 +47,19 @@ open "build/Build/Products/Debug/Minimal World Clock.app"
 # Quit it
 pkill -x "Minimal World Clock"
 
+# Render views to PNG (light + dark) in build/snapshots/
+swift run --package-path Tools/Snapshots Snapshots [name-filter]
+
 # Open in Xcode instead
 open WorldClock.xcodeproj
 
 # Delete build output
 rm -rf build Packages/WorldClockKit/.build
 ```
+
+## Working with Claude Code
+
+The repo is built one roadmap milestone per chat. Start a new chat and run `/milestone` (or say "start M1"). Claude reads ROADMAP.md → Handoff, builds the milestone test-first, checks the UI with snapshots, updates the docs and handoff, commits, pushes, and stops for you to review. Routine build and test commands are pre-approved in `.claude/settings.json`.
 
 ## Deploying
 
