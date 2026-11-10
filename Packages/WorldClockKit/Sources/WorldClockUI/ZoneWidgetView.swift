@@ -55,7 +55,11 @@ public struct ZoneWidgetView: View {
     /// widget from an archived view and can't use our own format types for live text.
     private var time: some View {
         HStack(alignment: .firstTextBaseline, spacing: (timeSize * 0.12).rounded()) {
-            hoursAndMinutes
+            // The fixed text sizes the time; the live time is drawn in exactly that space (on
+            // the desktop it would otherwise take all the width it can and push off center).
+            Text(display.timeText)
+                .hidden()
+                .overlay { hoursAndMinutes }
             if let dayPeriod = display.dayPeriodText {
                 Text(dayPeriod)
                     .font(.system(size: (timeSize * TimeStyle.dayPeriodScale).rounded()))
