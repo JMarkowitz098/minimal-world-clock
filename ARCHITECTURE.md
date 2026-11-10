@@ -22,7 +22,7 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Widget sandbox entitlements | `Apps/Widget/MinimalWorldClockWidget.entitlements` |
 | Targets, bundle IDs, versions, Info.plist keys, signing (development team for every build) and the widget's "Require team signing" build step | `project.yml` |
 | Package targets | `Packages/WorldClockKit/Package.swift` |
-| Time zone value (validation, city/region names, Codable) | `WorldClockCore/Zone.swift` |
+| Time zone value (validation, city/region names, Codable, `Zone.utc`) | `WorldClockCore/Zone.swift` |
 | Zone list and search (matching, ranking) | `WorldClockCore/ZoneCatalog.swift` |
 | Wall-clock time at an instant, and wall time → instant (DST gaps and overlaps) | `WorldClockCore/WallTime.swift` |
 | UTC offset text (`UTC+5:30`) and difference between zones (`−3 h 30 min`, `Same time`) | `WorldClockCore/Offsets.swift` |
@@ -40,7 +40,7 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Keeps a window at its content's proportions while resizing (`NSWindow.contentAspectRatio`, macOS only) | `WorldClockUI/WindowAspectRatio.swift` |
 | Clock window display strings, ticking, zone choice and its persistence; `ClockViewModel.live()` wires the app's dependencies | `WorldClockUI/ClockViewModel.swift` |
 | Clock window layout: city + globe in the title bar strip, time and date scaling with the window, theme colors, hover highlight, drag anywhere to move (start/stop on appear/disappear) | `WorldClockUI/ClockView.swift` |
-| Compare window: two zones at one instant, live vs. scrubbed, swap, Now, typed times (`typeTimeA`/`typeTimeB`), difference and day-relation text, B's date with its day (`zoneBDateText`), scrubber hour labels, persistence; `live()` | `WorldClockUI/CompareViewModel.swift` |
+| Compare window: two zones at one instant, live vs. scrubbed, swap, Now, typed times (`typeTimeA`/`typeTimeB`), difference and day-relation text, B's date with its day (`zoneBDateText`), scrubber hour labels, the widest B date for sizing (`widestZoneBDateText`), persistence; `live()` | `WorldClockUI/CompareViewModel.swift` |
 | Compare window layout (design H): city + globe, click-to-type time and date per zone; accent difference and swap between (hover circle); 24-hour strip; "Now" pill in the title bar strip while scrubbed; theme colors, hover edge, drag background to move; scales with the window like the Clock (natural size measured with `TimeStyle.widestTime` so it doesn't change while scrubbing) | `WorldClockUI/CompareView.swift` |
 | Large time that turns into a text field when clicked (hover: accent background + text cursor; Return commits, Esc cancels, unreadable input beeps; clicking elsewhere commits a time or reverts) | `WorldClockUI/EditableTime.swift` |
 | 24-hour scrubber drawn in theme colors (the system slider ignores tint): hourly ticks, labels, accent fill and thumb; hover darkens and thickens the track, rings the thumb, and marks the quarter hour a click would jump to; quarter-hour snapping; arrow keys and VoiceOver adjust | `WorldClockUI/TimeStrip.swift` |
@@ -53,7 +53,9 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Zone search field and results list, drawn in the window's theme (surface background, accent ring, cursor, hover and checkmark) | `WorldClockUI/ZonePicker.swift` |
 | UI test helpers (`FakeClock`, `FakeTicker`, `makeClock(…)`, `makeCompare(…)`, `nnbsp`) | `Tests/WorldClockUITests/TestSupport.swift` |
 | Views rendered for visual checks (and later App Store screenshots) | `Tools/Snapshots/Sources/Snapshots/Catalog.swift` |
+| The snapshot renderer (offscreen `NSHostingView`, light and dark, 2×; deletes renders no catalog entry makes) | `Tools/Snapshots/Sources/Snapshots/Snapshots.swift` |
 | What the pre-commit check runs (tests, app build, team-signing check, snapshot tool build) | `scripts/check.sh` (hook: `scripts/hooks/pre-commit`) |
+| One-time setup after cloning (installs the hook, generates the Xcode project) | `scripts/setup.sh` |
 | Commands pre-approved for Claude Code | `.claude/settings.json` |
 | The `/milestone` workflow | `.claude/skills/milestone/SKILL.md` |
 | Work handed from one session to the next (e.g. draft tests; create when needed) | `docs/handoff/` (see ROADMAP.md → Handoff) |
@@ -67,7 +69,7 @@ Update this table as milestones add files.
 - A `Zone` always holds a valid identifier (known IANA zones plus `UTC`), so `zone.timeZone` never fails. Abbreviations like `PST` are not identifiers.
 - Time math is computed from offsets in seconds and a UTC Gregorian calendar, never `Calendar.current` or `TimeZone.current`. Minus signs in user-facing text are U+2212 (`−`), not hyphens.
 - No package resources (the App Store export doesn't re-sign SwiftPM resource bundles). Images go in each app's asset catalog.
-- View models take their clock (`() -> Date`), `Ticker`, `SettingsStore`, and `Locale` as init parameters; only the `live()` factories touch `Date()`, `TimeZone.current`, or `UserDefaults.standard`.
+- View models take their clock (`() -> Date`), `Ticker`, `SettingsStore`, and `Locale` as init parameters; only the `live()` factories and the widget's timeline provider (the entry points) touch `Date()`, `TimeZone.current`, or `UserDefaults.standard`.
 - A view model schedules one tick at a time, at the next minute boundary, and only between `start()` and `stop()`, which views call from `onAppear` / `onDisappear`. Nothing repeats on its own.
 - Display strings for a zone come from `ZoneFormatter`, so the Clock and Compare windows format time and date identically. Keep one formatter per shown zone (creating a `DateFormatter` is costly) and update its `zone` rather than rebuilding it.
 - The widget's hours and minutes are live text (`Text(.currentDate, format:)`, macOS 15+); its timeline has entries only when the date, AM/PM or offset changes (`Zone.displayChanges`: midnight, noon, DST), plus when the time's width changes (`WidgetDisplay.entryDates`: 9:59 → 10:00, 12:59 → 1:00), so the extension runs a few times a day. Never add per-minute entries.

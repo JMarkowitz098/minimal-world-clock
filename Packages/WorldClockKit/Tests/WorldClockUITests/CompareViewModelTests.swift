@@ -143,6 +143,13 @@ import Testing
     #expect(model.zoneBDateText == "Thursday, January 15 · previous day")
 }
 
+@Test @MainActor func widestZoneBDateUsesTheLongestDayLabel() {
+    // The window sizes itself by this, so it must be at least as wide as any day label B's date
+    // can carry: "2 days earlier" is longer than "previous day".
+    let (model, _, _) = makeCompare(a: zone("Europe/London"), b: zone("Europe/Paris"))
+    #expect(model.widestZoneBDateText == "Thursday, January 15 · 2 days earlier")
+}
+
 @Test @MainActor func zoneBDateIsPlainOnTheSameDay() {
     let (model, _, _) = makeCompare(a: zone("Europe/London"), b: zone("Europe/Paris"))
     #expect(model.zoneBDateText == "Thursday, January 15")

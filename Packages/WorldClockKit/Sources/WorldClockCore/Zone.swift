@@ -10,6 +10,9 @@ public struct Zone: Hashable, Sendable, Codable {
 
     public let identifier: String
 
+    /// Coordinated Universal Time: the fallback when the Mac's zone isn't in the known list.
+    public static let utc = Zone(identifier: "UTC")!
+
     public init?(identifier: String) {
         guard Self.validIdentifiers.contains(identifier) else { return nil }
         self.identifier = identifier

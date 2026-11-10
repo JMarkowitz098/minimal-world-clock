@@ -22,14 +22,7 @@ import WorldClockCore
     /// How far B is ahead of A: "+14 h", "−3 h 30 min", "Same time".
     public var differenceText: String { zoneB.offsetText(from: zoneA, at: instant) }
     /// B's date relative to A's: "Same day", "Next day", "Previous day", "2 days later".
-    public var dayRelationText: String {
-        switch zoneB.dayRelation(from: zoneA, at: instant) {
-        case .today: "Same day"
-        case .tomorrow: "Next day"
-        case .yesterday: "Previous day"
-        case .days(let n): n > 0 ? "\(n) days later" : "\(-n) days earlier"
-        }
-    }
+    public var dayRelationText: String { Self.label(for: zoneB.dayRelation(from: zoneA, at: instant)) }
 
     /// B's date, followed by its day relative to A's when they differ:
     /// "Friday, January 16 · next day", or just "Thursday, January 15" on the same day.
@@ -37,6 +30,22 @@ import WorldClockCore
         let date = b.dateText
         guard zoneB.dayRelation(from: zoneA, at: instant) != .today else { return date }
         return "\(date) · \(dayRelationText.lowercased())"
+    }
+
+    /// `zoneBDateText` with the longest day label ("2 days earlier"), for sizing the window so
+    /// it doesn't change size while scrubbing.
+    public var widestZoneBDateText: String {
+        let labels = [DayRelation.yesterday, .tomorrow, .days(2), .days(-2)].map { Self.label(for: $0).lowercased() }
+        return "\(b.dateText) · \(labels.max { $0.count < $1.count }!)"
+    }
+
+    private static func label(for relation: DayRelation) -> String {
+        switch relation {
+        case .today: "Same day"
+        case .tomorrow: "Next day"
+        case .yesterday: "Previous day"
+        case .days(let n): n > 0 ? "\(n) days later" : "\(-n) days earlier"
+        }
     }
 
     /// Zone A's time of day in minutes since midnight (0...1439), for the scrubber.
@@ -179,7 +188,7 @@ extension CompareViewModel {
     public static func live() -> CompareViewModel {
         CompareViewModel(
             store: UserDefaultsSettingsStore(),
-            defaultZones: (.macZoneOrUTC, Zone(identifier: "UTC")!),
+            defaultZones: (.macZoneOrUTC, .utc),
             clock: Date.init,
             ticker: DispatchTicker()
         )

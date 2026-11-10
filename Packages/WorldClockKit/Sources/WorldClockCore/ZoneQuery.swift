@@ -5,7 +5,7 @@ extension Zone {
     /// system reports one missing from its own list (e.g. `Asia/Kolkata` on a system that
     /// lists `Asia/Calcutta`, or a fixed offset like `GMT+0100`).
     public init(systemZone: TimeZone) {
-        self = Zone(identifier: systemZone.identifier) ?? Zone(identifier: "UTC")!
+        self = Zone(identifier: systemZone.identifier) ?? .utc
     }
 }
 

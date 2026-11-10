@@ -86,7 +86,7 @@ public struct CompareView: View {
                      scale: s, measuring: measuring, select: model.selectA, type: model.typeTimeA)
                 difference(scale: s)
                 side(model.b, zone: model.zoneB,
-                     date: measuring ? "\(model.b.dateText) · previous day" : model.zoneBDateText,
+                     date: measuring ? model.widestZoneBDateText : model.zoneBDateText,
                      name: "Second time zone", scale: s, measuring: measuring,
                      select: model.selectB, type: model.typeTimeB)
             }
