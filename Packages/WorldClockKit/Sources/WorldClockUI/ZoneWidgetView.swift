@@ -34,6 +34,10 @@ public struct ZoneWidgetView: View {
                     date
                     Spacer(minLength: 0)
                     time
+                        // The time's text box leaves room below the digits for descenders, so it
+                        // looked raised; this lines the digits up with the bottom margin as the
+                        // city's letters line up with the top (measured on snapshots).
+                        .offset(y: 5)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
             case .medium:
