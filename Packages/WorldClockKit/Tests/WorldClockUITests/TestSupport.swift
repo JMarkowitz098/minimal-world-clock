@@ -68,12 +68,13 @@ final class FakeClock {
     at now: Date = jan15Noon,
     store: SettingsStore = InMemorySettingsStore(),
     a: Zone = zone("America/New_York"),
-    b: Zone = zone("Asia/Tokyo")
+    b: Zone = zone("Asia/Tokyo"),
+    locale: String = "en_US"
 ) -> (CompareViewModel, FakeClock, FakeTicker) {
     let clock = FakeClock(now)
     let ticker = FakeTicker()
     let model = CompareViewModel(
-        store: store, defaultZones: (a, b), locale: Locale(identifier: "en_US"),
+        store: store, defaultZones: (a, b), locale: Locale(identifier: locale),
         clock: { clock.now }, ticker: ticker
     )
     return (model, clock, ticker)

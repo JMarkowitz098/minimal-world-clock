@@ -136,6 +136,58 @@ import Testing
     #expect(model.dayRelationText == "2 days later")
 }
 
+@Test @MainActor func zoneBDateNamesItsDayWhenItDiffers() {
+    // 12:00 UTC Thursday: 2 AM Friday in Kiritimati (UTC+14).
+    let (model, _, _) = makeCompare(a: zone("Europe/London"), b: zone("Pacific/Kiritimati"))
+    #expect(model.zoneBDateText == "Friday, January 16 · next day")
+    model.selectB(zone("America/New_York"))
+    model.selectA(zone("Pacific/Kiritimati"))
+    #expect(model.zoneBDateText == "Thursday, January 15 · previous day")
+}
+
+@Test @MainActor func zoneBDateIsPlainOnTheSameDay() {
+    let (model, _, _) = makeCompare(a: zone("Europe/London"), b: zone("Europe/Paris"))
+    #expect(model.zoneBDateText == "Thursday, January 15")
+}
+
+@Test @MainActor func typingZoneATimeScrubsToIt() {
+    let (model, _, _) = makeCompare()  // live: 7:00 AM in New York, 9:00 PM in Tokyo
+    #expect(model.typeTimeA("3:15 pm"))
+    #expect(!model.isLive)
+    #expect(model.a.timeText == "3:15\(nnbsp)PM")
+    #expect(model.a.dateText == "Thursday, January 15")
+    #expect(model.b.timeText == "5:15\(nnbsp)AM")
+}
+
+@Test @MainActor func typingZoneBTimeKeepsBsDateAndMovesA() {
+    let (model, _, _) = makeCompare()
+    // Tokyo shows 9 PM Thursday; 9 AM Thursday in Tokyo is 7 PM Wednesday in New York.
+    #expect(model.typeTimeB("9 am"))
+    #expect(model.b.timeText == "9:00\(nnbsp)AM")
+    #expect(model.b.dateText == "Thursday, January 15")
+    #expect(model.a.timeText == "7:00\(nnbsp)PM")
+    #expect(model.a.dateText == "Wednesday, January 14")
+}
+
+@Test @MainActor func typedTimeWithoutDayPeriodKeepsTheShownHalf() {
+    let (model, _, _) = makeCompare()  // Tokyo shows 9 PM
+    #expect(model.typeTimeB("10"))
+    #expect(model.b.timeText == "10:00\(nnbsp)PM")
+}
+
+@Test @MainActor func typedTimeInTwentyFourHourLocale() {
+    let (model, _, _) = makeCompare(locale: "en_GB")  // Tokyo shows 21:00
+    #expect(model.typeTimeB("10"))
+    #expect(model.b.timeText == "10:00")
+}
+
+@Test @MainActor func invalidTypedTimeChangesNothing() {
+    let (model, _, _) = makeCompare()
+    #expect(!model.typeTimeA("25:00"))
+    #expect(!model.typeTimeB("soon"))
+    #expect(model.isLive)
+}
+
 @Test @MainActor func sameZoneReadsSameTime() {
     let (model, _, _) = makeCompare(a: zone("Asia/Tokyo"), b: zone("Asia/Tokyo"))
     #expect(model.differenceText == "Same time")

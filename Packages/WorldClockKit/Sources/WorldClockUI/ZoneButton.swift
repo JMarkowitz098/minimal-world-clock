@@ -1,36 +1,26 @@
 import SwiftUI
 import WorldClockCore
 
-/// A button that opens the zone picker in a popover: either the zone's city name with a
-/// chevron (Compare: `TimeDisplay`'s title) or the city followed by a globe (Clock: in the
-/// window's top strip, beside the close/minimize buttons).
+/// "Tokyo 🌐": the zone's city followed by a globe, in the accent color; opens the zone picker
+/// in a popover. The Clock window shows it in the top strip; Compare above each time.
 public struct ZoneButton: View {
-    public enum Style: Sendable {
-        /// "Tokyo ⌄"
-        case cityName
-        /// "Tokyo 🌐"
-        case cityWithGlobe
-    }
-
     let zone: Zone
     let now: Date
-    let style: Style
     let accessibilityName: String
     let theme: Theme?
     let onSelect: (Zone) -> Void
     @State private var picker: ZonePickerViewModel?
-    /// Whether the pointer is over the button (`.cityWithGlobe` shows a pill behind it).
+    /// Whether the pointer is over the button (shows a pill behind it).
     @State private var isHovered = false
 
     /// - Parameters:
     ///   - now: the instant the picker's offsets are shown for.
     ///   - accessibilityName: what VoiceOver calls the button, e.g. "Time zone".
     ///   - theme: colors for the button (accent) and the picker popover (surface); `nil` uses the system's.
-    public init(zone: Zone, now: Date, style: Style = .cityName, accessibilityName: String = "Time zone",
+    public init(zone: Zone, now: Date, accessibilityName: String = "Time zone",
                 theme: Theme? = nil, onSelect: @escaping (Zone) -> Void) {
         self.zone = zone
         self.now = now
-        self.style = style
         self.accessibilityName = accessibilityName
         self.theme = theme
         self.onSelect = onSelect
@@ -40,34 +30,22 @@ public struct ZoneButton: View {
         Button {
             picker = ZonePickerViewModel(now: now)
         } label: {
-            switch style {
-            case .cityName:
-                HStack(spacing: 4) {
-                    Text(zone.city)
-                        .lineLimit(1)
-                    Image(systemName: "chevron.down")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
-                .font(.title2.weight(.medium))
-            case .cityWithGlobe:
-                HStack(spacing: 6) {
-                    Text(zone.city)
-                        .font(.headline)
-                        .lineLimit(1)
-                    Image(systemName: "globe")
-                        .font(.callout)
-                }
-                // Colored here, not by the caller: a foreground style set on the button would
-                // also color the popover's contents.
-                .foregroundStyle(theme?.accent ?? Color.accentColor)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background((theme?.accent ?? Color.accentColor).opacity(isHovered ? 0.15 : 0), in: Capsule())
-                .contentShape(Capsule())
-                .onHover { hovering in
-                    withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
-                }
+            HStack(spacing: 6) {
+                Text(zone.city)
+                    .font(.headline)
+                    .lineLimit(1)
+                Image(systemName: "globe")
+                    .font(.callout)
+            }
+            // Colored here, not by the caller: a foreground style set on the button would
+            // also color the popover's contents.
+            .foregroundStyle(theme?.accent ?? Color.accentColor)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background((theme?.accent ?? Color.accentColor).opacity(isHovered ? 0.15 : 0), in: Capsule())
+            .contentShape(Capsule())
+            .onHover { hovering in
+                withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
             }
         }
         .buttonStyle(.plain)

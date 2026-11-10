@@ -26,6 +26,7 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Zone list and search (matching, ranking) | `WorldClockCore/ZoneCatalog.swift` |
 | Wall-clock time at an instant, and wall time → instant (DST gaps and overlaps) | `WorldClockCore/WallTime.swift` |
 | UTC offset text (`UTC+5:30`) and difference between zones (`−3 h 30 min`, `Same time`) | `WorldClockCore/Offsets.swift` |
+| Reading a typed time of day (`9`, `9:30 pm`, `21:30`, `930`; no AM/PM keeps the edited time's half of the day in 12-hour locales) | `WorldClockCore/TimeEntry.swift` |
 | Yesterday / today / tomorrow relative to another zone | `WorldClockCore/DayRelation.swift` |
 | When a zone's date or offset next changes (next midnight or DST transition): the widget's timeline dates | `WorldClockCore/DisplayChanges.swift` |
 | The widget's zone lookups (resolve identifiers, search, suggestions, default) and `Zone(systemZone:)` (the Mac's zone or UTC) | `WorldClockCore/ZoneQuery.swift` |
@@ -38,12 +39,14 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Keeps a window at its content's proportions while resizing (`NSWindow.contentAspectRatio`, macOS only) | `WorldClockUI/WindowAspectRatio.swift` |
 | Clock window display strings, ticking, zone choice and its persistence; `ClockViewModel.live()` wires the app's dependencies | `WorldClockUI/ClockViewModel.swift` |
 | Clock window layout: city + globe in the title bar strip, time and date scaling with the window, theme colors, hover highlight, drag anywhere to move (start/stop on appear/disappear) | `WorldClockUI/ClockView.swift` |
-| Compare window: two zones at one instant, live vs. scrubbed, swap, Now, difference and day-relation text, scrubber hour labels, persistence; `live()` | `WorldClockUI/CompareViewModel.swift` |
-| Compare window layout (two time displays; difference, swap button and day between them; scrubber slider with hour labels; Now) | `WorldClockUI/CompareView.swift` |
+| Compare window: two zones at one instant, live vs. scrubbed, swap, Now, typed times (`typeTimeA`/`typeTimeB`), difference and day-relation text, B's date with its day (`zoneBDateText`), scrubber hour labels, persistence; `live()` | `WorldClockUI/CompareViewModel.swift` |
+| Compare window layout (design H): city + globe, click-to-type time and date per zone; accent difference and swap between; 24-hour strip; "Now" pill in the title bar strip while scrubbed; theme colors, hover edge, drag background to move | `WorldClockUI/CompareView.swift` |
+| Large time that turns into a text field when clicked (hover: accent background + text cursor; Return commits, Esc cancels, unreadable input beeps) | `WorldClockUI/EditableTime.swift` |
+| 24-hour scrubber drawn in theme colors (the system slider ignores tint): hourly ticks, labels, accent fill and thumb; quarter-hour snapping; arrow keys and VoiceOver adjust | `WorldClockUI/TimeStrip.swift` |
+| Thin accent edge along the window while hovered (Clock and Compare) | `WorldClockUI/HoverEdge.swift` |
 | The widget's strings at an entry date (city, date, short date, offset) and its live time format | `WorldClockUI/WidgetDisplay.swift` |
 | The widget's layout, small and medium (no WidgetKit import; snapshots can freeze the time) | `WorldClockUI/ZoneWidgetView.swift` |
-| Button that opens the zone picker in a popover: city with chevron (Compare) or city with globe and hover pill (Clock); passes its theme to the popover | `WorldClockUI/ZoneButton.swift` |
-| Large time + date + offset under a title (Compare) | `WorldClockUI/TimeDisplay.swift` |
+| Button that opens the zone picker in a popover: city with globe and hover pill (Clock and Compare); passes its theme to the popover | `WorldClockUI/ZoneButton.swift` |
 | Zone search rows (`city`, `Asia · UTC+9`) | `WorldClockUI/ZonePickerViewModel.swift` |
 | Zone search field and results list, system look or themed (surface background, accent ring, cursor, hover and checkmark) | `WorldClockUI/ZonePicker.swift` |
 | UI test helpers (`FakeClock`, `FakeTicker`, `makeClock(…)`, `makeCompare(…)`, `nnbsp`) | `Tests/WorldClockUITests/TestSupport.swift` |

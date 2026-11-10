@@ -75,16 +75,16 @@ struct ThemedPicker: View {
     Snapshot(name: "clock-resized", size: CGSize(width: 560, height: 300)) {
         AnyView(ClockView(model: clockModel("Asia/Tokyo"), themes: .solarized).safeAreaPadding(.top, 28))
     },
-    Snapshot(name: "compare", size: CGSize(width: 640, height: 260)) {
-        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo")))
+    Snapshot(name: "compare", size: CGSize(width: 640, height: 230)) {
+        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo"), themes: .solarized).safeAreaPadding(.top, 28))
     },
     // Scrubbed to 3 PM in New York: Tokyo is on the next day, and Now is enabled.
-    Snapshot(name: "compare-scrubbed", size: CGSize(width: 640, height: 260)) {
-        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 15 * 60)))
+    Snapshot(name: "compare-scrubbed", size: CGSize(width: 640, height: 230)) {
+        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 15 * 60), themes: .solarized).safeAreaPadding(.top, 28))
     },
     // Longest city name on both sides, with a half-hour difference.
-    Snapshot(name: "compare-long-names", size: CGSize(width: 640, height: 260)) {
-        AnyView(CompareView(model: compareModel("America/Bahia_Banderas", "America/St_Johns")))
+    Snapshot(name: "compare-long-names", size: CGSize(width: 640, height: 230)) {
+        AnyView(CompareView(model: compareModel("America/Bahia_Banderas", "America/St_Johns"), themes: .solarized).safeAreaPadding(.top, 28))
     },
     Snapshot(name: "zone-picker", size: CGSize(width: 300, height: 380)) {
         AnyView(ZonePicker(model: ZonePickerViewModel(now: jan15Noon), selected: Zone(identifier: "Africa/Accra")) { _ in })

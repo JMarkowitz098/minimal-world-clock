@@ -31,6 +31,14 @@ import WorldClockCore
         }
     }
 
+    /// B's date, followed by its day relative to A's when they differ:
+    /// "Friday, January 16 · next day", or just "Thursday, January 15" on the same day.
+    public var zoneBDateText: String {
+        let date = b.dateText
+        guard zoneB.dayRelation(from: zoneA, at: instant) != .today else { return date }
+        return "\(date) · \(dayRelationText.lowercased())"
+    }
+
     /// Zone A's time of day in minutes since midnight (0...1439), for the scrubber.
     public var scrubberMinuteOfDay: Int {
         let wall = zoneA.wallTime(at: instant)
@@ -51,6 +59,8 @@ import WorldClockCore
     @ObservationIgnored private let ticker: Ticker
     @ObservationIgnored private let formatterA: ZoneFormatter
     @ObservationIgnored private let formatterB: ZoneFormatter
+    /// Whether the locale shows 12-hour time, for reading typed times without AM/PM.
+    @ObservationIgnored private let twelveHour: Bool
 
     /// - Parameters:
     ///   - defaultZones: shown when nothing (or nothing readable) is saved, each on its own.
@@ -67,6 +77,7 @@ import WorldClockCore
         now = clock()
         formatterA = ZoneFormatter(zone: a, locale: locale)
         formatterB = ZoneFormatter(zone: b, locale: locale)
+        twelveHour = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: locale)?.contains("a") ?? false
         let utc = TimeZone(identifier: "UTC")!
         let hour = Date.FormatStyle(locale: locale, timeZone: utc).hour()
         scrubberMarks = stride(from: 0, to: 24 * 60, by: 6 * 60).map { minute in
@@ -90,6 +101,30 @@ import WorldClockCore
         let day = scrubbed ?? zoneA.wallTime(at: now)
         let clamped = min(max(minutes, 0), 24 * 60 - 1)
         scrubbed = WallTime(year: day.year, month: day.month, day: day.day, hour: clamped / 60, minute: clamped % 60)
+    }
+
+    /// Shows the time typed for zone A ("3:15 pm", "15:15", see `TimeEntry`), on the day A
+    /// shows. Returns `false`, changing nothing, if `text` isn't a time.
+    @discardableResult public func typeTimeA(_ text: String) -> Bool {
+        guard let minutes = TimeEntry.minuteOfDay(from: text, twelveHour: twelveHour, editing: scrubberMinuteOfDay)
+        else { return false }
+        scrub(toMinuteOfDay: minutes)
+        return true
+    }
+
+    /// Shows the time typed for zone B, on the day B shows; A moves to the same instant (and
+    /// may change day). Returns `false`, changing nothing, if `text` isn't a time.
+    @discardableResult public func typeTimeB(_ text: String) -> Bool {
+        var wall = zoneB.wallTime(at: instant)
+        guard let minutes = TimeEntry.minuteOfDay(from: text, twelveHour: twelveHour, editing: wall.hour * 60 + wall.minute)
+        else { return false }
+        wall.hour = minutes / 60
+        wall.minute = minutes % 60
+        wall.second = 0
+        var a = zoneA.wallTime(at: zoneB.instant(for: wall))
+        a.second = 0
+        scrubbed = a
+        return true
     }
 
     /// Goes back to showing the current time.

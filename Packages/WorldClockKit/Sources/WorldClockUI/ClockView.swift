@@ -47,7 +47,7 @@ public struct ClockView: View {
             .foregroundStyle(theme.text)
             .overlay(alignment: .top) { topStrip }
             .background(theme.background.ignoresSafeArea())
-            .overlay { hoverEdge }
+            .overlay { HoverEdge(color: theme.accent, isVisible: isHovered) }
             .onHover { hovering in
                 withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
             }
@@ -91,28 +91,12 @@ public struct ClockView: View {
         .padding(.bottom, 20 * scale)
     }
 
-    /// A thin accent line along the window's edge while hovered, following its rounded corners.
-    @ViewBuilder private var hoverEdge: some View {
-        Group {
-            if #available(macOS 26, iOS 26, *) {
-                // Centered on the edge; the window clips the outer half, leaving 2 pt.
-                ConcentricRectangle().stroke(theme.accent.opacity(0.6), lineWidth: 4)
-            } else {
-                RoundedRectangle(cornerRadius: 10).strokeBorder(theme.accent.opacity(0.6), lineWidth: 2)
-            }
-        }
-        .opacity(isHovered ? 1 : 0)
-        .ignoresSafeArea()
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
-
     /// The city and globe, right-aligned in the title bar's strip.
     private var topStrip: some View {
         GeometryReader { proxy in
             HStack {
                 Spacer()
-                ZoneButton(zone: model.zone, now: model.now, style: .cityWithGlobe, theme: theme) { model.select($0) }
+                ZoneButton(zone: model.zone, now: model.now, theme: theme) { model.select($0) }
             }
             // The button's hover pill adds 8 pt on each side.
             .padding(.trailing, 6)
