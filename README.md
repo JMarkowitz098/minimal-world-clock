@@ -50,7 +50,8 @@ pkill -x "Minimal World Clock"
 
 # Try the desktop widget: macOS only offers widgets from apps in /Applications.
 # Build first (above), then install the Debug build over any older copy and launch it once.
-pkill -x "Minimal World Clock"; rm -rf "/Applications/Minimal World Clock.app"
+# Also stop the running widget extension: it keeps the old code until it exits.
+pkill -x "Minimal World Clock"; pkill -x MinimalWorldClockWidget; rm -rf "/Applications/Minimal World Clock.app"
 cp -R "build/Build/Products/Debug/Minimal World Clock.app" /Applications/
 open "/Applications/Minimal World Clock.app"
 pluginkit -r "build/Build/Products/Debug/Minimal World Clock.app/Contents/PlugIns/MinimalWorldClockWidget.appex"  # only /Applications' copy stays registered
