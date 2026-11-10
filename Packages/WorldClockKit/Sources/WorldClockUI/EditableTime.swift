@@ -75,7 +75,9 @@ struct EditableTime: View {
             .onChange(of: isFocused) { _, focused in
                 if !focused { draft = nil }
             }
-            .task { isFocused = true }
+            // Focusing in the same pass the field appears marks it focused without making it
+            // the first responder (keys went nowhere until a second click); a beat later works.
+            .onAppear { DispatchQueue.main.async { isFocused = true } }
     }
 
     private func begin() {
