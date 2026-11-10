@@ -112,4 +112,4 @@ struct ThemedPicker: View {
     Snapshot(name: "widget-medium-long", size: CGSize(width: 388, height: 194)) {
         widget("America/St_Johns", .medium, at: Date(timeIntervalSince1970: 1_790_784_000))
     },
-] + clockOptionSnapshots + hoverOptionSnapshots + pickerOptionSnapshots
+] + compareOptionSnapshots
