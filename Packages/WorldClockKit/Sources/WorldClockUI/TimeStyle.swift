@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// The look shared by both windows and the widget: type sizes, and (windows only) the time
-/// drawn with its day period (AM/PM) smaller than the digits. The widget can't: see
-/// `ZoneWidgetView.time`.
+/// The look shared by both windows and the widget: type sizes, and the time drawn with its day
+/// period (AM/PM) smaller than the digits (the widget draws it as two texts instead: see
+/// `ZoneWidgetView.time`).
 public enum TimeStyle {
     /// The large time in the Clock and Compare windows.
     public static let windowTimeSize: CGFloat = 56

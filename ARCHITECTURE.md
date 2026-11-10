@@ -44,8 +44,8 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Large time that turns into a text field when clicked (hover: accent background + text cursor; Return commits, Esc cancels, unreadable input beeps; clicking elsewhere commits a time or reverts) | `WorldClockUI/EditableTime.swift` |
 | 24-hour scrubber drawn in theme colors (the system slider ignores tint): hourly ticks, labels, accent fill and thumb; quarter-hour snapping; arrow keys and VoiceOver adjust | `WorldClockUI/TimeStrip.swift` |
 | Thin accent edge along the window while hovered (Clock and Compare) | `WorldClockUI/HoverEdge.swift` |
-| The widget's strings at an entry date (city, date, short date, offset) and its live time format | `WorldClockUI/WidgetDisplay.swift` |
-| The widget's layout, small and medium (no WidgetKit import; snapshots can freeze the time) | `WorldClockUI/ZoneWidgetView.swift` |
+| The widget's strings at an entry date (city, date, short date, offset) and its live time formats (hours and minutes; AM/PM alone, nil in 24-hour locales) | `WorldClockUI/WidgetDisplay.swift` |
+| The widget's layout, small and medium, in the Clock window's look: city top-right in the accent, time with a smaller AM/PM, date; theme colors (no WidgetKit import; snapshots can freeze the time) | `WorldClockUI/ZoneWidgetView.swift` |
 | Button that opens the zone picker in a popover: city with globe and hover pill (Clock and Compare); passes its theme to the popover | `WorldClockUI/ZoneButton.swift` |
 | Zone search rows (`city`, `Asia · UTC+9`) | `WorldClockUI/ZonePickerViewModel.swift` |
 | Zone search field and results list, system look or themed (surface background, accent ring, cursor, hover and checkmark) | `WorldClockUI/ZonePicker.swift` |
@@ -72,7 +72,7 @@ Update this table as milestones add files.
 - SwiftUI's `Text(_:format:)` formats dates in the environment's `\.timeZone`, ignoring the format style's own zone, so a view showing another zone's time with it must set `.environment(\.timeZone, …)`. (The windows format strings with `ZoneFormatter` instead.) Snapshots won't catch a miss when the zone shown matches the Mac's.
 - Names the system sees (targets, products, widget kind, gallery name) start with "Minimal World Clock" / `MinimalWorldClock…`: Apple's Clock app already ships a "World Clock" widget whose extension is `WorldClockWidget`. Bundle IDs: `com.jaredmarkowitz.minimalworldclock` and `….widget` (permanent once on the App Store).
 - Every build is signed with the development team. Ad-hoc signed, the widget shows up but macOS silently drops the zone picked in its edit screen. The widget target's "Require team signing" build step and `check.sh`'s signature check enforce this.
-- The widget's live time uses a system format (`Date.FormatStyle`) only: macOS draws widgets from an archived view, and with a custom `DiscreteFormatStyle` the widget stays on its placeholder. So only the windows draw AM/PM smaller.
+- The widget's live time uses system formats only (`Date.FormatStyle`, `Date.VerbatimFormatStyle`): macOS draws widgets from an archived view, and with a custom `DiscreteFormatStyle` the widget stays on its placeholder. So the widget draws AM/PM smaller as a second `Text`, not as one styled string like the windows.
 - Windows without a title bar (Clock): content respects the top safe area (the title bar strip); only the background and the strip's controls extend into it. Snapshots of such a view add `.safeAreaPadding(.top, 28)`.
 - A view's `.foregroundStyle` also colors the popovers it presents, so a button that opens a popover colors its own label (`ZoneButton` does) instead of the caller styling the button.
 - App Intents types (`AppEntity`, `WidgetConfigurationIntent`) live in the widget target, where Xcode extracts their metadata; their logic lives in the package (`ZoneQuery`).

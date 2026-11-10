@@ -51,16 +51,25 @@ struct ThemedPicker: View {
     }
 }
 
-/// The widget at a fixed instant, on a rounded background like the desktop's widget container
-/// (the real one comes from WidgetKit). Sizes are macOS's small and medium widgets.
+/// The widget at a fixed instant, on a rounded Solarized background like the desktop's widget
+/// container (the real one comes from WidgetKit). Sizes are macOS's small and medium widgets.
 @MainActor func widget(_ identifier: String, _ size: ZoneWidgetView.Size, at now: Date = jan15Noon) -> AnyView {
     let display = WidgetDisplay(zone: Zone(identifier: identifier)!, at: now, locale: Locale(identifier: "en_US"))
-    return AnyView(
-        ZoneWidgetView(display: display, size: size, frozenTime: now)
+    return AnyView(WidgetMock(display: display, size: size, now: now))
+}
+
+struct WidgetMock: View {
+    let display: WidgetDisplay
+    let size: ZoneWidgetView.Size
+    let now: Date
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        ZoneWidgetView(display: display, size: size, themes: .solarized, frozenTime: now)
             .padding(16)
-            .background(.background, in: RoundedRectangle(cornerRadius: 20))
+            .background(ThemePair.solarized.theme(for: scheme).background, in: RoundedRectangle(cornerRadius: 20))
             .padding(12)
-    )
+    }
 }
 
 @MainActor let catalog: [Snapshot] = [

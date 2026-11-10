@@ -1,7 +1,9 @@
 import SwiftUI
 
-/// The desktop widget's content: city, live time, and date (plus the UTC offset when there's
-/// room). The widget target adds the container background; WidgetKit isn't imported here.
+/// The desktop widget's content, in the Clock window's look: the city in the accent at the top
+/// right, the live time (AM/PM smaller) and the date centered, colors from `themes` (light or
+/// dark to match the Mac). The widget target adds the container background
+/// (`themes.theme(for:).background`); WidgetKit isn't imported here.
 public struct ZoneWidgetView: View {
     public enum Size: Sendable {
         case small, medium
@@ -9,36 +11,38 @@ public struct ZoneWidgetView: View {
 
     let display: WidgetDisplay
     let size: Size
+    let themes: ThemePair
     let frozenTime: Date?
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: Theme { themes.theme(for: colorScheme) }
 
     /// - Parameter frozenTime: shows this instant instead of the live time. For snapshots only.
-    public init(display: WidgetDisplay, size: Size, frozenTime: Date? = nil) {
+    public init(display: WidgetDisplay, size: Size, themes: ThemePair, frozenTime: Date? = nil) {
         self.display = display
         self.size = size
+        self.themes = themes
         self.frozenTime = frozenTime
     }
 
     public var body: some View {
         VStack(spacing: 2) {
-            Text(display.cityText)
-                .font(.headline)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
             time
-                .font(TimeStyle.timeFont(size: timeSize))
-                .monospacedDigit()
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-                // Text(_:format:) formats in the environment's zone, not the format's.
-                .environment(\.timeZone, display.timeZone)
-            Text(size == .small ? display.shortDateText : "\(display.dateText) · \(display.offsetText)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text(size == .small ? display.shortDateText : display.dateText)
+                .font(.system(size: 12))
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }
+        .foregroundStyle(theme.text)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // Read as one line; the time is live text, so VoiceOver reads its current value.
+        .overlay(alignment: .topTrailing) {
+            Text(display.cityText)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(theme.accent)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .accessibilitySortPriority(1)
+        }
+        // Read as one line, city first; the time is live text, so VoiceOver reads its current value.
         .accessibilityElement(children: .combine)
     }
 
@@ -46,14 +50,31 @@ public struct ZoneWidgetView: View {
         size == .small ? TimeStyle.smallWidgetTimeSize : TimeStyle.mediumWidgetTimeSize
     }
 
-    /// The system draws the widget from an archived copy of this view, so the live time must
-    /// use a system format (`Date.FormatStyle`): with a custom `DiscreteFormatStyle` the widget
-    /// stays on its placeholder. That's why AM/PM isn't drawn smaller here, unlike the windows.
-    @ViewBuilder private var time: some View {
+    /// Hours and minutes, then AM/PM at the windows' smaller size. Two `Text`s with system
+    /// formats rather than one styled string: the system draws the widget from an archived
+    /// view and can't use our own format types (see `WidgetDisplay.dayPeriodFormat`).
+    private var time: some View {
+        HStack(alignment: .firstTextBaseline, spacing: (timeSize * 0.12).rounded()) {
+            liveText(display.hourMinuteFormat)
+            if let dayPeriod = display.dayPeriodFormat {
+                liveText(dayPeriod)
+                    .font(.system(size: (timeSize * TimeStyle.dayPeriodScale).rounded()))
+            }
+        }
+        .font(TimeStyle.timeFont(size: timeSize))
+        .monospacedDigit()
+        .lineLimit(1)
+        .minimumScaleFactor(0.5)
+        // Text(_:format:) formats in the environment's zone, not the format's.
+        .environment(\.timeZone, display.timeZone)
+    }
+
+    @ViewBuilder private func liveText<F: DiscreteFormatStyle>(_ format: F) -> some View
+    where F.FormatInput == Date, F.FormatOutput == String {
         if let frozenTime {
-            Text(frozenTime, format: display.timeFormat)
+            Text(frozenTime, format: format)
         } else {
-            Text(.currentDate, format: display.timeFormat)
+            Text(.currentDate, format: format)
         }
     }
 }
