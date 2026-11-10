@@ -1,5 +1,8 @@
 import SwiftUI
 import WorldClockCore
+#if canImport(AppKit)
+import AppKit
+#endif
 
 /// The Compare window (design "H", chosen in M6): two zones side by side at one instant, each
 /// with its city + globe (the zone picker), a time you can click to type, and its date; B's date
@@ -51,6 +54,9 @@ public struct CompareView: View {
                 withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
             }
             #if os(macOS)
+            // Clicking the background ends typing a time (AppKit doesn't take focus from a text
+            // field for a click on empty space); `EditableTime` then keeps or drops what was typed.
+            .onTapGesture { NSApp.keyWindow?.makeFirstResponder(nil) }
             // Dragging the background moves the window; the strip, times and buttons keep their own clicks.
             .gesture(WindowDragGesture())
             .allowsWindowActivationEvents(true)

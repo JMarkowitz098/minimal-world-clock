@@ -4,8 +4,9 @@ import AppKit
 #endif
 
 /// A large time the user can click to type a different one (Compare window). Hovering shows that
-/// it's editable: a soft accent background and the text cursor. Return commits, Esc or clicking
-/// elsewhere cancels; a time that can't be read beeps and keeps the field open.
+/// it's editable: a soft accent background and the text cursor. Return commits (a time that
+/// can't be read beeps and keeps the field open); Esc cancels; clicking elsewhere commits if it's
+/// a time and otherwise goes back to the shown time.
 struct EditableTime: View {
     let time: AttributedString
     /// What VoiceOver calls it: "Time in Tokyo".
@@ -87,7 +88,12 @@ struct EditableTime: View {
             .onExitCommand { draft = nil }
             #endif
             .onChange(of: isFocused) { _, focused in
-                if !focused { draft = nil }
+                // Clicked elsewhere: keep a typed time, quietly drop anything else. (After Return
+                // or Esc, `draft` is already nil.)
+                if !focused, let typed = draft {
+                    _ = onCommit(typed)
+                    draft = nil
+                }
             }
             // Focusing in the same pass the field appears marks it focused without making it
             // the first responder (keys went nowhere until a second click); a beat later works.
