@@ -1,6 +1,6 @@
 import Foundation
 
-/// Where the app keeps what the user chose (the Clock window's zone, later Compare's zones and
+/// Where the app keeps what the user chose (the Clock and Compare windows' zones, later
 /// settings). Values are stored as JSON data by key. Reading is lenient: missing, corrupt, or
 /// unknown data reads as `nil`, and callers fall back to their defaults.
 public protocol SettingsStore: AnyObject {
@@ -11,6 +11,8 @@ public protocol SettingsStore: AnyObject {
 /// Keys used in a `SettingsStore`. Never rename one: saved data from older versions uses it.
 public enum SettingsKey {
     public static let clockZone = "clockZone"
+    public static let compareZoneA = "compareZoneA"
+    public static let compareZoneB = "compareZoneB"
 }
 
 extension SettingsStore {
@@ -32,6 +34,19 @@ extension SettingsStore {
     public var clockZone: Zone? {
         get { load(Zone.self, forKey: SettingsKey.clockZone) }
         set { save(newValue, forKey: SettingsKey.clockZone) }
+    }
+
+    /// The Compare window's first zone (the one the scrubber sets the time in). Saved apart
+    /// from `compareZoneB`, so one unreadable zone doesn't lose the other.
+    public var compareZoneA: Zone? {
+        get { load(Zone.self, forKey: SettingsKey.compareZoneA) }
+        set { save(newValue, forKey: SettingsKey.compareZoneA) }
+    }
+
+    /// The Compare window's second zone.
+    public var compareZoneB: Zone? {
+        get { load(Zone.self, forKey: SettingsKey.compareZoneB) }
+        set { save(newValue, forKey: SettingsKey.compareZoneB) }
     }
 }
 

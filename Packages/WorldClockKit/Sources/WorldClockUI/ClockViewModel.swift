@@ -8,20 +8,20 @@ import WorldClockCore
     public private(set) var zone: Zone
     public private(set) var now: Date
 
+    private var display: ZoneDisplay { formatter.display(at: now) }
     /// "9:00 PM" or "21:00", following the locale's 12/24-hour preference.
-    public var timeText: String { timeFormatter.string(from: now) }
+    public var timeText: String { display.timeText }
     /// "Thursday, January 15", the date in `zone`.
-    public var dateText: String { dateFormatter.string(from: now) }
+    public var dateText: String { display.dateText }
     /// "Tokyo"
-    public var cityText: String { zone.city }
+    public var cityText: String { display.cityText }
     /// "UTC+9"
-    public var offsetText: String { zone.utcOffsetText(at: now) }
+    public var offsetText: String { display.offsetText }
 
     @ObservationIgnored private let store: SettingsStore
     @ObservationIgnored private let clock: () -> Date
     @ObservationIgnored private let ticker: Ticker
-    @ObservationIgnored private let timeFormatter: DateFormatter
-    @ObservationIgnored private let dateFormatter: DateFormatter
+    @ObservationIgnored private let formatter: ZoneFormatter
 
     /// - Parameters:
     ///   - defaultZone: shown when nothing (or nothing readable) is saved.
@@ -34,8 +34,7 @@ import WorldClockCore
         let zone = store.clockZone ?? defaultZone
         self.zone = zone
         self.now = clock()
-        timeFormatter = Self.formatter(template: "jmm", locale: locale, zone: zone)
-        dateFormatter = Self.formatter(template: "EEEEMMMMd", locale: locale, zone: zone)
+        formatter = ZoneFormatter(zone: zone, locale: locale)
     }
 
     /// Refreshes the time and ticks on every minute boundary until `stop`. Call when the window appears.
@@ -50,30 +49,14 @@ import WorldClockCore
 
     /// Shows `zone` and saves it for the next launch.
     public func select(_ zone: Zone) {
+        formatter.zone = zone
         self.zone = zone
-        timeFormatter.timeZone = zone.timeZone
-        dateFormatter.timeZone = zone.timeZone
         store.clockZone = zone
     }
 
     private func tick() {
         now = clock()
-        ticker.schedule(at: Self.nextMinute(after: now)) { [weak self] in self?.tick() }
-    }
-
-    /// The first whole minute after `date`. Every zone in use today is offset from UTC by
-    /// whole minutes, so a UTC minute boundary is a minute boundary everywhere.
-    static func nextMinute(after date: Date) -> Date {
-        let t = date.timeIntervalSinceReferenceDate
-        return Date(timeIntervalSinceReferenceDate: (t / 60).rounded(.down) * 60 + 60)
-    }
-
-    private static func formatter(template: String, locale: Locale, zone: Zone) -> DateFormatter {
-        let formatter = DateFormatter()
-        formatter.locale = locale
-        formatter.timeZone = zone.timeZone
-        formatter.setLocalizedDateFormatFromTemplate(template)
-        return formatter
+        ticker.schedule(at: now.nextMinuteBoundary) { [weak self] in self?.tick() }
     }
 }
 
@@ -82,11 +65,17 @@ extension ClockViewModel {
     public static func live() -> ClockViewModel {
         ClockViewModel(
             store: UserDefaultsSettingsStore(),
-            // The Mac's zone can be missing from the known list (e.g. `Asia/Kolkata` on a
-            // system that lists `Asia/Calcutta`); UTC is the fallback then.
-            defaultZone: Zone(identifier: TimeZone.current.identifier) ?? Zone(identifier: "UTC")!,
+            defaultZone: .macZoneOrUTC,
             clock: Date.init,
             ticker: DispatchTicker()
         )
+    }
+}
+
+extension Zone {
+    /// The Mac's zone, or UTC when it's missing from the known list (e.g. `Asia/Kolkata` on a
+    /// system that lists `Asia/Calcutta`). Only for `live()` factories.
+    static var macZoneOrUTC: Zone {
+        Zone(identifier: TimeZone.current.identifier) ?? Zone(identifier: "UTC")!
     }
 }

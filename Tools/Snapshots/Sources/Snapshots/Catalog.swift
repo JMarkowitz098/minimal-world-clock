@@ -26,6 +26,15 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
     )
 }
 
+@MainActor func compareModel(_ a: String, _ b: String, at now: Date = jan15Noon, scrubTo minutes: Int? = nil) -> CompareViewModel {
+    let model = CompareViewModel(
+        store: InMemorySettingsStore(), defaultZones: (Zone(identifier: a)!, Zone(identifier: b)!),
+        locale: Locale(identifier: "en_US"), clock: { now }, ticker: StillTicker()
+    )
+    if let minutes { model.scrub(toMinuteOfDay: minutes) }
+    return model
+}
+
 @MainActor func pickerModel(query: String) -> ZonePickerViewModel {
     let model = ZonePickerViewModel(now: jan15Noon)
     model.query = query
@@ -39,6 +48,17 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
     // Longest city name in the catalog, to check it fits.
     Snapshot(name: "clock-long-name", size: CGSize(width: 320, height: 170)) {
         AnyView(ClockView(model: clockModel("America/Bahia_Banderas")))
+    },
+    Snapshot(name: "compare", size: CGSize(width: 640, height: 260)) {
+        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo")))
+    },
+    // Scrubbed to 3 PM in New York: Tokyo is on the next day, and Now is enabled.
+    Snapshot(name: "compare-scrubbed", size: CGSize(width: 640, height: 260)) {
+        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 15 * 60)))
+    },
+    // Longest city name on both sides, with a half-hour difference.
+    Snapshot(name: "compare-long-names", size: CGSize(width: 640, height: 260)) {
+        AnyView(CompareView(model: compareModel("America/Bahia_Banderas", "America/St_Johns")))
     },
     Snapshot(name: "zone-picker", size: CGSize(width: 300, height: 380)) {
         AnyView(ZonePicker(model: ZonePickerViewModel(now: jan15Noon), selected: Zone(identifier: "Africa/Accra")) { _ in })

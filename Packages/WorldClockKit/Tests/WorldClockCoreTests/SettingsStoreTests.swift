@@ -66,3 +66,22 @@ private func withTemporaryDefaults(_ body: (UserDefaults) throws -> Void) rethro
     store.save(Unencodable(), forKey: SettingsKey.clockZone)
     #expect(store.clockZone == zone("Europe/London"))
 }
+
+@Test func compareZonesRoundTripThroughUserDefaults() {
+    withTemporaryDefaults { defaults in
+        let store = UserDefaultsSettingsStore(defaults: defaults)
+        store.compareZoneA = zone("America/New_York")
+        store.compareZoneB = zone("Asia/Tokyo")
+        let relaunched = UserDefaultsSettingsStore(defaults: defaults)
+        #expect(relaunched.compareZoneA == zone("America/New_York"))
+        #expect(relaunched.compareZoneB == zone("Asia/Tokyo"))
+    }
+}
+
+@Test func compareZonesAreSavedIndependently() {
+    let store = InMemorySettingsStore()
+    store.compareZoneA = zone("Europe/London")
+    store.setData(Data("garbage".utf8), forKey: SettingsKey.compareZoneB)
+    #expect(store.compareZoneA == zone("Europe/London"))
+    #expect(store.compareZoneB == nil)
+}

@@ -30,3 +30,12 @@ import Foundation
         pending = nil
     }
 }
+
+extension Date {
+    /// The first whole minute after this date. Every zone in use today is offset from UTC by
+    /// whole minutes, so a UTC minute boundary is a minute boundary everywhere.
+    var nextMinuteBoundary: Date {
+        let t = timeIntervalSinceReferenceDate
+        return Date(timeIntervalSinceReferenceDate: (t / 60).rounded(.down) * 60 + 60)
+    }
+}

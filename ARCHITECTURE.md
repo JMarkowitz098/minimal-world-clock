@@ -16,7 +16,7 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 
 | Need to change… | File |
 |---|---|
-| App entry point, windows, app delegate (stay open when the last window closes) | `Apps/Mac/WorldClockMacApp.swift` |
+| App entry point, windows (Clock ⌘1, Compare ⌘2), app delegate (stay open when the last window closes) | `Apps/Mac/WorldClockMacApp.swift` |
 | App sandbox entitlements | `Apps/Mac/WorldClock.entitlements` |
 | Targets, bundle IDs, versions, Info.plist keys | `project.yml` |
 | Package targets | `Packages/WorldClockKit/Package.swift` |
@@ -25,15 +25,19 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Wall-clock time at an instant, and wall time → instant (DST gaps and overlaps) | `WorldClockCore/WallTime.swift` |
 | UTC offset text (`UTC+5:30`) and difference between zones (`−3 h 30 min`, `Same time`) | `WorldClockCore/Offsets.swift` |
 | Yesterday / today / tomorrow relative to another zone | `WorldClockCore/DayRelation.swift` |
-| Saved settings: the `SettingsStore` protocol, its keys, typed accessors (`clockZone`), UserDefaults and in-memory stores | `WorldClockCore/SettingsStore.swift` |
+| Saved settings: the `SettingsStore` protocol, its keys, typed accessors (`clockZone`, `compareZoneA`, `compareZoneB`), UserDefaults and in-memory stores | `WorldClockCore/SettingsStore.swift` |
 | Fixed test instants and helpers (`jan15Noon`, `mar15Noon`, `utc(…)`, `wall(…)`, `zone(…)`) | `Tests/WorldClockCoreTests/TestSupport.swift` |
-| Ticking on minute boundaries: the `Ticker` protocol and the app's `DispatchTicker` | `WorldClockUI/Ticker.swift` |
+| Ticking on minute boundaries: the `Ticker` protocol, the app's `DispatchTicker`, `Date.nextMinuteBoundary` | `WorldClockUI/Ticker.swift` |
+| A zone's display strings (time, date, city, offset) and the formatters that build them (`ZoneDisplay`, `ZoneFormatter`), shared by both windows | `WorldClockUI/ZoneDisplay.swift` |
 | Clock window display strings, ticking, zone choice and its persistence; `ClockViewModel.live()` wires the app's dependencies | `WorldClockUI/ClockViewModel.swift` |
-| Clock window layout (zone button, popover picker, start/stop on appear/disappear) | `WorldClockUI/ClockView.swift` |
+| Clock window layout (start/stop on appear/disappear) | `WorldClockUI/ClockView.swift` |
+| Compare window: two zones at one instant, live vs. scrubbed, swap, Now, difference and day-relation text, persistence; `live()` | `WorldClockUI/CompareViewModel.swift` |
+| Compare window layout (two time displays, swap button, scrubber slider, Now) | `WorldClockUI/CompareView.swift` |
+| City name button that opens the zone picker in a popover (title of each time display) | `WorldClockUI/ZoneButton.swift` |
 | Large time + date + offset under a title (shared with Compare) | `WorldClockUI/TimeDisplay.swift` |
 | Zone search rows (`city`, `Asia · UTC+9`) | `WorldClockUI/ZonePickerViewModel.swift` |
 | Zone search field and results list | `WorldClockUI/ZonePicker.swift` |
-| UI test helpers (`FakeClock`, `FakeTicker`, `makeClock(…)`, `nnbsp`) | `Tests/WorldClockUITests/TestSupport.swift` |
+| UI test helpers (`FakeClock`, `FakeTicker`, `makeClock(…)`, `makeCompare(…)`, `nnbsp`) | `Tests/WorldClockUITests/TestSupport.swift` |
 | Views rendered for visual checks (and later App Store screenshots) | `Tools/Snapshots/Sources/Snapshots/Catalog.swift` |
 | What the pre-commit check runs | `scripts/check.sh` (hook: `scripts/hooks/pre-commit`) |
 | Commands pre-approved for Claude Code | `.claude/settings.json` |
@@ -51,6 +55,7 @@ Update this table as milestones add files.
 - No package resources (the App Store export doesn't re-sign SwiftPM resource bundles). Images go in each app's asset catalog.
 - View models take their clock (`() -> Date`), `Ticker`, `SettingsStore`, and `Locale` as init parameters; only the `live()` factories touch `Date()`, `TimeZone.current`, or `UserDefaults.standard`.
 - A view model schedules one tick at a time, at the next minute boundary, and only between `start()` and `stop()`, which views call from `onAppear` / `onDisappear`. Nothing repeats on its own.
+- Display strings for a zone come from `ZoneFormatter`, so the Clock and Compare windows format time and date identically. Keep one formatter per shown zone (creating a `DateFormatter` is costly) and update its `zone` rather than rebuilding it.
 - Settings are read leniently: missing, corrupt, or unknown data reads as `nil` and the caller uses its default. `SettingsKey` values are never renamed.
 
 ## Recipes
@@ -59,6 +64,8 @@ Update this table as milestones add files.
 
 **Add a saved setting:** add a key to `SettingsKey` and a typed property beside `clockZone` in `SettingsStore.swift` (Codable value, `nil` when unreadable). Test missing and corrupt data with `InMemorySettingsStore`.
 
-**Snapshot a view:** add a `Snapshot` to `catalog` in `Tools/Snapshots/Sources/Snapshots/Catalog.swift`, built from fixed instants and zones (never the real clock). Run `swift run --package-path Tools/Snapshots Snapshots <name>`; output is `build/snapshots/<name>-light.png` and `-dark.png`. The tool draws through an offscreen `NSHostingView` (not `ImageRenderer`, which can't draw text fields, lists or sliders) with the light or dark appearance set, so AppKit controls and colors render correctly. For a view model, pass fixed instants, `InMemorySettingsStore`, `Locale(identifier: "en_US")`, and the catalog's `StillTicker`.
+**Snapshot a view:** add a `Snapshot` to `catalog` in `Tools/Snapshots/Sources/Snapshots/Catalog.swift`, built from fixed instants and zones (never the real clock). Run `swift run --package-path Tools/Snapshots Snapshots <name>`; output is `build/snapshots/<name>-light.png` and `-dark.png`. The tool draws through an offscreen `NSHostingView` (not `ImageRenderer`, which can't draw text fields, lists or sliders) with the light or dark appearance set, so AppKit controls and colors render correctly. For a view model, pass fixed instants, `InMemorySettingsStore`, `Locale(identifier: "en_US")`, and the catalog's `StillTicker` (the `clockModel`/`compareModel` helpers do this; `compareModel(…, scrubTo:)` renders a scrubbed state).
+
+**Add a window:** add a `Window` scene in `Apps/Mac/WorldClockMacApp.swift` with `.keyboardShortcut` (it gets a Window menu item automatically) and `.defaultSize` if the content has a greedy control (a `Slider`'s ideal width is 900 pt; `frame(idealWidth:)` doesn't help). The first scene opens at launch. macOS autosaves each window's frame (`NSWindow Frame <id>` in the app's defaults), so after changing a default size, delete that key before checking it.
 
 **Add a file to the app target:** create it under `Apps/Mac/`, then run `xcodegen generate`.
