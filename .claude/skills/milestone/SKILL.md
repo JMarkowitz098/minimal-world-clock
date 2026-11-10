@@ -22,6 +22,14 @@ For each behavior in the milestone's **Tests** list (test names are the acceptan
 
 Follow CLAUDE.md → Rules (Core is Foundation-only, time is injected, no `TimeZone.current` in tests, small views fed by a view model). If you add or remove files under `Apps/`, run `xcodegen generate`.
 
+**Keep the docs in step with the code.** Every commit (and any point where the docs have drifted, even mid-milestone) includes the doc updates its code changes call for:
+- New, moved, renamed, or deleted files → `ARCHITECTURE.md` file map.
+- New pattern, invariant, or "how to add an X" → `ARCHITECTURE.md` invariants and recipes.
+- New or changed command, script, setup step, or tool → `README.md` (for humans) and `CLAUDE.md` → Commands (for agents).
+- New rule or convention → `CLAUDE.md` → Rules or Workflow.
+- Product decision or change of scope → `design_doc.md`. Milestone turned out different from planned → its `ROADMAP.md` entry.
+Before committing, read the diff (`git diff --staged`) and ask: would a new session reading only the docs be misled by anything here? If so, fix the docs in the same commit. Don't write docs for code that doesn't exist yet.
+
 ## 3. Verify
 1. `./scripts/check.sh` passes (warnings fail it).
 2. **UI changes:** add or update entries in `Tools/Snapshots/Sources/Snapshots/Catalog.swift` (fixed dates and zones), run `swift run --package-path Tools/Snapshots Snapshots [name]`, and Read the PNGs in `build/snapshots/` (light and dark). Fix what looks wrong: clipping, alignment, contrast, dark mode.
@@ -29,7 +37,7 @@ Follow CLAUDE.md → Rules (Core is Foundation-only, time is injected, no `TimeZ
 
 ## 4. Hand off
 1. Check the milestone off in `ROADMAP.md` (`[x]`) and fix its text if what was built differs.
-2. Update `ARCHITECTURE.md` (file map, invariants, recipes) and `design_doc.md` (product decisions made this session).
+2. Do a last pass over all the docs (`README.md`, `CLAUDE.md`, `ARCHITECTURE.md`, `design_doc.md`) against everything the milestone changed (`git diff <commit before the milestone>`), and fix anything stale or missing.
 3. **Rewrite ROADMAP.md → Handoff:** last session's result, exactly what the next milestone should start with, open questions for the user, and non-obvious lessons (gotchas, dead ends, API quirks). Remove stale entries. Unfinished work goes in `docs/handoff/`, never only in chat.
 4. Commit as `M<n>: <title>` with a short body (the pre-commit hook runs `check.sh`), then `git push`.
 
