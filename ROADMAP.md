@@ -8,11 +8,11 @@ Shared commands: `./scripts/check.sh` (all tests + app build). Use `swift test -
 
 Each milestone runs in a new chat, so this section carries what the next session needs and the code and git history can't show.
 
-- **Last session (2026-11-10):** M2 done: `WallTime.swift`, `Offsets.swift`, `DayRelation.swift` in `WorldClockCore` (40 package tests green). The user also added a requirement mid-session: a non-intrusive prompt asking users to buy the app, like pomodoro_timer's planned M13. Recorded in `design_doc.md` and scheduled as **M10** (after v1.0 ships, as pomodoro did).
+- **Last session (2026-11-10):** M2 done: `WallTime.swift`, `Offsets.swift`, `DayRelation.swift` in `WorldClockCore` (40 package tests green). The user also added a requirement mid-session: a non-intrusive prompt asking users to buy the app, like pomodoro_timer's planned M13. Recorded in `design_doc.md` and scheduled as **M10**. The user then decided: mirror pomodoro's M13 as closely as possible, never prompt on first launch, price later.
 - **Next:** M3 (Clock window), run with `/milestone`. Build display strings from the M2 functions (`wallTime`, `utcOffsetText`); use `DateFormatter` with `timeZone = zone.timeZone` for localized time text. Inject the clock (`() -> Date`) and the ticker; the next tick is at the next minute boundary.
 - **Confirmed by the user:** Dock app; bundle ID `com.jaredmarkowitz.worldclock`; macOS 14 minimum; the M8 lightweight budget; minimal UI matters a lot (they find existing clock apps too feature-heavy), so keep every view to what its milestone needs.
 - **Open with the user (not blocking M3–M9):**
-  - M10 purchase reminder: popup window or a small card inside the Clock window? How often (pomodoro's plan: at most once a day, after a few days of use)? Ask on first launch (risks bad reviews)? Price? Ship v1.0 free without it (current plan) or include it in 1.0?
+  - M10 price (the user will decide later).
   - `gh` isn't installed, so no GitHub CLI (CI and PRs wait on it).
 - **Notes:**
   - `swift test` prints "Test run with…" twice (once per test runner); that's normal.
@@ -73,11 +73,13 @@ Lightweight check, then the icon. App icon drawn by `scripts/make-icon.swift` (n
 Privacy manifest, App Store entitlements (separate file if any need a provisioning profile), `scripts/release.sh` (check → bump build → archive → sign → upload → tag, as in pomodoro_timer), screenshot generator, listing draft in `docs/app-store/`, privacy policy and support pages.
 - Done when: `./scripts/release.sh --local` archives, and the listing draft exists. Upload once the App Store Connect app record exists.
 
-## [ ] M10: Supporter unlock (purchase reminder)
-Requirement added 2026-11-10: a non-intrusive prompt asking users to buy the app, like pomodoro_timer's planned M13. The app stays fully functional; a one-time in-app purchase (StoreKit 2, non-consumable, price to decide) removes the reminder for good. No feature paywall.
-- Design (to confirm with the user before starting): a gentle reminder at most once a day, starting after a few days of use; one-click "Not now"; Restore Purchase for reinstalls; never steals focus while the user is mid-scrub in Compare. Easy dismissal is also an App Review requirement.
-- `Entitlements` protocol in Core with a fake for tests; reminder scheduling logic test-first; StoreKit configuration file for local testing.
-- Tests: reminder schedule (grace period, at most once a day, never after purchase), purchase and restore through the fake entitlements, lenient decoding of the saved reminder state.
+## [ ] M10: Supporter unlock (daily reminder)
+Decided 2026-11-10: mirror pomodoro_timer's M13 as closely as possible (`~/Projects/pomodoro_timer/ROADMAP.md`; re-read it before starting and follow any decisions made there since). v1.0 ships free with no reminder. In an update, the app stays fully functional and free, shows a gentle reminder once a day, and a one-time in-app purchase (StoreKit 2, non-consumable) removes it for good. No feature paywall. Price: the user decides later.
+- Reminder design: a small card inside the Clock window (pomodoro's in-popover card; not a separate window); never while the user is scrubbing in Compare; starts after a few days of use; **never on first launch**; one-click "Not now"; Restore Purchase for reinstalls. It must stay easy to dismiss to meet App Review rules.
+- `Entitlements` protocol in Core with a fake for tests; reminder scheduling logic test-first (once per day, grace period, never on first launch); StoreKit configuration file for local testing.
+- No 1.0 groundwork needed: count the grace period from the update's first launch.
+- Tests: reminder schedule (grace period, at most once a day, never on first launch, never after purchase), purchase and restore through the fake entitlements, lenient decoding of the saved reminder state.
+- Before enabling sales: Paid Applications Agreement, bank and tax info, Small Business Program. EU trader status must switch to "trader" (App Store Connect → Business → Digital Services Act) once anything is sold.
 - Done when: tests pass; with the StoreKit test configuration, buying removes the reminder and it stays gone after relaunch.
 
 ## Later (not scheduled)
