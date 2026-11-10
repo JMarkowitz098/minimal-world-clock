@@ -1,0 +1,48 @@
+# XcodeGen spec — the source of truth for WorldClock.xcodeproj (generated, not committed).
+# Regenerate after editing: xcodegen generate
+name: WorldClock
+options:
+  bundleIdPrefix: com.jaredmarkowitz
+  deploymentTarget:
+    macOS: "14.0"
+    iOS: "17.0"
+
+packages:
+  WorldClockKit:
+    path: Packages/WorldClockKit
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+
+targets:
+  WorldClockMac:
+    type: application
+    platform: macOS
+    sources: [Apps/Mac]
+    dependencies:
+      - package: WorldClockKit
+        product: WorldClockCore
+      - package: WorldClockKit
+        product: WorldClockUI
+    info:
+      path: Apps/Mac/Info.plist
+      properties:
+        CFBundleDisplayName: Minimal World Clock
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.utilities
+        ITSAppUsesNonExemptEncryption: false  # no encryption beyond the OS; skips export questions on upload
+        NSHumanReadableCopyright: © 2026 Jared Markowitz
+    settings:
+      base:
+        PRODUCT_NAME: Minimal World Clock
+        # Permanent once on the App Store; shared with a future iPhone app (Universal Purchase).
+        PRODUCT_BUNDLE_IDENTIFIER: com.jaredmarkowitz.worldclock
+        # Local builds are ad-hoc signed; the release script (M9) signs with the developer team.
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        ENABLE_HARDENED_RUNTIME: YES
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        CODE_SIGN_ENTITLEMENTS: Apps/Mac/WorldClock.entitlements
