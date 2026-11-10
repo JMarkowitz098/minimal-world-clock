@@ -49,3 +49,20 @@ private func withTemporaryDefaults(_ body: (UserDefaults) throws -> Void) rethro
     store.clockZone = zone("Europe/London")
     #expect(store.clockZone == zone("Europe/London"))
 }
+
+@Test func savingNilRemovesTheValue() {
+    let store = InMemorySettingsStore()
+    store.clockZone = zone("Europe/London")
+    store.clockZone = nil
+    #expect(store.data(forKey: SettingsKey.clockZone) == nil)
+}
+
+@Test func valueThatFailsToEncodeKeepsTheSavedOne() {
+    struct Unencodable: Encodable {
+        func encode(to encoder: any Encoder) throws { throw EncodingError.invalidValue(0, .init(codingPath: [], debugDescription: "")) }
+    }
+    let store = InMemorySettingsStore()
+    store.clockZone = zone("Europe/London")
+    store.save(Unencodable(), forKey: SettingsKey.clockZone)
+    #expect(store.clockZone == zone("Europe/London"))
+}

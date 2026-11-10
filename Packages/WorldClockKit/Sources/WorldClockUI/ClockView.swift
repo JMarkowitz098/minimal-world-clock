@@ -41,5 +41,3 @@ public struct ClockView: View {
         .onDisappear { model.stop() }
     }
 }
-
-extension ZonePickerViewModel: Identifiable {}

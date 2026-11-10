@@ -8,13 +8,17 @@ Shared commands: `./scripts/check.sh` (all tests + app build). Use `swift test -
 
 Each milestone runs in a new chat, so this section carries what the next session needs and the code and git history can't show.
 
-- **Last session (2026-11-10):** M3 done: the Clock window. `SettingsStore` (Core), `Ticker`/`DispatchTicker`, `ClockViewModel`, `ZonePickerViewModel`, `TimeDisplay`, `ZonePicker`, `ClockView` (UI); `PlaceholderView` removed. 61 package tests green. The user checked in the app: live time, zone picking, persistence across relaunch, and (after a fix) the window reopening from the Dock.
+- **Last session (2026-11-10):** M3 done: the Clock window, then a code audit (below). `SettingsStore` (Core), `Ticker`/`DispatchTicker`, `ClockViewModel`, `ZonePickerViewModel`, `TimeDisplay`, `ZonePicker`, `ClockView` (UI); `PlaceholderView` removed. 67 package tests green. The user checked in the app: live time, zone picking, persistence across relaunch, and (after a fix) the window reopening from the Dock.
 - **Next:** M4 (Compare window), run with `/milestone`. Reuse `TimeDisplay` (its `title` slot takes a zone button like `ClockView`'s) and `ZonePicker` in a popover. Add `compareZones` (or two keys) to `SettingsKey` and a typed accessor beside `clockZone`. Inject clock, ticker and store like `ClockViewModel` and add a `live()` factory. The Window menu needs entries for both windows (⌘1 Clock, ⌘2 Compare): with `Window` scenes SwiftUI lists them automatically, but check the shortcuts.
 - **Confirmed by the user:** Dock app; bundle ID `com.jaredmarkowitz.worldclock`; macOS 14 minimum; the M8 lightweight budget; minimal UI matters a lot (they find existing clock apps too feature-heavy), so keep every view to what its milestone needs.
 - **Open with the user:**
   - **Design iteration:** the user wants to iterate on the visual design later (not now). Ask when: after M4, when both windows exist, is the natural point. Not yet a roadmap milestone.
   - M10 price (the user will decide later).
   - `gh` isn't installed, so no GitHub CLI (CI and PRs wait on it).
+- **Code audit (2026-11-10, after M3):** fixed: `SettingsStore` helpers renamed `load`/`save` (`setValue(_:forKey:)` read like NSObject's KVC method), and a value that fails to encode no longer erases the saved one; `ZonePickerViewModel`'s `Identifiable` moved into its own file; `DispatchTicker` got real-time tests. Deferred to the milestone that owns them:
+  - **M6:** the time format is fixed when the model is created, so changing the system's 12/24-hour setting needs a relaunch. When M6 adds "follow the system", rebuild the formatters on `NSLocale.currentLocaleDidChangeNotification`.
+  - **M8:** pause the ticker while the window is minimized (see below).
+  - **Later (localization):** Core's user-facing strings (`Same time`, `UTC`, `h`, `min`) are plain Swift strings, not localizable.
 - **Notes:**
   - A SwiftUI app whose only scene is a `Window` quits when that window closes. `AppDelegate.applicationShouldTerminateAfterLastWindowClosed` returns `false`, and SwiftUI then reopens the `Window` on a Dock click by itself. Verified by script: close via System Events, then `open` the running app (sends a reopen event); count windows with `CGWindowListCopyWindowInfo`.
   - The ticker stops on `onDisappear` (window closed) but probably not when the window is minimized. M8's budget requires no timer activity then; check it there (e.g. `NSWindow.didMiniaturizeNotification` or `scenePhase`).

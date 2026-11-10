@@ -15,20 +15,23 @@ public enum SettingsKey {
 
 extension SettingsStore {
     /// The value saved under `key`, or `nil` when there is none or it doesn't decode.
-    public func value<T: Decodable>(_ type: T.Type, forKey key: String) -> T? {
+    public func load<T: Decodable>(_ type: T.Type, forKey key: String) -> T? {
         guard let data = data(forKey: key) else { return nil }
         return try? JSONDecoder().decode(type, from: data)
     }
 
-    /// Saves `value` under `key`; `nil` removes it.
-    public func setValue<T: Encodable>(_ value: T?, forKey key: String) {
-        setData(value.flatMap { try? JSONEncoder().encode($0) }, forKey: key)
+    /// Saves `value` under `key`; `nil` removes it. If `value` fails to encode, the saved
+    /// value is left as it was rather than erased.
+    public func save<T: Encodable>(_ value: T?, forKey key: String) {
+        guard let value else { return setData(nil, forKey: key) }
+        guard let data = try? JSONEncoder().encode(value) else { return }
+        setData(data, forKey: key)
     }
 
     /// The zone shown in the Clock window.
     public var clockZone: Zone? {
-        get { value(Zone.self, forKey: SettingsKey.clockZone) }
-        set { setValue(newValue, forKey: SettingsKey.clockZone) }
+        get { load(Zone.self, forKey: SettingsKey.clockZone) }
+        set { save(newValue, forKey: SettingsKey.clockZone) }
     }
 }
 

@@ -2,8 +2,9 @@ import Foundation
 import Observation
 import WorldClockCore
 
-/// Search results for the zone picker: one row per matching zone.
-@MainActor @Observable public final class ZonePickerViewModel {
+/// Search results for the zone picker: one row per matching zone. Identifiable (by object
+/// identity) so a view can present it with `popover(item:)`.
+@MainActor @Observable public final class ZonePickerViewModel: Identifiable {
     public struct Row: Identifiable, Hashable {
         public var id: String { zone.identifier }
         public let zone: Zone
