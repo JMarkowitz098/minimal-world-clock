@@ -76,5 +76,5 @@ The repo is built one roadmap milestone per chat. Start a new chat and run `/mil
 
 Not set up yet. These arrive with the roadmap:
 
-- **M9:** `./scripts/install.sh` installs a Release build to /Applications (until then, copy the Debug build as in Testing locally).
-- **M10:** `./scripts/release.sh` checks, bumps the build number, archives, signs, uploads to App Store Connect, and tags the release. It follows the same process as `~/Projects/pomodoro_timer`, whose README has the full App Store Connect and TestFlight steps. This section will hold this app's copy of them.
+- **M10:** `./scripts/install.sh` installs a Release build to /Applications (until then, copy the Debug build as in Testing locally).
+- **M11:** `./scripts/release.sh` checks, bumps the build number, archives, signs, uploads to App Store Connect, and tags the release. It follows the same process as `~/Projects/pomodoro_timer`, whose README has the full App Store Connect and TestFlight steps. This section will hold this app's copy of them.

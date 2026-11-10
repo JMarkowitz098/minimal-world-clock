@@ -17,7 +17,7 @@ settings:
     SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
     # Every build, local ones included, is signed with the Apple Development certificate.
     # Ad-hoc signing ("-") isn't enough: macOS shows the widget but silently drops the zone
-    # picked in its edit screen (found in M5). The release script (M10) signs for distribution.
+    # picked in its edit screen (found in M5). The release script (M11) signs for distribution.
     CODE_SIGN_STYLE: Manual
     CODE_SIGN_IDENTITY: Apple Development
     DEVELOPMENT_TEAM: Y7W4DC22F6
