@@ -49,7 +49,7 @@ struct ThemedPicker: View {
 
     var body: some View {
         ZonePicker(model: pickerModel(query: query), selected: selected) { _ in }
-            .themed(.solarized)
+            .renderTheme()
     }
 }
 
@@ -64,44 +64,90 @@ struct WidgetMock: View {
     let display: WidgetDisplay
     let size: ZoneWidgetView.Size
     let now: Date
+    /// A fixed theme; nil uses Solarized light or dark to match the render.
+    var theme: Theme? = nil
 
     var body: some View {
-        ZoneWidgetView(display: display, size: size, frozenTime: now)
+        let widget = ZoneWidgetView(display: display, size: size, frozenTime: now)
             .padding(16)
             .background(WidgetBackground())
             .clipShape(RoundedRectangle(cornerRadius: 20))
             .containerShape(RoundedRectangle(cornerRadius: 20))
-            .themed(.solarized)
-            .padding(12)
+        Group {
+            if let theme {
+                widget.environment(\.theme, theme)
+            } else {
+                widget.renderTheme()
+            }
+        }
+        .padding(12)
+    }
+}
+
+extension View {
+    /// Solarized light in the light render and Solarized dark in the dark one, so each render
+    /// shows a light and a dark theme (the app's theme no longer follows the appearance).
+    func renderTheme() -> some View {
+        modifier(RenderTheme())
+    }
+}
+
+private struct RenderTheme: ViewModifier {
+    @Environment(\.colorScheme) private var scheme
+
+    func body(content: Content) -> some View {
+        content.environment(\.theme, scheme == .dark ? .solarizedDark : .solarizedLight)
+    }
+}
+
+/// A login item that does nothing, for the Settings snapshot.
+@MainActor final class StillLoginItem: LoginItem {
+    var isEnabled = false
+    func setEnabled(_ enabled: Bool) throws {}
+}
+
+@MainActor func settingsModel() -> SettingsViewModel {
+    SettingsViewModel(store: InMemorySettingsStore(), loginItem: StillLoginItem(), baseLocale: Locale(identifier: "en_US"))
+}
+
+/// Every theme as a small widget, four per row.
+struct ThemeGallery: View {
+    var body: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.fixed(194), spacing: 0), count: 4), spacing: 0) {
+            ForEach(Theme.all) { theme in
+                WidgetMock(display: WidgetDisplay(zone: Zone(identifier: "Asia/Tokyo")!, at: jan15Noon, locale: Locale(identifier: "en_US")),
+                           size: .small, now: jan15Noon, theme: theme)
+            }
+        }
     }
 }
 
 @MainActor let catalog: [Snapshot] = [
     Snapshot(name: "clock", size: CGSize(width: 300, height: 162)) {
-        AnyView(ClockView(model: clockModel("Asia/Tokyo")).themed(.solarized).safeAreaPadding(.top, 28))
+        AnyView(ClockView(model: clockModel("Asia/Tokyo")).renderTheme().safeAreaPadding(.top, 28))
     },
     // Longest city name in the catalog, to check it fits.
     Snapshot(name: "clock-long-name", size: CGSize(width: 300, height: 162)) {
-        AnyView(ClockView(model: clockModel("America/Bahia_Banderas")).themed(.solarized).safeAreaPadding(.top, 28))
+        AnyView(ClockView(model: clockModel("America/Bahia_Banderas")).renderTheme().safeAreaPadding(.top, 28))
     },
     // Resized larger than natural: the time and date scale up with the window.
     Snapshot(name: "clock-resized", size: CGSize(width: 560, height: 300)) {
-        AnyView(ClockView(model: clockModel("Asia/Tokyo")).themed(.solarized).safeAreaPadding(.top, 28))
+        AnyView(ClockView(model: clockModel("Asia/Tokyo")).renderTheme().safeAreaPadding(.top, 28))
     },
     Snapshot(name: "compare", size: CGSize(width: 640, height: 230)) {
-        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo")).themed(.solarized).safeAreaPadding(.top, 28))
+        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo")).renderTheme().safeAreaPadding(.top, 28))
     },
     // Scrubbed to 3 PM in New York: Tokyo is on the next day, and Now is enabled.
     Snapshot(name: "compare-scrubbed", size: CGSize(width: 640, height: 230)) {
-        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 15 * 60)).themed(.solarized).safeAreaPadding(.top, 28))
+        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 15 * 60)).renderTheme().safeAreaPadding(.top, 28))
     },
     // Resized larger than natural: everything but the title bar strip scales up.
     Snapshot(name: "compare-resized", size: CGSize(width: 960, height: 345)) {
-        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 15 * 60)).themed(.solarized).safeAreaPadding(.top, 28))
+        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 15 * 60)).renderTheme().safeAreaPadding(.top, 28))
     },
     // Longest city name on both sides, with a half-hour difference.
     Snapshot(name: "compare-long-names", size: CGSize(width: 640, height: 230)) {
-        AnyView(CompareView(model: compareModel("America/Bahia_Banderas", "America/St_Johns")).themed(.solarized).safeAreaPadding(.top, 28))
+        AnyView(CompareView(model: compareModel("America/Bahia_Banderas", "America/St_Johns")).renderTheme().safeAreaPadding(.top, 28))
     },
     // Accra selected (checkmark).
     Snapshot(name: "zone-picker", size: CGSize(width: 300, height: 380)) {
@@ -125,5 +171,12 @@ struct WidgetMock: View {
     },
     Snapshot(name: "widget-medium-long", size: CGSize(width: 388, height: 194)) {
         widget("America/St_Johns", .medium, at: Date(timeIntervalSince1970: 1_790_784_000))
+    },
+    Snapshot(name: "settings", size: CGSize(width: 480, height: 640)) {
+        AnyView(SettingsView(model: settingsModel()))
+    },
+    // Every theme on the small widget, to compare them (and check contrast in M8).
+    Snapshot(name: "themes", size: CGSize(width: 776, height: 776)) {
+        AnyView(ThemeGallery())
     },
 ]

@@ -24,12 +24,21 @@ final class ZoneFormatter {
         }
     }
 
+    /// Changing it rebuilds the formatters (the 12/24-hour setting changes it).
+    var locale: Locale {
+        didSet {
+            time = Self.timeFormat(locale: locale, zone: zone)
+            date = Self.formatter(template: "EEEEMMMMd", locale: locale, zone: zone)
+        }
+    }
+
     private var time: Date.FormatStyle
-    private let date: DateFormatter
+    private var date: DateFormatter
 
     init(zone: Zone, locale: Locale) {
         self.zone = zone
-        time = Date.FormatStyle(locale: locale, timeZone: zone.timeZone).hour().minute()
+        self.locale = locale
+        time = Self.timeFormat(locale: locale, zone: zone)
         date = Self.formatter(template: "EEEEMMMMd", locale: locale, zone: zone)
     }
 
@@ -46,6 +55,10 @@ final class ZoneFormatter {
     /// Hours and minutes in `zone` without AM/PM ("9:00", or "21:00" in a 24-hour locale).
     static func hourMinuteFormat(locale: Locale, zone: Zone) -> Date.FormatStyle {
         Date.FormatStyle(locale: locale, timeZone: zone.timeZone).hour(.defaultDigits(amPM: .omitted)).minute()
+    }
+
+    private static func timeFormat(locale: Locale, zone: Zone) -> Date.FormatStyle {
+        Date.FormatStyle(locale: locale, timeZone: zone.timeZone).hour().minute()
     }
 
     private static func formatter(template: String, locale: Locale, zone: Zone) -> DateFormatter {

@@ -16,6 +16,7 @@ public enum SettingsKey {
     public static let clockZone = "clockZone"
     public static let compareZoneA = "compareZoneA"
     public static let compareZoneB = "compareZoneB"
+    public static let appSettings = "appSettings"
 }
 
 extension SettingsStore {

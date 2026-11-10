@@ -90,8 +90,9 @@ public struct ZoneWidgetView: View {
         .monospacedDigit()
         .lineLimit(1)
         .minimumScaleFactor(0.5)
-        // Text(_:format:) formats in the environment's zone, not the format's.
+        // Text(_:format:) formats in the environment's zone and locale, not the format's.
         .environment(\.timeZone, display.timeZone)
+        .environment(\.locale, display.locale)
     }
 
     @ViewBuilder private var hoursAndMinutes: some View {

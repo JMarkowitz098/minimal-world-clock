@@ -56,7 +56,7 @@ import WorldClockCore
 
     /// Labels under the scrubber every six hours: "12 AM", "6 AM"… (or "00", "06"… in 24-hour
     /// locales), at their minute of the day.
-    public let scrubberMarks: [ScrubberMark]
+    public private(set) var scrubberMarks: [ScrubberMark]
 
     public struct ScrubberMark: Hashable, Sendable {
         public let minuteOfDay: Int
@@ -68,7 +68,7 @@ import WorldClockCore
     @ObservationIgnored private let formatterA: ZoneFormatter
     @ObservationIgnored private let formatterB: ZoneFormatter
     /// Whether the locale shows 12-hour time, for reading typed times without AM/PM.
-    @ObservationIgnored private let twelveHour: Bool
+    @ObservationIgnored private var twelveHour: Bool
 
     /// - Parameters:
     ///   - defaultZones: shown when nothing (or nothing readable) is saved, each on its own.
@@ -85,11 +85,24 @@ import WorldClockCore
         formatterA = ZoneFormatter(zone: a, locale: locale)
         formatterB = ZoneFormatter(zone: b, locale: locale)
         twelveHour = locale.usesTwelveHourTime
-        let utc = TimeZone(identifier: "UTC")!
-        let hour = Date.FormatStyle(locale: locale, timeZone: utc).hour()
-        scrubberMarks = stride(from: 0, to: 24 * 60, by: 6 * 60).map { minute in
+        scrubberMarks = Self.marks(locale: locale)
+    }
+
+    private static func marks(locale: Locale) -> [ScrubberMark] {
+        let hour = Date.FormatStyle(locale: locale, timeZone: Zone.utc.timeZone).hour()
+        return stride(from: 0, to: 24 * 60, by: 6 * 60).map { minute in
             ScrubberMark(minuteOfDay: minute, label: hour.format(Date(timeIntervalSince1970: Double(minute * 60))))
         }
+    }
+
+    /// Formats times and dates, and reads typed times, for `locale` from now on (the 12/24-hour
+    /// setting changed, or the Mac's region settings did). A scrubbed time stays scrubbed.
+    public func setLocale(_ locale: Locale) {
+        formatterA.locale = locale
+        formatterB.locale = locale
+        twelveHour = locale.usesTwelveHourTime
+        scrubberMarks = Self.marks(locale: locale)
+        now = minutes.now()
     }
 
     /// Refreshes the time and ticks on every minute boundary until `stop`. Call when the window appears.
@@ -177,11 +190,13 @@ import WorldClockCore
 }
 
 extension CompareViewModel {
-    /// The app's model: saved in UserDefaults, real time, the Mac's zone (A) and UTC (B) by default.
-    public static func live() -> CompareViewModel {
+    /// The app's model: saved in UserDefaults, real time, the Mac's zone (A) and UTC (B) by default,
+    /// and `locale` from the settings (`SettingsViewModel.locale`).
+    public static func live(locale: Locale) -> CompareViewModel {
         CompareViewModel(
             store: UserDefaultsSettingsStore.live(),
             defaultZones: (.macZoneOrUTC, .utc),
+            locale: locale,
             clock: Date.init,
             ticker: DispatchTicker()
         )

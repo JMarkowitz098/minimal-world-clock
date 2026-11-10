@@ -23,7 +23,7 @@ Status: early development. See [ROADMAP.md](ROADMAP.md) for what's done and what
 
 ## Setup
 
-Requires macOS 15 or later, Xcode, XcodeGen, and the **Apple Development certificate for team Y7W4DC22F6** in your keychain (Xcode → Settings → Accounts). Every build is signed with it: an ad-hoc signed widget appears on the desktop but forgets the zone you pick, so the build refuses to produce one ("error: The widget must be signed with a development team"). On another team, change `DEVELOPMENT_TEAM` in `project.yml`.
+Requires macOS 15 or later, Xcode, XcodeGen, and the **Apple Development certificate for team Y7W4DC22F6** in your keychain (Xcode → Settings → Accounts). Every build is signed with it: an ad-hoc signed widget appears on the desktop but forgets the zone you pick, so the build refuses to produce one ("error: The widget must be signed with a development team"). On another team, change `DEVELOPMENT_TEAM` in `project.yml`, and the App Group ID (prefixed with the team ID) in both `.entitlements` files and `WorldClockUI/AppGroup.swift`.
 
 ```sh
 brew install xcodegen

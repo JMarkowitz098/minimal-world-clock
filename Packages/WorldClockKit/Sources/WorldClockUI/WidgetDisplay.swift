@@ -26,6 +26,9 @@ public struct WidgetDisplay: Equatable, Sendable {
     /// The zone's time zone. SwiftUI's `Text(_:format:)` replaces the format's time zone with
     /// the environment's, so the view must also set `\.timeZone` to this.
     public var timeZone: TimeZone
+    /// The locale the strings were made in (12/24-hour applied). Like the zone, SwiftUI's
+    /// `Text(_:format:)` takes the locale from the environment, so the view sets `\.locale` too.
+    public var locale: Locale
 
     public init(zone: Zone, at instant: Date, locale: Locale) {
         let display = ZoneFormatter(zone: zone, locale: locale).display(at: instant)
@@ -44,6 +47,7 @@ public struct WidgetDisplay: Equatable, Sendable {
                 .format(instant)
             : nil
         timeZone = zone.timeZone
+        self.locale = locale
     }
 
     /// The widget's next `count` timeline dates after `now`: when the date or AM/PM changes

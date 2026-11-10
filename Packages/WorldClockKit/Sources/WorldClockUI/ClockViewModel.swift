@@ -45,6 +45,13 @@ import WorldClockCore
         minutes.stop()
     }
 
+    /// Formats times and dates for `locale` from now on (the 12/24-hour setting changed, or
+    /// the Mac's region settings did).
+    public func setLocale(_ locale: Locale) {
+        formatter.locale = locale
+        now = minutes.now()
+    }
+
     /// Shows `zone` and saves it for the next launch.
     public func select(_ zone: Zone) {
         formatter.zone = zone
@@ -54,11 +61,13 @@ import WorldClockCore
 }
 
 extension ClockViewModel {
-    /// The app's model: saved in UserDefaults, real time, and the Mac's zone as the default.
-    public static func live() -> ClockViewModel {
+    /// The app's model: saved in UserDefaults, real time, the Mac's zone as the default, and
+    /// `locale` from the settings (`SettingsViewModel.locale`).
+    public static func live(locale: Locale) -> ClockViewModel {
         ClockViewModel(
             store: UserDefaultsSettingsStore.live(),
             defaultZone: .macZoneOrUTC,
+            locale: locale,
             clock: Date.init,
             ticker: DispatchTicker()
         )

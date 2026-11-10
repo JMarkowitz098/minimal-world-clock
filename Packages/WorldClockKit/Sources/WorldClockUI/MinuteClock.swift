@@ -2,7 +2,7 @@ import Foundation
 
 /// The current time for a view model: read now, and again on every minute boundary between
 /// `start` and `stop`. Shared by the Clock and Compare view models so the ticking rules (one
-/// tick at a time, nothing while stopped; later: seconds in M7, pausing while minimized in M10)
+/// tick at a time, nothing while stopped; later: pausing while minimized in M10)
 /// live in one place.
 @MainActor final class MinuteClock {
     private let clock: () -> Date

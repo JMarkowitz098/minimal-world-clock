@@ -32,7 +32,7 @@ A minimal macOS world clock (macOS 15+): a Clock window, a Compare window for tw
 - **Builds are signed with the development team** (`project.yml`), never ad-hoc: macOS drops an ad-hoc widget's settings. A build step and `check.sh` enforce it; don't remove them.
 - **Saved data stays backward compatible:** decoding is lenient and falls back to defaults (and the fallback is logged, see `Log`).
 - **Accessible by default:** every control has a VoiceOver label; color is never the only signal (assume color-blind users); respect Reduce Motion, Increase Contrast, and Reduce Transparency.
-- **Lightweight and minimal:** no third-party dependencies; no timers faster than the display needs (once a minute unless seconds are shown); no background work while windows are hidden; no feature, option, or UI element that the requirements don't call for (the user dislikes feature-heavy clock apps).
+- **Lightweight and minimal:** no third-party dependencies; no timers faster than the display needs (once a minute; the app never shows seconds); no background work while windows are hidden; no feature, option, or UI element that the requirements don't call for (the user dislikes feature-heavy clock apps).
 
 ## Workflow
 
