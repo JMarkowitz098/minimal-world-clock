@@ -45,6 +45,7 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | 24-hour scrubber drawn in theme colors (the system slider ignores tint): hourly ticks, labels, accent fill and thumb; hover darkens and thickens the track, rings the thumb, and marks the quarter hour a click would jump to; quarter-hour snapping; arrow keys and VoiceOver adjust | `WorldClockUI/TimeStrip.swift` |
 | Thin accent edge along the window while hovered (Clock and Compare) | `WorldClockUI/HoverEdge.swift` |
 | The widget's strings at an entry date (city, date, short date, offset) and its live hours-and-minutes format with the fixed `timeText` that sizes it, AM/PM as fixed text (nil in 24-hour locales), and the timeline's dates (`entryDates`: date, AM/PM, offset or the time's width changes) | `WorldClockUI/WidgetDisplay.swift` |
+| The widget's container background: theme background and a thin border in the text color along the widget's corners | `WorldClockUI/WidgetBackground.swift` |
 | The widget's layout, small and medium, in the Clock window's look: city top-right in the accent, time with a smaller AM/PM, date; theme colors (no WidgetKit import; snapshots can freeze the time) | `WorldClockUI/ZoneWidgetView.swift` |
 | Button that opens the zone picker in a popover: city with globe and hover pill (Clock and Compare); passes its theme to the popover | `WorldClockUI/ZoneButton.swift` |
 | Zone search rows (`city`, `Asia · UTC+9`) | `WorldClockUI/ZonePickerViewModel.swift` |

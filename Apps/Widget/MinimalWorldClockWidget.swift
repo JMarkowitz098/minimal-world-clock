@@ -102,7 +102,6 @@ struct EntryView: View {
     let entry: Entry
     @Environment(\.widgetFamily) private var family
     @Environment(\.locale) private var locale
-    @Environment(\.colorScheme) private var colorScheme
     /// The windows' colors (a Settings choice in M7).
     private let themes = ThemePair.solarized
 
@@ -112,6 +111,6 @@ struct EntryView: View {
             size: family == .systemSmall ? .small : .medium,
             themes: themes
         )
-        .containerBackground(themes.theme(for: colorScheme).background, for: .widget)
+        .containerBackground(for: .widget) { WidgetBackground(themes: themes) }
     }
 }

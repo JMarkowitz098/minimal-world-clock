@@ -51,8 +51,8 @@ struct ThemedPicker: View {
     }
 }
 
-/// The widget at a fixed instant, on a rounded Solarized background like the desktop's widget
-/// container (the real one comes from WidgetKit). Sizes are macOS's small and medium widgets.
+/// The widget at a fixed instant, on its background with the widget's rounded corners (the real
+/// container comes from WidgetKit). Sizes are macOS's small and medium widgets.
 @MainActor func widget(_ identifier: String, _ size: ZoneWidgetView.Size, at now: Date = jan15Noon) -> AnyView {
     let display = WidgetDisplay(zone: Zone(identifier: identifier)!, at: now, locale: Locale(identifier: "en_US"))
     return AnyView(WidgetMock(display: display, size: size, now: now))
@@ -62,12 +62,13 @@ struct WidgetMock: View {
     let display: WidgetDisplay
     let size: ZoneWidgetView.Size
     let now: Date
-    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         ZoneWidgetView(display: display, size: size, themes: .solarized, frozenTime: now)
             .padding(16)
-            .background(ThemePair.solarized.theme(for: scheme).background, in: RoundedRectangle(cornerRadius: 20))
+            .background(WidgetBackground(themes: .solarized))
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .containerShape(RoundedRectangle(cornerRadius: 20))
             .padding(12)
     }
 }
@@ -124,9 +125,5 @@ struct WidgetMock: View {
     },
     Snapshot(name: "widget-medium-long", size: CGSize(width: 388, height: 194)) {
         widget("America/St_Johns", .medium, at: Date(timeIntervalSince1970: 1_790_784_000))
-    },
-    // M6 prototype (WidgetOptions.swift; delete with that file once a border is chosen).
-    Snapshot(name: "widget-borders", size: CGSize(width: 600, height: 1290)) {
-        AnyView(WidgetBorderSheet())
     },
 ]
