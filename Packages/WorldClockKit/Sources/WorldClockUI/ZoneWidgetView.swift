@@ -55,10 +55,14 @@ public struct ZoneWidgetView: View {
     /// view and can't use our own format types (see `WidgetDisplay.dayPeriodFormat`).
     private var time: some View {
         HStack(alignment: .firstTextBaseline, spacing: (timeSize * 0.12).rounded()) {
+            // On the desktop, live text takes more width than it shows and draws at its
+            // leading edge; aligning the digits right and AM/PM left keeps them together.
             liveText(display.hourMinuteFormat)
+                .multilineTextAlignment(display.dayPeriodFormat == nil ? .center : .trailing)
             if let dayPeriod = display.dayPeriodFormat {
                 liveText(dayPeriod)
                     .font(.system(size: (timeSize * TimeStyle.dayPeriodScale).rounded()))
+                    .multilineTextAlignment(.leading)
             }
         }
         .font(TimeStyle.timeFont(size: timeSize))
