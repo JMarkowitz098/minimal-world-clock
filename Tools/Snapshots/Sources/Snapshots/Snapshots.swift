@@ -29,23 +29,32 @@ struct Snapshots {
         }
     }
 
+    /// Draws through an `NSHostingView` rather than `ImageRenderer`, which can't draw
+    /// AppKit-backed controls (text fields, lists, sliders) and shows a placeholder instead.
     @MainActor static func render(_ snapshot: Snapshot, scheme: ColorScheme, to file: URL) throws {
         let content = snapshot.view()
             .frame(width: snapshot.size.width, height: snapshot.size.height)
             .background(Color(nsColor: .windowBackgroundColor))
             .environment(\.colorScheme, scheme)
-        // AppKit colors (windowBackgroundColor…) resolve against the current drawing
-        // appearance, not SwiftUI's colorScheme, so set both.
-        let appearance = NSAppearance(named: scheme == .light ? .aqua : .darkAqua)!
-        var png: Data?
-        appearance.performAsCurrentDrawingAppearance {
-            let renderer = ImageRenderer(content: content)
-            renderer.scale = 2
-            if let image = renderer.cgImage {
-                png = NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])
-            }
-        }
-        guard let png else { throw CocoaError(.fileWriteUnknown) }
+        let view = NSHostingView(rootView: content)
+        view.frame = CGRect(origin: .zero, size: snapshot.size)
+        // AppKit colors (windowBackgroundColor…) and controls follow the view's appearance,
+        // not SwiftUI's colorScheme, so set both.
+        view.appearance = NSAppearance(named: scheme == .light ? .aqua : .darkAqua)!
+        // An offscreen window gives the view a real view hierarchy to lay out and draw in.
+        let window = NSWindow(contentRect: view.frame, styleMask: [.borderless], backing: .buffered, defer: false)
+        window.contentView = view
+        view.layoutSubtreeIfNeeded()
+
+        let scale = 2
+        guard let rep = NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: Int(snapshot.size.width) * scale, pixelsHigh: Int(snapshot.size.height) * scale,
+            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+            colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
+        ) else { throw CocoaError(.fileWriteUnknown) }
+        rep.size = snapshot.size
+        view.cacheDisplay(in: view.bounds, to: rep)
+        guard let png = rep.representation(using: .png, properties: [:]) else { throw CocoaError(.fileWriteUnknown) }
         try png.write(to: file)
     }
 }

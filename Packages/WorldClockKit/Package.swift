@@ -17,6 +17,6 @@ let package = Package(
         // bundles (ITMS-90284). Shared images live in each app's asset catalog instead.
         .target(name: "WorldClockUI", dependencies: ["WorldClockCore"]),
         .testTarget(name: "WorldClockCoreTests", dependencies: ["WorldClockCore"]),
-        .testTarget(name: "WorldClockUITests", dependencies: ["WorldClockUI"]),
+        .testTarget(name: "WorldClockUITests", dependencies: ["WorldClockUI", "WorldClockCore"]),
     ]
 )

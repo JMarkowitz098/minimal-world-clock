@@ -8,13 +8,21 @@ Shared commands: `./scripts/check.sh` (all tests + app build). Use `swift test -
 
 Each milestone runs in a new chat, so this section carries what the next session needs and the code and git history can't show.
 
-- **Last session (2026-11-10):** M2 done: `WallTime.swift`, `Offsets.swift`, `DayRelation.swift` in `WorldClockCore` (40 package tests green). The user also added a requirement mid-session: a non-intrusive prompt asking users to buy the app, like pomodoro_timer's planned M13. Recorded in `design_doc.md` and scheduled as **M10**. The user then decided: mirror pomodoro's M13 as closely as possible, never prompt on first launch, price later.
-- **Next:** M3 (Clock window), run with `/milestone`. Build display strings from the M2 functions (`wallTime`, `utcOffsetText`); use `DateFormatter` with `timeZone = zone.timeZone` for localized time text. Inject the clock (`() -> Date`) and the ticker; the next tick is at the next minute boundary.
+- **Last session (2026-11-10):** M3 done: the Clock window. `SettingsStore` (Core), `Ticker`/`DispatchTicker`, `ClockViewModel`, `ZonePickerViewModel`, `TimeDisplay`, `ZonePicker`, `ClockView` (UI); `PlaceholderView` removed. 61 package tests green. The user checked in the app: live time, zone picking, persistence across relaunch, and (after a fix) the window reopening from the Dock.
+- **Next:** M4 (Compare window), run with `/milestone`. Reuse `TimeDisplay` (its `title` slot takes a zone button like `ClockView`'s) and `ZonePicker` in a popover. Add `compareZones` (or two keys) to `SettingsKey` and a typed accessor beside `clockZone`. Inject clock, ticker and store like `ClockViewModel` and add a `live()` factory. The Window menu needs entries for both windows (⌘1 Clock, ⌘2 Compare): with `Window` scenes SwiftUI lists them automatically, but check the shortcuts.
 - **Confirmed by the user:** Dock app; bundle ID `com.jaredmarkowitz.worldclock`; macOS 14 minimum; the M8 lightweight budget; minimal UI matters a lot (they find existing clock apps too feature-heavy), so keep every view to what its milestone needs.
-- **Open with the user (not blocking M3–M9):**
+- **Open with the user:**
+  - **Design iteration:** the user wants to iterate on the visual design later (not now). Ask when: after M4, when both windows exist, is the natural point. Not yet a roadmap milestone.
   - M10 price (the user will decide later).
   - `gh` isn't installed, so no GitHub CLI (CI and PRs wait on it).
 - **Notes:**
+  - A SwiftUI app whose only scene is a `Window` quits when that window closes. `AppDelegate.applicationShouldTerminateAfterLastWindowClosed` returns `false`, and SwiftUI then reopens the `Window` on a Dock click by itself. Verified by script: close via System Events, then `open` the running app (sends a reopen event); count windows with `CGWindowListCopyWindowInfo`.
+  - The ticker stops on `onDisappear` (window closed) but probably not when the window is minimized. M8's budget requires no timer activity then; check it there (e.g. `NSWindow.didMiniaturizeNotification` or `scenePhase`).
+  - `DispatchTicker` uses `asyncAfter(wallDeadline:)`, which keeps counting while the Mac sleeps; `Timer` and `Task.sleep` use uptime clocks and would fire late after wake.
+  - en_US time text has a narrow no-break space (U+202F) before AM/PM; tests use `nnbsp`. Time uses the `jmm` template, so 12/24 h follows the locale (en_GB → `21:00`) until M6.
+  - `ImageRenderer` draws AppKit-backed controls (TextField, List, Slider) as yellow placeholders. The snapshot tool now draws through an offscreen `NSHostingView` + `cacheDisplay` instead.
+  - The longest city name in the catalog is "Bahia Banderas" (`clock-long-name` snapshot).
+  - `TimeZone.current.identifier` may not be in the known list (e.g. `Asia/Kolkata` vs. `Asia/Calcutta`); `ClockViewModel.live()` falls back to UTC then. If a user reports this, map through the catalog by matching zone data instead.
   - `swift test` prints "Test run with…" twice (once per test runner); that's normal.
   - A fresh clone needs `./scripts/setup.sh` once to install the git hook.
   - The system catalog uses old IANA names: `Asia/Calcutta` (not `Asia/Kolkata`), and `Etc/GMT±N` zones are not listed (only `GMT`). `zone(…)` in tests traps on unknown identifiers, so check names with `TimeZone.knownTimeZoneIdentifiers` first.
@@ -38,10 +46,10 @@ Pure functions on `Zone` taking `at now: Date`: `wallTime(at:)`, `utcOffset`/`ut
 - Tests: `utcOffsetTextInWinterAndSummer`, `utcOffsetTextForUTCIsPlain`, `utcOffsetTextForHalfAndQuarterHourZones`, `differenceTextInWholeHours`, `differenceTextWithMinutes`, `differenceTextUnderAnHour`, `differenceTextSameTime`, `differenceChangesAcrossDSTTransitions` (New York ↔ London 4 h apart in March and late October), `differenceFlipsAcrossHemispheres`, `wallTimeInZone`, `wallTimeKeepsSeconds`, `instantFromWallTime`, `dstGapMovesForward`, `dstGapMovesForwardInLondon`, `dstOverlapPicksFirst`, `skippedDayMovesForward` (Samoa, 2011), `sameZoneIsToday`, `dayRelationChangesAtMidnight`, `kiribatiIsTomorrowFromAmericanSamoa`, `samoaAndAmericanSamoaShareClockTimeButNotDate`, `extremeZonesCanBeTwoDaysApart`
 - Done when: core tests pass.
 
-## [ ] M3: Clock window
+## [x] M3: Clock window
 `ClockViewModel` (in WorldClockUI) driven by an injected clock and ticker. The ticker fires on minute boundaries, not every second (lightweight: the app should be idle between ticks). Reusable views: `TimeDisplay` (large time, date, zone name, offset), `ZonePicker` (search field + results list from M1). The Clock window shows one zone (defaults to the Mac's current zone); the chosen zone persists across launches via a `SettingsStore` protocol in Core with a UserDefaults implementation.
-- Tests: view model display strings at fixed instants, minute rollover on tick, next tick scheduled for the next minute boundary, changing zone, persistence round trip, missing or corrupt saved data → defaults.
-- Done when: tests pass; the window shows a live time, and picking a zone sticks after relaunch.
+- Tests: view model display strings at fixed instants, minute rollover on tick, next tick scheduled for the next minute boundary, changing zone, persistence round trip, missing or corrupt saved data → defaults. As built: `displayStringsAtFixedInstant`, `dateFollowsTheZoneNotUTC`, `twentyFourHourLocaleShowsTwentyFourHourTime`, `nextTickIsAtNextMinuteBoundary`, `tickOnABoundarySchedulesTheFollowingMinute`, `minuteRollsOverOnTick`, `startRefreshesStaleTime`, `stopCancelsTheTicker`, `changingZoneUpdatesDisplay`, `chosenZonePersistsAcrossLaunches`, `missingSavedZoneUsesDefault`, `corruptSavedZoneUsesDefault`; picker: `emptyQueryListsEveryZoneByCity`, `rowsShowRegionAndOffset`, `queryFiltersRows`; store: `clockZoneRoundTripsThroughUserDefaults`, `missingClockZoneIsNil`, `corruptClockZoneIsNil`, `unknownSavedZoneIsNil`, `wrongTypeInUserDefaultsIsNil`, `inMemoryStoreRoundTrips`.
+- Done when: tests pass; the window shows a live time, and picking a zone sticks after relaunch. Closing the window keeps the app in the Dock, and a Dock click reopens it.
 
 ## [ ] M4: Compare window
 A second window (Window menu, ⌘2) comparing two zones. Shows both times side by side with the difference and day relation from M2. A **time scrubber** (slider or 24-hour strip) sets a time in zone A and shows the matching time in zone B, with a "Now" button to return to live. Swap button exchanges the zones. Both zones persist.
