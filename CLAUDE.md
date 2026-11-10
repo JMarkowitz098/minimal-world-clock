@@ -30,7 +30,7 @@ A minimal macOS world clock: a Clock window, a Compare window for two time zones
 - **Views are small reusable pieces** that read display-ready values from a view model.
 - **Saved data stays backward compatible:** decoding is lenient and falls back to defaults.
 - **Accessible by default:** every control has a VoiceOver label; color is never the only signal (assume color-blind users); respect Reduce Motion, Increase Contrast, and Reduce Transparency.
-- **Lightweight and minimal:** no third-party dependencies; no timers faster than the display needs (once a minute unless seconds are shown); no feature or UI element that the requirements don't call for.
+- **Lightweight and minimal:** no third-party dependencies; no timers faster than the display needs (once a minute unless seconds are shown); no background work while windows are hidden; no feature, option, or UI element that the requirements don't call for (the user dislikes feature-heavy clock apps).
 
 ## Workflow
 

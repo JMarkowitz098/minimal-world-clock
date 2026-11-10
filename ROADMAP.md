@@ -10,7 +10,8 @@ Each milestone runs in a new chat, so this section carries what the next session
 
 - **Last session (2026-11-10):** M1 done: `Zone` and `ZoneCatalog` in `WorldClockCore` (19 core tests green). The draft tests from `docs/handoff/` were moved into `Tests/WorldClockCoreTests/` and the drafts folder deleted. Earlier: M0 plus AI tooling (`/milestone` skill, snapshot renderer, pre-commit hook running `check.sh`).
 - **Next:** M2 (time math), run with `/milestone`. No draft tests exist; write them from the M2 entry. Reuse `TestSupport.swift` (`jan15Noon`, `jul15Noon`, `utc(…)`, `zone(…)`) and add new fixed instants there (e.g. the March weeks when New York and London differ by 4 h). Functions take `Zone` and `at now: Date`; `zone.timeZone` gives the `TimeZone`.
-- **Open with the user:** the lightweight budget numbers in M8 (10 MB bundle, 50 MB memory) are proposals; confirm or change them. Also not yet confirmed: Dock app (not menu bar), bundle ID `com.jaredmarkowitz.worldclock`, macOS 14 minimum (see design_doc.md). `gh` isn't installed, so no GitHub CLI (CI and PRs wait on it).
+- **Confirmed by the user:** Dock app; the M8 lightweight budget; minimal UI matters a lot (they find existing clock apps too feature-heavy), so keep every view to what its milestone needs.
+- **Open with the user:** not yet confirmed: bundle ID `com.jaredmarkowitz.worldclock`, macOS 14 minimum (see design_doc.md). `gh` isn't installed, so no GitHub CLI (CI and PRs wait on it).
 - **Notes:**
   - `swift test` prints "Test run with…" twice (once per test runner); that's normal.
   - A fresh clone needs `./scripts/setup.sh` once to install the git hook.
@@ -61,7 +62,7 @@ VoiceOver labels everywhere ("Tokyo, 3:42 PM, tomorrow, 14 hours ahead"), scrubb
 
 ## [ ] M8: Polish & packaging
 Lightweight check, then the icon. App icon drawn by `scripts/make-icon.swift` (no SF Symbols in the icon: Apple's license forbids it), version 1.0.0, `scripts/install.sh` (Release build → /Applications).
-- Lightweight budget (measured on the Release build, recorded in README): no third-party dependencies; app bundle under 10 MB; idle CPU near 0% with both windows open (Activity Monitor); memory under 50 MB. Fix any regressions before packaging.
+- Lightweight budget (measured on the Release build, recorded in README): no third-party dependencies; app bundle under 10 MB; idle CPU near 0% and Energy Impact low with both windows open (Activity Monitor → CPU and Energy tabs); no timer activity while windows are hidden or minimized; memory under 50 MB. Fix any regressions before packaging.
 - Done when: the installed app and widget run from /Applications, the icon shows in Finder and the Dock, and the lightweight budget is met.
 
 ## [ ] M9: App Store readiness
