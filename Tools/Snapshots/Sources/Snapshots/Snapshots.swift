@@ -7,7 +7,8 @@ let root = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
 
 /// Renders every catalog entry whose name contains the optional filter argument, in light and
-/// dark mode, to build/snapshots/<name>-<light|dark>.png at 2× scale.
+/// dark mode (or only light, for `lightOnly` entries), to build/snapshots/<name>-<light|dark>.png
+/// at 2× scale.
 @main
 struct Snapshots {
     @MainActor static func main() throws {
@@ -17,7 +18,7 @@ struct Snapshots {
 
         // Delete renders no catalog entry makes any more (e.g. a removed prototype sheet), so the
         // folder only ever holds current views.
-        let current = Set(catalog.flatMap { ["\($0.name)-light.png", "\($0.name)-dark.png"] })
+        let current = Set(catalog.flatMap { snapshot in snapshot.schemes.map { snapshot.fileName($0) } })
         for file in try FileManager.default.contentsOfDirectory(at: output, includingPropertiesForKeys: nil)
         where file.pathExtension == "png" && !current.contains(file.lastPathComponent) {
             try FileManager.default.removeItem(at: file)
@@ -30,8 +31,8 @@ struct Snapshots {
             exit(1)
         }
         for snapshot in selected {
-            for scheme in [ColorScheme.light, .dark] {
-                let file = output.appending(path: "\(snapshot.name)-\(scheme == .light ? "light" : "dark").png")
+            for scheme in snapshot.schemes {
+                let file = output.appending(path: snapshot.fileName(scheme))
                 try render(snapshot, scheme: scheme, to: file)
                 print("Wrote \(file.path)")
             }

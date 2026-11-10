@@ -7,7 +7,16 @@ import WorldClockUI
 struct Snapshot {
     let name: String
     let size: CGSize
+    /// Render only the light appearance: for views whose colors don't depend on it (a dark
+    /// render would be the same picture).
+    var lightOnly = false
     let view: @MainActor () -> AnyView
+
+    var schemes: [ColorScheme] { lightOnly ? [.light] : [.light, .dark] }
+
+    func fileName(_ scheme: ColorScheme) -> String {
+        "\(name)-\(scheme == .light ? "light" : "dark").png"
+    }
 }
 
 /// January 15, 2026, 12:00 UTC.
@@ -175,8 +184,9 @@ struct ThemeGallery: View {
     Snapshot(name: "settings", size: CGSize(width: 480, height: 640)) {
         AnyView(SettingsView(model: settingsModel()))
     },
-    // Every theme on the small widget, to compare them (and check contrast in M8).
-    Snapshot(name: "themes", size: CGSize(width: 776, height: 776)) {
+    // Every theme on the small widget, to compare them (and check contrast in M8). Light only:
+    // each theme has fixed colors, so a dark render would be the same.
+    Snapshot(name: "themes", size: CGSize(width: 776, height: 776), lightOnly: true) {
         AnyView(ThemeGallery())
     },
 ]
