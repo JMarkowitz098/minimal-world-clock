@@ -13,7 +13,10 @@ public struct WidgetBackground: View {
 
     public var body: some View {
         let theme = themes.theme(for: colorScheme)
+        // Stroked centered on the edge at twice the width; the widget's clipping cuts the outer
+        // half. A border drawn inside the edge (`strokeBorder`) left a light rim outside it on
+        // the desktop: the clipped edge's smoothed pixels blended in the background.
         theme.background
-            .overlay { ContainerRelativeShape().strokeBorder(theme.text, lineWidth: 2) }
+            .overlay { ContainerRelativeShape().stroke(theme.text, lineWidth: 4) }
     }
 }
