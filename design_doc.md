@@ -22,8 +22,8 @@
 - **Time zones:** IANA identifiers from `TimeZone.knownTimeZoneIdentifiers`. The city shown is the last part of the identifier (`America/Argentina/Buenos_Aires` → "Buenos Aires"). City aliases and localized names come later. `UTC` is accepted alongside the system's list; abbreviations (`PST`) are not valid zones.
 - **Zone search:** ignores case and diacritics, treats `_` and space alike, and matches city, region or identifier by substring, or the abbreviation in effect on the given date by exact match only (many zones only have `GMT+9`-style abbreviations, so substring matches would flood the results). Cities starting with the query rank first, then city order.
 - **Widget:** WidgetKit with the zone chosen in the widget's own edit screen (App Intents), so no App Group or shared storage is needed at first.
-- **Bundle ID:** `com.jaredmarkowitz.worldclock` (permanent once on the App Store). Widget: `com.jaredmarkowitz.worldclock.widget`.
+- **Bundle ID (confirmed):** `com.jaredmarkowitz.worldclock` (permanent once on the App Store). Widget: `com.jaredmarkowitz.worldclock.widget`.
 - **Lightweight (budget confirmed by the user):** no third-party dependencies; the clock ticks once a minute unless seconds are shown; no background work when nothing is visible (App Nap allowed, timers paused for hidden windows); budgets checked in M8 (ROADMAP.md): bundle under 10 MB, idle CPU near 0%, Energy Impact low, memory under 50 MB.
 - **Minimal UI:** each window shows only what its job needs. New features, options and settings need a clear reason from the requirements; when in doubt, leave it out. Prefer one obvious way to do something over several configurable ones.
 - **Color blindness:** color is decoration only. Every state also has text or a symbol, and views are checked with the macOS color filters (M7).
-- **Minimum macOS:** 14 (Sonoma), the first version with desktop widgets.
+- **Minimum macOS (confirmed):** 14 (Sonoma), the first version with desktop widgets.
