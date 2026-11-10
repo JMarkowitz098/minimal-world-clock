@@ -3,7 +3,8 @@ import WorldClockCore
 
 /// The Clock window, laid out for a window without a title bar: the city and globe (the zone
 /// picker button) sit top-right in the title bar's strip, level with the close/minimize
-/// buttons; the time and date are centered below (no UTC offset: decided in M6). Colors come from `theme`.
+/// buttons; the time and date are centered below (no UTC offset: decided in M6). Colors come from
+/// `themes`, light or dark to match the Mac's appearance.
 ///
 /// macOS sizes a hidden-title-bar window as content + title bar, with the title bar as a top
 /// safe area. So the time and date respect the safe area, and only the background and the
@@ -11,11 +12,13 @@ import WorldClockCore
 /// `safeAreaPadding(.top, 28)`.
 public struct ClockView: View {
     let model: ClockViewModel
-    let theme: Theme
+    let themes: ThemePair
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: Theme { themes.theme(for: colorScheme) }
 
-    public init(model: ClockViewModel, theme: Theme) {
+    public init(model: ClockViewModel, themes: ThemePair) {
         self.model = model
-        self.theme = theme
+        self.themes = themes
     }
 
     /// The window's natural content size (time and date at their normal size).

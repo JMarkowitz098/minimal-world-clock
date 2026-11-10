@@ -41,6 +41,16 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
     return model
 }
 
+/// The zone picker as the Clock window shows it: Solarized light or dark to match the render.
+struct ThemedPicker: View {
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        ZonePicker(model: ZonePickerViewModel(now: jan15Noon), selected: Zone(identifier: "Africa/Accra"),
+                   theme: ThemePair.solarized.theme(for: scheme)) { _ in }
+    }
+}
+
 /// The widget at a fixed instant, on a rounded background like the desktop's widget container
 /// (the real one comes from WidgetKit). Sizes are macOS's small and medium widgets.
 @MainActor func widget(_ identifier: String, _ size: ZoneWidgetView.Size, at now: Date = jan15Noon) -> AnyView {
@@ -55,15 +65,15 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
 
 @MainActor let catalog: [Snapshot] = [
     Snapshot(name: "clock", size: CGSize(width: 300, height: 162)) {
-        AnyView(ClockView(model: clockModel("Asia/Tokyo"), theme: .solarizedLight).safeAreaPadding(.top, 28))
+        AnyView(ClockView(model: clockModel("Asia/Tokyo"), themes: .solarized).safeAreaPadding(.top, 28))
     },
     // Longest city name in the catalog, to check it fits.
     Snapshot(name: "clock-long-name", size: CGSize(width: 300, height: 162)) {
-        AnyView(ClockView(model: clockModel("America/Bahia_Banderas"), theme: .solarizedLight).safeAreaPadding(.top, 28))
+        AnyView(ClockView(model: clockModel("America/Bahia_Banderas"), themes: .solarized).safeAreaPadding(.top, 28))
     },
     // Resized larger than natural: the time and date scale up with the window.
     Snapshot(name: "clock-resized", size: CGSize(width: 560, height: 300)) {
-        AnyView(ClockView(model: clockModel("Asia/Tokyo"), theme: .solarizedLight).safeAreaPadding(.top, 28))
+        AnyView(ClockView(model: clockModel("Asia/Tokyo"), themes: .solarized).safeAreaPadding(.top, 28))
     },
     Snapshot(name: "compare", size: CGSize(width: 640, height: 260)) {
         AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo")))
@@ -81,7 +91,7 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
     },
     // Themed, as the Clock window shows it (Accra selected).
     Snapshot(name: "zone-picker-themed", size: CGSize(width: 300, height: 380)) {
-        AnyView(ZonePicker(model: ZonePickerViewModel(now: jan15Noon), selected: Zone(identifier: "Africa/Accra"), theme: .solarizedLight) { _ in })
+        AnyView(ThemedPicker())
     },
     Snapshot(name: "zone-picker-search", size: CGSize(width: 300, height: 380)) {
         AnyView(ZonePicker(model: pickerModel(query: "new"), selected: nil) { _ in })

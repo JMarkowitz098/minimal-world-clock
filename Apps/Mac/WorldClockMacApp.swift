@@ -12,7 +12,7 @@ struct WorldClockMacApp: App {
     /// scene (Clock) is the one that opens at launch and on a Dock click.
     var body: some Scene {
         Window("Clock", id: "clock") {
-            ClockView(model: clock, theme: .solarizedLight)
+            ClockView(model: clock, themes: .solarized)
         }
         // The content can grow (its text scales with the window), so without a default size
         // the window opens large. This is below the content's natural size, which is the

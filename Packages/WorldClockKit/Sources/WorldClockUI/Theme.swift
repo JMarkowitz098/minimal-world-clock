@@ -28,6 +28,34 @@ public struct Theme: Sendable, Equatable {
         accent: Color(hex: 0x268BD2),
         surface: Color(hex: 0xFEFAF1)  // base3 halfway to white
     )
+
+    /// Solarized dark: base03 background, base1 text (brighter than the usual base0, for
+    /// contrast), blue accent, base02 (Solarized's highlight background) for popovers.
+    public static let solarizedDark = Theme(
+        name: "Solarized Dark",
+        background: Color(hex: 0x002B36),
+        text: Color(hex: 0x93A1A1),
+        accent: Color(hex: 0x268BD2),
+        surface: Color(hex: 0x073642)
+    )
+}
+
+/// A light and a dark theme used together: the window shows the one matching the Mac's
+/// appearance. The default for M7's theme setting ("System") follows the appearance this way.
+public struct ThemePair: Sendable, Equatable {
+    public let light: Theme
+    public let dark: Theme
+
+    public init(light: Theme, dark: Theme) {
+        self.light = light
+        self.dark = dark
+    }
+
+    public func theme(for scheme: ColorScheme) -> Theme {
+        scheme == .dark ? dark : light
+    }
+
+    public static let solarized = ThemePair(light: .solarizedLight, dark: .solarizedDark)
 }
 
 extension Color {

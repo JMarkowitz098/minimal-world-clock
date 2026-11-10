@@ -45,3 +45,8 @@ private func dayPeriod(in time: AttributedString) -> String? {
     )
     #expect(model.scrubberMarks.map(\.label) == ["00", "06", "12", "18"])
 }
+
+@Test func themePairFollowsTheAppearance() {
+    #expect(ThemePair.solarized.theme(for: .light) == .solarizedLight)
+    #expect(ThemePair.solarized.theme(for: .dark) == .solarizedDark)
+}

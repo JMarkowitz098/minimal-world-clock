@@ -34,7 +34,7 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Ticking on minute boundaries: the `Ticker` protocol, the app's `DispatchTicker`, `Date.nextMinuteBoundary` | `WorldClockUI/Ticker.swift` |
 | A zone's display strings (time, date, city, offset; `time` also as an `AttributedString` marking AM/PM) and the formatters that build them (`ZoneDisplay`, `ZoneFormatter`), shared by both windows | `WorldClockUI/ZoneDisplay.swift` |
 | Shared type sizes and the time with a smaller AM/PM (`TimeStyle.shrinkingDayPeriod`, windows only) | `WorldClockUI/TimeStyle.swift` |
-| Color themes (background, text, accent, and a softer `surface` for popovers); `Theme.solarizedLight` for now, System and a Settings choice in M7 | `WorldClockUI/Theme.swift` |
+| Color themes (background, text, accent, and a softer `surface` for popovers) and light/dark pairs (`ThemePair.solarized`: the window follows the Mac's appearance); a Settings choice in M7 | `WorldClockUI/Theme.swift` |
 | Keeps a window at its content's proportions while resizing (`NSWindow.contentAspectRatio`, macOS only) | `WorldClockUI/WindowAspectRatio.swift` |
 | Clock window display strings, ticking, zone choice and its persistence; `ClockViewModel.live()` wires the app's dependencies | `WorldClockUI/ClockViewModel.swift` |
 | Clock window layout: city + globe in the title bar strip, time and date scaling with the window, theme colors, hover highlight, drag anywhere to move (start/stop on appear/disappear) | `WorldClockUI/ClockView.swift` |
