@@ -16,7 +16,7 @@ Status: early development. See [ROADMAP.md](ROADMAP.md) for what's done and what
 - `Apps/Mac/`: macOS app entry point, kept small
 - `Apps/Widget/`: desktop widget extension (embedded in the app), kept small
 - `project.yml`: XcodeGen spec. Generates `WorldClock.xcodeproj`, which isn't committed.
-- `scripts/`: setup, check, install, and release scripts; `scripts/hooks/`: git hooks
+- `scripts/`: setup and check scripts (install and release scripts come in M10 and M11); `scripts/hooks/`: git hooks
 - `Tools/Snapshots/`: renders the SwiftUI views to PNG for visual checks
 - `.claude/`: Claude Code settings and the `/milestone` skill
 - `ROADMAP.md`: milestones. `design_doc.md`: requirements and decisions. `ARCHITECTURE.md`: how the code fits together. `CLAUDE.md`: instructions for AI agents working in the repo.
@@ -59,7 +59,7 @@ pluginkit -m -p com.apple.widgetkit-extension | grep worldclock   # registered?
 # Then right-click the desktop → Edit Widgets → search "Minimal World Clock".
 # After a signing change, remove and re-add the widget before judging it.
 
-# Render views to PNG (light + dark) in build/snapshots/
+# Render views to PNG (light + dark) in build/snapshots/ (also removes renders of views no longer in the catalog)
 swift run --package-path Tools/Snapshots Snapshots [name-filter]
 
 # Open in Xcode instead

@@ -41,12 +41,15 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
     return model
 }
 
-/// The zone picker as the Clock window shows it: Solarized light or dark to match the render.
+/// The zone picker as the windows show it: Solarized light or dark to match the render, on the
+/// theme's `surface` (the popover's background in the app).
 struct ThemedPicker: View {
+    var query = ""
+    var selected: Zone? = nil
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
-        ZonePicker(model: ZonePickerViewModel(now: jan15Noon), selected: Zone(identifier: "Africa/Accra"),
+        ZonePicker(model: pickerModel(query: query), selected: selected,
                    theme: ThemePair.solarized.theme(for: scheme)) { _ in }
     }
 }
@@ -100,18 +103,15 @@ struct WidgetMock: View {
     Snapshot(name: "compare-long-names", size: CGSize(width: 640, height: 230)) {
         AnyView(CompareView(model: compareModel("America/Bahia_Banderas", "America/St_Johns"), themes: .solarized).safeAreaPadding(.top, 28))
     },
+    // Accra selected (checkmark).
     Snapshot(name: "zone-picker", size: CGSize(width: 300, height: 380)) {
-        AnyView(ZonePicker(model: ZonePickerViewModel(now: jan15Noon), selected: Zone(identifier: "Africa/Accra")) { _ in })
-    },
-    // Themed, as the Clock window shows it (Accra selected).
-    Snapshot(name: "zone-picker-themed", size: CGSize(width: 300, height: 380)) {
-        AnyView(ThemedPicker())
+        AnyView(ThemedPicker(selected: Zone(identifier: "Africa/Accra")))
     },
     Snapshot(name: "zone-picker-search", size: CGSize(width: 300, height: 380)) {
-        AnyView(ZonePicker(model: pickerModel(query: "new"), selected: nil) { _ in })
+        AnyView(ThemedPicker(query: "new"))
     },
     Snapshot(name: "zone-picker-empty", size: CGSize(width: 300, height: 380)) {
-        AnyView(ZonePicker(model: pickerModel(query: "zzz"), selected: nil) { _ in })
+        AnyView(ThemedPicker(query: "zzz"))
     },
     Snapshot(name: "widget-small", size: CGSize(width: 194, height: 194)) {
         widget("Asia/Tokyo", .small)

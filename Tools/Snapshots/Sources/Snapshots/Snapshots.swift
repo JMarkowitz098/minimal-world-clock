@@ -15,6 +15,15 @@ struct Snapshots {
         let output = root.appending(path: "build/snapshots")
         try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
 
+        // Delete renders no catalog entry makes any more (e.g. a removed prototype sheet), so the
+        // folder only ever holds current views.
+        let current = Set(catalog.flatMap { ["\($0.name)-light.png", "\($0.name)-dark.png"] })
+        for file in try FileManager.default.contentsOfDirectory(at: output, includingPropertiesForKeys: nil)
+        where file.pathExtension == "png" && !current.contains(file.lastPathComponent) {
+            try FileManager.default.removeItem(at: file)
+            print("Removed stale \(file.lastPathComponent)")
+        }
+
         let selected = catalog.filter { filter.isEmpty || $0.name.contains(filter) }
         guard !selected.isEmpty else {
             print("No snapshot matches \"\(filter)\". Names: \(catalog.map(\.name).joined(separator: ", "))")

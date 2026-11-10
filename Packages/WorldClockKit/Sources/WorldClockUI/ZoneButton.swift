@@ -7,7 +7,7 @@ public struct ZoneButton: View {
     let zone: Zone
     let now: Date
     let accessibilityName: String
-    let theme: Theme?
+    let theme: Theme
     let scale: CGFloat
     let onSelect: (Zone) -> Void
     @State private var picker: ZonePickerViewModel?
@@ -17,10 +17,10 @@ public struct ZoneButton: View {
     /// - Parameters:
     ///   - now: the instant the picker's offsets are shown for.
     ///   - accessibilityName: what VoiceOver calls the button, e.g. "Time zone".
-    ///   - theme: colors for the button (accent) and the picker popover (surface); `nil` uses the system's.
+    ///   - theme: colors for the button (accent) and the picker popover (surface).
     ///   - scale: size relative to normal (Compare scales with its window).
     public init(zone: Zone, now: Date, accessibilityName: String = "Time zone",
-                theme: Theme? = nil, scale: CGFloat = 1, onSelect: @escaping (Zone) -> Void) {
+                theme: Theme, scale: CGFloat = 1, onSelect: @escaping (Zone) -> Void) {
         self.scale = scale
         self.zone = zone
         self.now = now
@@ -43,10 +43,10 @@ public struct ZoneButton: View {
             }
             // Colored here, not by the caller: a foreground style set on the button would
             // also color the popover's contents.
-            .foregroundStyle(theme?.accent ?? Color.accentColor)
+            .foregroundStyle(theme.accent)
             .padding(.horizontal, 8 * scale)
             .padding(.vertical, 3 * scale)
-            .background((theme?.accent ?? Color.accentColor).opacity(isHovered ? 0.15 : 0), in: Capsule())
+            .background(theme.accent.opacity(isHovered ? 0.15 : 0), in: Capsule())
             .contentShape(Capsule())
             .onHover { hovering in
                 withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
@@ -62,7 +62,7 @@ public struct ZoneButton: View {
                 onSelect(zone)
                 self.picker = nil
             }
-            .presentationBackground(theme?.surface ?? Color.clear)
+            .presentationBackground(theme.surface)
         }
     }
 }
