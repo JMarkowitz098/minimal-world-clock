@@ -3,7 +3,7 @@ import SwiftUI
 /// The Compare window's scrubber: a 24-hour track drawn in the theme's colors (the system slider
 /// ignores the tint on macOS), with a tick per hour, labels every six hours, and an accent fill
 /// and thumb. Dragging or clicking snaps to quarter hours; arrow keys and VoiceOver's adjust
-/// step by 15 minutes.
+/// step by 15 minutes. Hovering darkens the track and rings the thumb (the keyboard focus ring).
 struct TimeStrip: View {
     /// The thumb's position, in minutes since midnight.
     let minuteOfDay: Int
@@ -22,6 +22,7 @@ struct TimeStrip: View {
     private var inset: CGFloat { 7 * scale }
     private var trackY: CGFloat { 12 * scale }
     @FocusState private var isFocused: Bool
+    @State private var isHovered = false
 
     var body: some View {
         GeometryReader { proxy in
@@ -34,7 +35,7 @@ struct TimeStrip: View {
                         .frame(width: 1, height: (major ? 10 : 6) * scale)
                         .position(x: x(hour * 60), y: trackY)
                 }
-                Capsule().fill(theme.text.opacity(0.15))
+                Capsule().fill(theme.text.opacity(isHovered ? 0.25 : 0.15))
                     .frame(width: track, height: 3 * scale)
                     .position(x: inset + track / 2, y: trackY)
                 Capsule().fill(theme.accent)
@@ -42,10 +43,10 @@ struct TimeStrip: View {
                     .position(x: (inset + x(minuteOfDay)) / 2, y: trackY)
                 Circle().fill(theme.accent)
                     .frame(width: 14 * scale, height: 14 * scale)
-                    // Keyboard focus: a soft ring around the thumb instead of the system's
-                    // focus rectangle, which ignores the theme and covers the labels.
+                    // Keyboard focus and hover: a soft ring around the thumb (instead of the
+                    // system's focus rectangle, which ignores the theme and covers the labels).
                     .padding(4 * scale)
-                    .overlay(Circle().strokeBorder(theme.accent.opacity(isFocused ? 0.4 : 0), lineWidth: 3 * scale))
+                    .overlay(Circle().strokeBorder(theme.accent.opacity(isFocused || isHovered ? 0.4 : 0), lineWidth: 3 * scale))
                     .position(x: x(minuteOfDay), y: trackY)
                 ForEach(marks, id: \.minuteOfDay) { mark in
                     Text(mark.label)
@@ -57,6 +58,9 @@ struct TimeStrip: View {
                 }
             }
             .contentShape(Rectangle())
+            .onHover { hovering in
+                withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
+            }
             .gesture(
                 DragGesture(minimumDistance: 0).onChanged { drag in
                     let minutes = Double(drag.location.x - inset) / Double(track) * Double(24 * 60)

@@ -120,16 +120,7 @@ public struct CompareView: View {
                 .font(.system(size: 15 * s, weight: .medium))
                 .monospacedDigit()
                 .foregroundStyle(theme.accent)
-            Button {
-                model.swap()
-            } label: {
-                Image(systemName: "arrow.left.arrow.right")
-                    .font(.system(size: 15 * s))
-                    .foregroundStyle(theme.accent)
-            }
-            .buttonStyle(.plain)
-            .help("Swap time zones")
-            .accessibilityLabel("Swap time zones")
+            SwapButton(theme: theme, scale: s) { model.swap() }
         }
         .fixedSize()
         .accessibilityElement(children: .contain)
@@ -148,6 +139,31 @@ public struct CompareView: View {
             // A little below the strip's center (asked for by the user in M6).
             .offset(y: 3 - proxy.safeAreaInsets.top)
         }
+    }
+}
+
+/// The accent swap arrows; a circle behind them on hover, like the city button's pill. The
+/// circle and the click area reach past the arrows without changing the layout.
+private struct SwapButton: View {
+    let theme: Theme
+    let scale: CGFloat
+    let action: () -> Void
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "arrow.left.arrow.right")
+                .font(.system(size: 15 * scale))
+                .foregroundStyle(theme.accent)
+                .background(Circle().inset(by: -6 * scale).fill(theme.accent.opacity(isHovered ? 0.15 : 0)))
+                .contentShape(Circle().inset(by: -6 * scale))
+                .onHover { hovering in
+                    withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
+                }
+        }
+        .buttonStyle(.plain)
+        .help("Swap time zones")
+        .accessibilityLabel("Swap time zones")
     }
 }
 
