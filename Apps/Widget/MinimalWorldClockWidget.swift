@@ -83,8 +83,9 @@ struct Provider: AppIntentTimelineProvider {
         Entry(date: Date(), zone: zone(for: configuration))
     }
 
-    /// The time text updates on its own, so entries are only needed when the date or offset
-    /// changes: now, then the next two changes; WidgetKit asks again after the last.
+    /// Hours and minutes update on their own, so entries are only needed when the date, AM/PM
+    /// or offset changes (midnight, noon, DST): now, then the next two changes; WidgetKit asks
+    /// again after the last.
     func timeline(for configuration: SelectZoneIntent, in context: Context) async -> Timeline<Entry> {
         let zone = zone(for: configuration)
         let now = Date()

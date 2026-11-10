@@ -28,7 +28,7 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | UTC offset text (`UTC+5:30`) and difference between zones (`−3 h 30 min`, `Same time`) | `WorldClockCore/Offsets.swift` |
 | Reading a typed time of day (`9`, `9:30 pm`, `21:30`, `930`; no AM/PM keeps the edited time's half of the day in 12-hour locales) | `WorldClockCore/TimeEntry.swift` |
 | Yesterday / today / tomorrow relative to another zone | `WorldClockCore/DayRelation.swift` |
-| When a zone's date or offset next changes (next midnight or DST transition): the widget's timeline dates | `WorldClockCore/DisplayChanges.swift` |
+| When a zone's date, AM/PM or offset next changes (next midnight, noon or DST transition): the widget's timeline dates | `WorldClockCore/DisplayChanges.swift` |
 | The widget's zone lookups (resolve identifiers, search, suggestions, default) and `Zone(systemZone:)` (the Mac's zone or UTC) | `WorldClockCore/ZoneQuery.swift` |
 | Saved settings: the `SettingsStore` protocol, its keys, typed accessors (`clockZone`, `compareZoneA`, `compareZoneB`), UserDefaults and in-memory stores | `WorldClockCore/SettingsStore.swift` |
 | Fixed test instants and helpers (`jan15Noon`, `mar15Noon`, `utc(…)`, `wall(…)`, `zone(…)`) | `Tests/WorldClockCoreTests/TestSupport.swift` |
@@ -44,7 +44,7 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Large time that turns into a text field when clicked (hover: accent background + text cursor; Return commits, Esc cancels, unreadable input beeps; clicking elsewhere commits a time or reverts) | `WorldClockUI/EditableTime.swift` |
 | 24-hour scrubber drawn in theme colors (the system slider ignores tint): hourly ticks, labels, accent fill and thumb; hover darkens and thickens the track, rings the thumb, and marks the quarter hour a click would jump to; quarter-hour snapping; arrow keys and VoiceOver adjust | `WorldClockUI/TimeStrip.swift` |
 | Thin accent edge along the window while hovered (Clock and Compare) | `WorldClockUI/HoverEdge.swift` |
-| The widget's strings at an entry date (city, date, short date, offset) and its live time formats (hours and minutes; AM/PM alone, nil in 24-hour locales) | `WorldClockUI/WidgetDisplay.swift` |
+| The widget's strings at an entry date (city, date, short date, offset) and its live hours-and-minutes format, and AM/PM as fixed text (nil in 24-hour locales) | `WorldClockUI/WidgetDisplay.swift` |
 | The widget's layout, small and medium, in the Clock window's look: city top-right in the accent, time with a smaller AM/PM, date; theme colors (no WidgetKit import; snapshots can freeze the time) | `WorldClockUI/ZoneWidgetView.swift` |
 | Button that opens the zone picker in a popover: city with globe and hover pill (Clock and Compare); passes its theme to the popover | `WorldClockUI/ZoneButton.swift` |
 | Zone search rows (`city`, `Asia · UTC+9`) | `WorldClockUI/ZonePickerViewModel.swift` |
@@ -68,11 +68,11 @@ Update this table as milestones add files.
 - View models take their clock (`() -> Date`), `Ticker`, `SettingsStore`, and `Locale` as init parameters; only the `live()` factories touch `Date()`, `TimeZone.current`, or `UserDefaults.standard`.
 - A view model schedules one tick at a time, at the next minute boundary, and only between `start()` and `stop()`, which views call from `onAppear` / `onDisappear`. Nothing repeats on its own.
 - Display strings for a zone come from `ZoneFormatter`, so the Clock and Compare windows format time and date identically. Keep one formatter per shown zone (creating a `DateFormatter` is costly) and update its `zone` rather than rebuilding it.
-- The widget's time is live text (`Text(.currentDate, format:)`, macOS 15+); its timeline has entries only when the date or offset changes (`Zone.displayChanges`), so the extension runs about once a day. Never add per-minute entries.
+- The widget's hours and minutes are live text (`Text(.currentDate, format:)`, macOS 15+); its timeline has entries only when the date, AM/PM or offset changes (`Zone.displayChanges`: midnight, noon, DST), so the extension runs about twice a day. Never add per-minute entries.
 - SwiftUI's `Text(_:format:)` formats dates in the environment's `\.timeZone`, ignoring the format style's own zone, so a view showing another zone's time with it must set `.environment(\.timeZone, …)`. (The windows format strings with `ZoneFormatter` instead.) Snapshots won't catch a miss when the zone shown matches the Mac's.
 - Names the system sees (targets, products, widget kind, gallery name) start with "Minimal World Clock" / `MinimalWorldClock…`: Apple's Clock app already ships a "World Clock" widget whose extension is `WorldClockWidget`. Bundle IDs: `com.jaredmarkowitz.minimalworldclock` and `….widget` (permanent once on the App Store).
 - Every build is signed with the development team. Ad-hoc signed, the widget shows up but macOS silently drops the zone picked in its edit screen. The widget target's "Require team signing" build step and `check.sh`'s signature check enforce this.
-- The widget's live time uses system formats only (`Date.FormatStyle`, `Date.VerbatimFormatStyle`): macOS draws widgets from an archived view, and with a custom `DiscreteFormatStyle` the widget stays on its placeholder. So the widget draws AM/PM smaller as a second `Text`, not as one styled string like the windows.
+- The widget's live time uses a system format only (`Date.FormatStyle`): macOS draws widgets from an archived view, and with a custom `DiscreteFormatStyle` the widget stays on its placeholder. On the desktop a live `Text` also takes all the width it can (a live AM/PM pushed the time off center), so AM/PM is a separate fixed `Text` drawn smaller, refreshed by the timeline at noon and midnight.
 - Windows without a title bar (Clock): content respects the top safe area (the title bar strip); only the background and the strip's controls extend into it. Snapshots of such a view add `.safeAreaPadding(.top, 28)`.
 - A view's `.foregroundStyle` also colors the popovers it presents, so a button that opens a popover colors its own label (`ZoneButton` does) instead of the caller styling the button.
 - App Intents types (`AppEntity`, `WidgetConfigurationIntent`) live in the widget target, where Xcode extracts their metadata; their logic lives in the package (`ZoneQuery`).

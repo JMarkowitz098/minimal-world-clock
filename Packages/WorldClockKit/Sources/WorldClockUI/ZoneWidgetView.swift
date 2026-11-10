@@ -50,19 +50,15 @@ public struct ZoneWidgetView: View {
         size == .small ? TimeStyle.smallWidgetTimeSize : TimeStyle.mediumWidgetTimeSize
     }
 
-    /// Hours and minutes, then AM/PM at the windows' smaller size. Two `Text`s with system
-    /// formats rather than one styled string: the system draws the widget from an archived
-    /// view and can't use our own format types (see `WidgetDisplay.dayPeriodFormat`).
+    /// Live hours and minutes, then AM/PM (fixed text, see `WidgetDisplay.dayPeriodText`) at the
+    /// windows' smaller size. Two `Text`s rather than one styled string: the system draws the
+    /// widget from an archived view and can't use our own format types for live text.
     private var time: some View {
         HStack(alignment: .firstTextBaseline, spacing: (timeSize * 0.12).rounded()) {
-            // On the desktop, live text takes more width than it shows and draws at its
-            // leading edge; aligning the digits right and AM/PM left keeps them together.
-            liveText(display.hourMinuteFormat)
-                .multilineTextAlignment(display.dayPeriodFormat == nil ? .center : .trailing)
-            if let dayPeriod = display.dayPeriodFormat {
-                liveText(dayPeriod)
+            hoursAndMinutes
+            if let dayPeriod = display.dayPeriodText {
+                Text(dayPeriod)
                     .font(.system(size: (timeSize * TimeStyle.dayPeriodScale).rounded()))
-                    .multilineTextAlignment(.leading)
             }
         }
         .font(TimeStyle.timeFont(size: timeSize))
@@ -73,12 +69,11 @@ public struct ZoneWidgetView: View {
         .environment(\.timeZone, display.timeZone)
     }
 
-    @ViewBuilder private func liveText<F: DiscreteFormatStyle>(_ format: F) -> some View
-    where F.FormatInput == Date, F.FormatOutput == String {
+    @ViewBuilder private var hoursAndMinutes: some View {
         if let frozenTime {
-            Text(frozenTime, format: format)
+            Text(frozenTime, format: display.hourMinuteFormat)
         } else {
-            Text(.currentDate, format: format)
+            Text(.currentDate, format: display.hourMinuteFormat)
         }
     }
 }

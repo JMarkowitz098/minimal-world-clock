@@ -3,9 +3,9 @@ import Testing
 @testable import WorldClockCore
 @testable import WorldClockUI
 
-// The widget's text at a timeline entry's date. The time itself is live (formatted by the
-// system from `hourMinuteFormat` and `dayPeriodFormat`), so the tests check the formats against
-// fixed instants.
+// The widget's text at a timeline entry's date. Hours and minutes are live (formatted by the
+// system from `hourMinuteFormat`), so the tests check the format against fixed instants; AM/PM
+// is `dayPeriodText`, fixed per entry (the timeline refreshes at noon and midnight).
 
 @Test func widgetDisplayStringsAtFixedInstant() {
     let display = WidgetDisplay(zone: zone("Asia/Tokyo"), at: jan15Noon, locale: Locale(identifier: "en_US"))
@@ -14,13 +14,13 @@ import Testing
     #expect(display.shortDateText == "Thu, Jan 15")
     #expect(display.offsetText == "UTC+9")
     #expect(display.hourMinuteFormat.format(jan15Noon) == "9:00")
-    #expect(display.dayPeriodFormat?.format(jan15Noon) == "PM")
+    #expect(display.dayPeriodText == "PM")
 }
 
 @Test func widgetTimeFollowsTwentyFourHourLocale() {
     let display = WidgetDisplay(zone: zone("Asia/Tokyo"), at: jan15Noon, locale: Locale(identifier: "en_GB"))
     #expect(display.hourMinuteFormat.format(jan15Noon) == "21:00")
-    #expect(display.dayPeriodFormat == nil)
+    #expect(display.dayPeriodText == nil)
 }
 
 @Test func widgetDateFollowsTheZone() {
@@ -28,7 +28,7 @@ import Testing
     let display = WidgetDisplay(zone: zone("America/New_York"), at: utc(2026, 1, 16, 2, 0), locale: Locale(identifier: "en_US"))
     #expect(display.dateText == "Thursday, January 15")
     #expect(display.hourMinuteFormat.format(utc(2026, 1, 16, 2, 0)) == "9:00")
-    #expect(display.dayPeriodFormat?.format(utc(2026, 1, 16, 2, 0)) == "PM")
+    #expect(display.dayPeriodText == "PM")
     #expect(display.timeZone.identifier == "America/New_York")
 }
 
@@ -42,5 +42,5 @@ import Testing
     // Noon UTC is 7 AM in New York, 9 PM in Tokyo.
     let display = WidgetDisplay(zone: zone("America/New_York"), at: jan15Noon, locale: Locale(identifier: "en_US"))
     #expect(display.hourMinuteFormat.format(jan15Noon) == "7:00")
-    #expect(display.dayPeriodFormat?.format(jan15Noon) == "AM")
+    #expect(display.dayPeriodText == "AM")
 }
