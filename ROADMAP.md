@@ -10,19 +10,19 @@ Each milestone runs in a new chat, so this section carries what the next session
 
 - **Last session (2026-11-10):** M3 done: the Clock window, then a code audit (below). `SettingsStore` (Core), `Ticker`/`DispatchTicker`, `ClockViewModel`, `ZonePickerViewModel`, `TimeDisplay`, `ZonePicker`, `ClockView` (UI); `PlaceholderView` removed. 67 package tests green. The user checked in the app: live time, zone picking, persistence across relaunch, and (after a fix) the window reopening from the Dock.
 - **Next:** M4 (Compare window), run with `/milestone`. Reuse `TimeDisplay` (its `title` slot takes a zone button like `ClockView`'s) and `ZonePicker` in a popover. Add `compareZones` (or two keys) to `SettingsKey` and a typed accessor beside `clockZone`. Inject clock, ticker and store like `ClockViewModel` and add a `live()` factory. The Window menu needs entries for both windows (⌘1 Clock, ⌘2 Compare): with `Window` scenes SwiftUI lists them automatically, but check the shortcuts.
-- **Confirmed by the user:** a design pass after Settings, once every UI element exists (now M7; later milestones renumbered: Accessibility M8, Polish M9, App Store M10, Supporter unlock M11), so keep M4–M6 visuals plain and consistent rather than polished; Dock app; bundle ID `com.jaredmarkowitz.worldclock`; macOS 14 minimum; the M9 lightweight budget; minimal UI matters a lot (they find existing clock apps too feature-heavy), so keep every view to what its milestone needs.
+- **Confirmed by the user:** a design pass as M6, after the widget and before Settings (Settings is M7; later milestones renumbered: Accessibility M8, Polish M9, App Store M10, Supporter unlock M11), so keep M4–M5 visuals plain and consistent rather than polished; Dock app; bundle ID `com.jaredmarkowitz.worldclock`; macOS 14 minimum; the M9 lightweight budget; minimal UI matters a lot (they find existing clock apps too feature-heavy), so keep every view to what its milestone needs.
 - **Open with the user:**
   - M11 price (the user will decide later).
   - `gh` isn't installed, so no GitHub CLI (CI and PRs wait on it).
 - **Code audit (2026-11-10, after M3):** fixed: `SettingsStore` helpers renamed `load`/`save` (`setValue(_:forKey:)` read like NSObject's KVC method), and a value that fails to encode no longer erases the saved one; `ZonePickerViewModel`'s `Identifiable` moved into its own file; `DispatchTicker` got real-time tests. Deferred to the milestone that owns them:
-  - **M6:** the time format is fixed when the model is created, so changing the system's 12/24-hour setting needs a relaunch. When M6 adds "follow the system", rebuild the formatters on `NSLocale.currentLocaleDidChangeNotification`.
+  - **M7:** the time format is fixed when the model is created, so changing the system's 12/24-hour setting needs a relaunch. When M7 adds "follow the system", rebuild the formatters on `NSLocale.currentLocaleDidChangeNotification`.
   - **M9:** pause the ticker while the window is minimized (see below).
   - **Later (localization):** Core's user-facing strings (`Same time`, `UTC`, `h`, `min`) are plain Swift strings, not localizable.
 - **Notes:**
   - A SwiftUI app whose only scene is a `Window` quits when that window closes. `AppDelegate.applicationShouldTerminateAfterLastWindowClosed` returns `false`, and SwiftUI then reopens the `Window` on a Dock click by itself. Verified by script: close via System Events, then `open` the running app (sends a reopen event); count windows with `CGWindowListCopyWindowInfo`.
   - The ticker stops on `onDisappear` (window closed) but probably not when the window is minimized. M9's budget requires no timer activity then; check it there (e.g. `NSWindow.didMiniaturizeNotification` or `scenePhase`).
   - `DispatchTicker` uses `asyncAfter(wallDeadline:)`, which keeps counting while the Mac sleeps; `Timer` and `Task.sleep` use uptime clocks and would fire late after wake.
-  - en_US time text has a narrow no-break space (U+202F) before AM/PM; tests use `nnbsp`. Time uses the `jmm` template, so 12/24 h follows the locale (en_GB → `21:00`) until M6.
+  - en_US time text has a narrow no-break space (U+202F) before AM/PM; tests use `nnbsp`. Time uses the `jmm` template, so 12/24 h follows the locale (en_GB → `21:00`) until M7.
   - `ImageRenderer` draws AppKit-backed controls (TextField, List, Slider) as yellow placeholders. The snapshot tool now draws through an offscreen `NSHostingView` + `cacheDisplay` instead.
   - The longest city name in the catalog is "Bahia Banderas" (`clock-long-name` snapshot).
   - `TimeZone.current.identifier` may not be in the known list (e.g. `Asia/Kolkata` vs. `Asia/Calcutta`); `ClockViewModel.live()` falls back to UTC then. If a user reports this, map through the catalog by matching zone data instead.
@@ -65,15 +65,16 @@ A WidgetKit extension (`WorldClockWidget`, small and medium sizes) showing the t
 - Done when: tests pass; installed from /Applications, the widget appears in the macOS widget gallery, can be placed on the desktop, and shows the chosen zone's time.
 - Risk: macOS may hide widgets from ad-hoc-signed apps. If so, test with a development-signed build and record the steps in README.
 
-## [ ] M6: Settings
+## [ ] M6: Design pass
+Decided 2026-11-10: once the Clock and Compare windows and the widget exist, and before Settings, iterate on the visual design with the user. Work from snapshots: propose changes, render them in light and dark, and revise until the user approves. Keep the minimal-UI rule: refine what's there, add nothing the requirements don't call for. Shared styling (type sizes, spacing) goes in WorldClockUI so every window and the widget match.
+- Tests: existing view model tests stay green; every changed view keeps a snapshot entry.
+- Done when: the user approves the snapshots of both windows and the widget, and the running app matches.
+
+## [ ] M7: Settings
 Settings window (⌘,): 12/24-hour time (default: follow the system), show seconds, and launch at login. Only showing seconds makes the ticker fire every second.
 - Tests: settings defaults, round trip, lenient decoding (missing keys → defaults); display strings honor 12/24 h and seconds.
+- Design: follow the look settled in M6.
 - Done when: tests pass; changes apply live in both windows and the widget.
-
-## [ ] M7: Design pass
-Decided 2026-11-10: once every UI element exists (Clock, Compare, Settings, widget), iterate on the visual design with the user. Work from snapshots: propose changes, render them in light and dark, and revise until the user approves. Keep the minimal-UI rule: refine what's there, add nothing the requirements don't call for. Shared styling (type sizes, spacing) goes in WorldClockUI so every window and the widget match.
-- Tests: existing view model tests stay green; every changed view keeps a snapshot entry.
-- Done when: the user approves the snapshots of each window and the widget, and the running app matches.
 
 ## [ ] M8: Accessibility
 VoiceOver labels everywhere ("Tokyo, 3:42 PM, tomorrow, 14 hours ahead"), scrubber adjustable with arrow keys, keyboard-only use of both windows, contrast meeting WCAG AA in light and dark, Increase Contrast and Reduce Transparency respected, Reduce Motion respected, no information carried by color alone (day relation and ahead/behind always have text or a symbol; any colors pass the macOS color-filter checks for red/green and blue/yellow color blindness).
