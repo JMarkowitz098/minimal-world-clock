@@ -11,6 +11,8 @@ struct EditableTime: View {
     /// What VoiceOver calls it: "Time in Tokyo".
     let label: String
     let theme: Theme
+    /// Size relative to normal (Compare scales with its window).
+    var scale: CGFloat = 1
     /// Called with the typed text; returns whether it was a time.
     let onCommit: (String) -> Bool
 
@@ -18,6 +20,7 @@ struct EditableTime: View {
     @State private var draft: String?
     @State private var isHovered = false
     @FocusState private var isFocused: Bool
+    private var size: CGFloat { TimeStyle.windowTimeSize * scale }
 
     var body: some View {
         Group {
@@ -25,24 +28,24 @@ struct EditableTime: View {
                 // The field draws AM/PM full size, so it's sized by a hidden copy of the typed
                 // text (plus room for the cursor) rather than by the shown time.
                 Text(draft.isEmpty ? " " : draft)
-                    .font(TimeStyle.timeFont(size: TimeStyle.windowTimeSize))
+                    .font(TimeStyle.timeFont(size: size))
                     .monospacedDigit()
                     .lineLimit(1)
                     .fixedSize()
-                    .padding(.trailing, 8)
+                    .padding(.trailing, 8 * scale)
                     .hidden()
                     .overlay { field }
             } else {
-                Text(TimeStyle.shrinkingDayPeriod(time, timeSize: TimeStyle.windowTimeSize))
-                    .font(TimeStyle.timeFont(size: TimeStyle.windowTimeSize))
+                Text(TimeStyle.shrinkingDayPeriod(time, timeSize: size))
+                    .font(TimeStyle.timeFont(size: size))
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
             }
         }
-        .padding(.horizontal, 10)
-        .background(theme.accent.opacity(isHovered || draft != nil ? 0.12 : 0), in: RoundedRectangle(cornerRadius: 10))
-        .contentShape(RoundedRectangle(cornerRadius: 10))
+        .padding(.horizontal, 10 * scale)
+        .background(theme.accent.opacity(isHovered || draft != nil ? 0.12 : 0), in: RoundedRectangle(cornerRadius: 10 * scale))
+        .contentShape(RoundedRectangle(cornerRadius: 10 * scale))
         .onTapGesture { begin() }
         .onHover { hovering in
             withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
@@ -63,7 +66,7 @@ struct EditableTime: View {
         TextField(label, text: Binding(get: { draft ?? "" }, set: { draft = $0 }))
             .labelsHidden()
             .textFieldStyle(.plain)
-            .font(TimeStyle.timeFont(size: TimeStyle.windowTimeSize))
+            .font(TimeStyle.timeFont(size: size))
             .monospacedDigit()
             .multilineTextAlignment(.center)
             .tint(theme.accent)

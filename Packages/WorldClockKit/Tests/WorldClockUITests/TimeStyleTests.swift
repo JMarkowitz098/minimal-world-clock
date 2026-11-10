@@ -50,3 +50,13 @@ private func dayPeriod(in time: AttributedString) -> String? {
     #expect(ThemePair.solarized.theme(for: .light) == .solarizedLight)
     #expect(ThemePair.solarized.theme(for: .dark) == .solarizedDark)
 }
+
+// The Compare window sizes itself by the widest time, so its scale doesn't change while scrubbing.
+@Test func widestTimeHasTwoHourDigits() {
+    let formatter = ZoneFormatter(zone: zone("America/New_York"), locale: Locale(identifier: "en_US"))
+    let sevenAM = formatter.display(at: jan15Noon).time  // "7:00 AM"
+    #expect(String(TimeStyle.widestTime(sevenAM).characters) == "87:00\u{202F}AM")
+    #expect(dayPeriod(in: TimeStyle.widestTime(sevenAM)) == "AM")
+    let tenPM = formatter.display(at: jan15Noon.addingTimeInterval(15 * 3600)).time  // "10:00 PM"
+    #expect(TimeStyle.widestTime(tenPM) == tenPM)
+}

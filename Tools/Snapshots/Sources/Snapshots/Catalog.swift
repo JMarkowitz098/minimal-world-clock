@@ -82,6 +82,10 @@ struct ThemedPicker: View {
     Snapshot(name: "compare-scrubbed", size: CGSize(width: 640, height: 230)) {
         AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 15 * 60), themes: .solarized).safeAreaPadding(.top, 28))
     },
+    // Resized larger than natural: everything but the title bar strip scales up.
+    Snapshot(name: "compare-resized", size: CGSize(width: 960, height: 345)) {
+        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 15 * 60), themes: .solarized).safeAreaPadding(.top, 28))
+    },
     // Longest city name on both sides, with a half-hour difference.
     Snapshot(name: "compare-long-names", size: CGSize(width: 640, height: 230)) {
         AnyView(CompareView(model: compareModel("America/Bahia_Banderas", "America/St_Johns"), themes: .solarized).safeAreaPadding(.top, 28))

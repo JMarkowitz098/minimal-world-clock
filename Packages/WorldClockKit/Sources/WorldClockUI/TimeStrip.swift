@@ -12,13 +12,15 @@ struct TimeStrip: View {
     /// What VoiceOver calls it and reads as its value: "Time in New York", "3:00 PM".
     let label: String
     let value: String
+    /// Size relative to normal (Compare scales with its window).
+    var scale: CGFloat = 1
     let onChange: (Int) -> Void
 
     private static let lastMinute = 24 * 60 - 15
     private static let step = 15
     /// Room at each end for half the thumb.
-    private let inset: CGFloat = 7
-    private let trackY: CGFloat = 12
+    private var inset: CGFloat { 7 * scale }
+    private var trackY: CGFloat { 12 * scale }
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -29,29 +31,29 @@ struct TimeStrip: View {
                 ForEach(0..<25) { hour in
                     let major = hour % 6 == 0
                     Rectangle().fill(theme.text.opacity(major ? 0.5 : 0.25))
-                        .frame(width: 1, height: major ? 10 : 6)
+                        .frame(width: 1, height: (major ? 10 : 6) * scale)
                         .position(x: x(hour * 60), y: trackY)
                 }
                 Capsule().fill(theme.text.opacity(0.15))
-                    .frame(width: track, height: 3)
+                    .frame(width: track, height: 3 * scale)
                     .position(x: inset + track / 2, y: trackY)
                 Capsule().fill(theme.accent)
-                    .frame(width: x(minuteOfDay) - inset, height: 3)
+                    .frame(width: x(minuteOfDay) - inset, height: 3 * scale)
                     .position(x: (inset + x(minuteOfDay)) / 2, y: trackY)
                 Circle().fill(theme.accent)
-                    .frame(width: 14, height: 14)
+                    .frame(width: 14 * scale, height: 14 * scale)
                     // Keyboard focus: a soft ring around the thumb instead of the system's
                     // focus rectangle, which ignores the theme and covers the labels.
-                    .padding(4)
-                    .overlay(Circle().strokeBorder(theme.accent.opacity(isFocused ? 0.4 : 0), lineWidth: 3))
+                    .padding(4 * scale)
+                    .overlay(Circle().strokeBorder(theme.accent.opacity(isFocused ? 0.4 : 0), lineWidth: 3 * scale))
                     .position(x: x(minuteOfDay), y: trackY)
                 ForEach(marks, id: \.minuteOfDay) { mark in
                     Text(mark.label)
-                        .font(.caption)
+                        .font(.system(size: 10 * scale))  // macOS's caption size
                         .monospacedDigit()
                         .opacity(0.75)
                         .fixedSize()
-                        .position(x: x(mark.minuteOfDay), y: trackY + 18)
+                        .position(x: x(mark.minuteOfDay), y: trackY + 18 * scale)
                 }
             }
             .contentShape(Rectangle())
@@ -62,7 +64,7 @@ struct TimeStrip: View {
                 }
             )
         }
-        .frame(height: 40)
+        .frame(height: 40 * scale)
         .focusable()
         .focused($isFocused)
         .focusEffectDisabled()

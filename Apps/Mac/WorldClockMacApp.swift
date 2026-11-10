@@ -29,8 +29,9 @@ struct WorldClockMacApp: App {
         }
         // No title bar, like the Clock window; CompareView makes its background a drag handle.
         .windowStyle(.hiddenTitleBar)
-        // Without a default size the window opens as wide as the slider's ideal width (900 pt).
-        .defaultSize(width: 640, height: 260)
+        // Below the content's natural size (its minimum), so a new window opens at exactly that
+        // size; the content grows with the window, like the Clock's.
+        .defaultSize(width: 200, height: 100)
         .windowResizability(.contentSize)
         .keyboardShortcut("2")
     }

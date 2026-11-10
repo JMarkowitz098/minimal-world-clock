@@ -18,6 +18,18 @@ public enum TimeStyle {
         .system(size: size, weight: timeWeight)
     }
 
+    /// `time` with a one-digit hour widened to two ("7:00 AM" → "87:00 AM"). Digits are
+    /// monospaced, so this is as wide as the time ever gets; the Compare window sizes itself by
+    /// it, so its scale doesn't change while scrubbing from 9:45 to 10:00.
+    public static func widestTime(_ time: AttributedString) -> AttributedString {
+        let text = String(time.characters)
+        guard let separator = text.firstIndex(where: { !$0.isNumber }),
+              text.distance(from: text.startIndex, to: separator) == 1 else { return time }
+        var wide = time
+        wide.insert(AttributedString("8"), at: wide.startIndex)
+        return wide
+    }
+
     /// `time` (a formatted time with `dateField` attributes) with its day period set in a
     /// smaller font; every other run keeps the font of the `Text` it's drawn in.
     public static func shrinkingDayPeriod(_ time: AttributedString, timeSize: CGFloat) -> AttributedString {
