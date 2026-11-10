@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// The desktop widget's content, in the Clock window's look: the city in the accent at the top
-/// right, the live time (AM/PM smaller) and the date centered, colors from `themes` (light or
-/// dark to match the Mac). The widget target adds the container background
-/// (`themes.theme(for:).background`); WidgetKit isn't imported here.
+/// The desktop widget's content, colors from `themes` (light or dark to match the Mac). Medium
+/// has the Clock window's look: the city in the accent at the top right, the live time (AM/PM
+/// smaller) and the date centered. Small stacks the city and date at the top left and the time
+/// at the bottom left (chosen by the user in M6: "like the Apple Watch"). The widget target adds
+/// the container background (`WidgetBackground`); WidgetKit isn't imported here.
 public struct ZoneWidgetView: View {
     public enum Size: Sendable {
         case small, medium
@@ -25,25 +26,44 @@ public struct ZoneWidgetView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 2) {
-            time
-            Text(size == .small ? display.shortDateText : display.dateText)
-                .font(.system(size: 13))
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+        Group {
+            switch size {
+            case .small:
+                VStack(alignment: .leading, spacing: 2) {
+                    city
+                    date
+                    Spacer(minLength: 0)
+                    time
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            case .medium:
+                VStack(spacing: 2) {
+                    time
+                    date
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay(alignment: .topTrailing) { city }
+            }
         }
         .foregroundStyle(theme.text)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .overlay(alignment: .topTrailing) {
-            Text(display.cityText)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(theme.accent)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .accessibilitySortPriority(1)
-        }
         // Read as one line, city first; the time is live text, so VoiceOver reads its current value.
         .accessibilityElement(children: .combine)
+    }
+
+    private var city: some View {
+        Text(display.cityText)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(theme.accent)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .accessibilitySortPriority(1)
+    }
+
+    private var date: some View {
+        Text(size == .small ? display.shortDateText : display.dateText)
+            .font(.system(size: 13))
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
     }
 
     private var timeSize: CGFloat {

@@ -126,8 +126,4 @@ struct WidgetMock: View {
     Snapshot(name: "widget-medium-long", size: CGSize(width: 388, height: 194)) {
         widget("America/St_Johns", .medium, at: Date(timeIntervalSince1970: 1_790_784_000))
     },
-    // M6 prototype (WidgetOptions.swift; delete with that file once a layout is chosen).
-    Snapshot(name: "widget-layouts", size: CGSize(width: 600, height: 1290)) {
-        AnyView(WidgetLayoutSheet())
-    },
 ]
