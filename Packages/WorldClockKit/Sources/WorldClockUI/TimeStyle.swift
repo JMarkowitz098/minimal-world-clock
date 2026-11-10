@@ -7,8 +7,8 @@ public enum TimeStyle {
     /// The large time in the Clock and Compare windows.
     public static let windowTimeSize: CGFloat = 56
     /// The time in the small and medium widgets.
-    static let smallWidgetTimeSize: CGFloat = 36
-    static let mediumWidgetTimeSize: CGFloat = 48
+    static let smallWidgetTimeSize: CGFloat = 42
+    static let mediumWidgetTimeSize: CGFloat = 56
     static let timeWeight: Font.Weight = .light
     /// AM/PM as a fraction of the time's size.
     static let dayPeriodScale: CGFloat = 0.4

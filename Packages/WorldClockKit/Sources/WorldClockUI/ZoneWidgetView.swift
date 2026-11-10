@@ -28,7 +28,7 @@ public struct ZoneWidgetView: View {
         VStack(spacing: 2) {
             time
             Text(size == .small ? display.shortDateText : display.dateText)
-                .font(.system(size: 12))
+                .font(.system(size: 13))
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }
@@ -36,7 +36,7 @@ public struct ZoneWidgetView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .topTrailing) {
             Text(display.cityText)
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(theme.accent)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
