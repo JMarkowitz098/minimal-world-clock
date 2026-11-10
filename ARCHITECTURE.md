@@ -21,6 +21,7 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Targets, bundle IDs, versions, Info.plist keys | `project.yml` |
 | Package targets | `Packages/WorldClockKit/Package.swift` |
 | Placeholder window content (replaced in M3) | `WorldClockUI/PlaceholderView.swift` |
+| Work handed from one session to the next (e.g. draft tests) | `docs/handoff/` (see ROADMAP.md → Handoff) |
 
 Update this table as milestones add files.
 

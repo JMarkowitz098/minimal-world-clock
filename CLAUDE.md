@@ -32,6 +32,7 @@ A minimal macOS world clock: a Clock window, a Compare window for two time zones
 
 - **TDD** for Core and view models: failing test first, then make it pass, then refactor. Views are checked by running the app; ask the user to check visual changes.
 - **One milestone from ROADMAP.md at a time. Stop after each one and check in with the user before starting the next.** The milestone's listed tests are its acceptance criteria.
+- **Each milestone runs in a fresh chat.** Start by reading ROADMAP.md → Handoff. Before the final commit of a session, rewrite that Handoff section: what was done, exactly what's next, open questions for the user, and anything learned that isn't obvious from the code (gotchas, decisions, dead ends). Also update ARCHITECTURE.md's file map and record product decisions in design_doc.md. Nothing may live only in the chat or a scratchpad: work in progress goes in the repo (e.g. `docs/handoff/`).
 - Swift 6 language mode; fix concurrency warnings rather than suppressing them.
 - After a structural change, update ARCHITECTURE.md in the same commit.
 

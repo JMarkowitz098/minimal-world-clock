@@ -4,6 +4,19 @@ Each milestone fits in one session. Its "Tests" are the acceptance criteria: wri
 
 Shared commands: `./scripts/check.sh` (all tests + app build). Use `swift test --package-path Packages/WorldClockKit` for fast TDD loops.
 
+## Handoff (read first; rewrite at the end of every session)
+
+Each milestone runs in a new chat, so this section carries what the next session needs and the code and git history can't show.
+
+- **Last session (2026-11-10):** M0 done. Repo is local only (`main`).
+- **Next:** M1. Draft tests are already written in `docs/handoff/M1-draft-tests/` (red, never run against an implementation): move them to `Packages/WorldClockKit/Tests/WorldClockCoreTests/`, confirm they fail, implement `Zone` and `ZoneCatalog` in `WorldClockCore`, then delete the drafts folder.
+- **Open with the user:**
+  - GitHub remote not set up yet: `gh` isn't installed. The user will either install it (`brew install gh && gh auth login`) or create an empty repo and give the URL. Ask whether it should be public or private. Then `git remote add origin …` and push.
+  - User hasn't confirmed: Dock app (not menu bar), bundle ID `com.jaredmarkowitz.worldclock`, macOS 14 minimum (see design_doc.md).
+- **Notes:**
+  - `swift test` prints "Test run with…" twice (once per test runner); that's normal.
+  - `TimeZone.abbreviation(for:)` returns `GMT+9`-style text for many zones, so abbreviation search only helps for zones with real abbreviations (PST, CET…).
+
 ## [x] M0: Scaffold
 Shared `WorldClockKit` package (Core + UI), XcodeGen project with a `WorldClockMac` target (sandboxed, ad-hoc signed), a single placeholder window, `scripts/check.sh`, and the docs (README, CLAUDE.md, ARCHITECTURE.md, design_doc.md, this roadmap). Git repo on `main`.
 - Tests: `coreModuleLoads`, `uiModuleLoads`
