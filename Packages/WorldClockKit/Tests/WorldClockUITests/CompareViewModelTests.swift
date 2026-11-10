@@ -22,10 +22,8 @@ import Testing
     let (model, _, _) = makeCompare()
     #expect(model.a.cityText == "New York")
     #expect(model.a.dateText == "Thursday, January 15")
-    #expect(model.a.offsetText == "UTC\u{2212}5")
     #expect(model.b.cityText == "Tokyo")
     #expect(model.b.dateText == "Thursday, January 15")
-    #expect(model.b.offsetText == "UTC+9")
     #expect(model.differenceText == "+14 h")
 }
 

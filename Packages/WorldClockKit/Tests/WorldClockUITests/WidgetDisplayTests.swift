@@ -12,7 +12,6 @@ import Testing
     #expect(display.cityText == "Tokyo")
     #expect(display.dateText == "Thursday, January 15")
     #expect(display.shortDateText == "Thu, Jan 15")
-    #expect(display.offsetText == "UTC+9")
     #expect(display.hourMinuteFormat.format(jan15Noon) == "9:00")
     #expect(display.dayPeriodText == "PM")
 }
@@ -30,12 +29,6 @@ import Testing
     #expect(display.hourMinuteFormat.format(utc(2026, 1, 16, 2, 0)) == "9:00")
     #expect(display.dayPeriodText == "PM")
     #expect(display.timeZone.identifier == "America/New_York")
-}
-
-@Test func widgetOffsetAtTransitionIsTheNewOffset() {
-    // The timeline's entry at a DST transition shows the offset that starts then.
-    let display = WidgetDisplay(zone: zone("America/New_York"), at: utc(2026, 3, 8, 7, 0), locale: Locale(identifier: "en_US"))
-    #expect(display.offsetText == "UTC\u{2212}4")
 }
 
 @Test func widgetDayPeriodFollowsTheZone() {

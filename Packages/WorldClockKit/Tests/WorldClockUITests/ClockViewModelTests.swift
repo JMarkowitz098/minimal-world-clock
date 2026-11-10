@@ -8,7 +8,6 @@ import Testing
     #expect(model.timeText == "9:00\(nnbsp)PM")
     #expect(model.dateText == "Thursday, January 15")
     #expect(model.cityText == "Tokyo")
-    #expect(model.offsetText == "UTC+9")
 }
 
 @Test @MainActor func dateFollowsTheZoneNotUTC() {
@@ -16,7 +15,6 @@ import Testing
     let (model, _, _) = makeClock(at: utc(2026, 1, 15, 5, 0), defaultZone: zone("Pacific/Pago_Pago"))
     #expect(model.timeText == "6:00\(nnbsp)PM")
     #expect(model.dateText == "Wednesday, January 14")
-    #expect(model.offsetText == "UTC\u{2212}11")
 }
 
 @Test @MainActor func twentyFourHourLocaleShowsTwentyFourHourTime() {
@@ -72,7 +70,6 @@ import Testing
     #expect(model.zone == zone("America/New_York"))
     #expect(model.timeText == "7:00\(nnbsp)AM")
     #expect(model.cityText == "New York")
-    #expect(model.offsetText == "UTC\u{2212}5")
 }
 
 @Test @MainActor func chosenZonePersistsAcrossLaunches() {

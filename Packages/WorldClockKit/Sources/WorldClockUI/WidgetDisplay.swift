@@ -1,9 +1,9 @@
 import Foundation
 import WorldClockCore
 
-/// What the desktop widget shows for one zone at a timeline entry's date. The date and offset
-/// are fixed strings (the timeline refreshes when they change, see `Zone.nextDisplayChange`);
-/// hours and minutes are live, drawn by the system from `hourMinuteFormat`.
+/// What the desktop widget shows for one zone at a timeline entry's date. The city, date and
+/// AM/PM are fixed strings (the timeline refreshes when they change, see `entryDates`); hours
+/// and minutes are live, drawn by the system from `hourMinuteFormat`.
 public struct WidgetDisplay: Equatable, Sendable {
     /// "Tokyo"
     public var cityText: String
@@ -11,8 +11,6 @@ public struct WidgetDisplay: Equatable, Sendable {
     public var dateText: String
     /// "Thu, Jan 15" (small widget)
     public var shortDateText: String
-    /// "UTC+9"
-    public var offsetText: String
     /// Hours and minutes at the entry's date ("9:00"), as fixed text. The view lays the live
     /// time over it: on the desktop a live `Text` takes all the width it can, which pushed the
     /// time off center. Its width only changes when the hour gains or loses a digit, and the
@@ -38,12 +36,9 @@ public struct WidgetDisplay: Equatable, Sendable {
         cityText = display.cityText
         dateText = display.dateText
         shortDateText = shortDate.string(from: instant)
-        offsetText = display.offsetText
-        hourMinuteFormat = Date.FormatStyle(locale: locale, timeZone: zone.timeZone)
-            .hour(.defaultDigits(amPM: .omitted)).minute()
+        hourMinuteFormat = ZoneFormatter.hourMinuteFormat(locale: locale, zone: zone)
         timeText = hourMinuteFormat.format(instant)
-        let usesDayPeriod = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: locale)?.contains("a") ?? false
-        dayPeriodText = usesDayPeriod
+        dayPeriodText = locale.usesTwelveHourTime
             ? Date.VerbatimFormatStyle(format: "\(dayPeriod: .standard(.abbreviated))", locale: locale,
                                        timeZone: zone.timeZone, calendar: Calendar(identifier: .gregorian))
                 .format(instant)
@@ -51,12 +46,11 @@ public struct WidgetDisplay: Equatable, Sendable {
         timeZone = zone.timeZone
     }
 
-    /// The widget's next `count` timeline dates after `now`: when the date, AM/PM or offset
-    /// changes (`Zone.displayChanges`), or the time's width does (9:59 → 10:00, 12:59 → 1:00),
+    /// The widget's next `count` timeline dates after `now`: when the date or AM/PM changes
+    /// (`Zone.displayChanges`: midnight, noon, DST transitions), or the time's width does (9:59 → 10:00, 12:59 → 1:00),
     /// since `timeText` sizes the live time. Several a day at most; never one per minute.
     public static func entryDates(zone: Zone, after now: Date, locale: Locale, count: Int) -> [Date] {
-        let format = Date.FormatStyle(locale: locale, timeZone: zone.timeZone)
-            .hour(.defaultDigits(amPM: .omitted)).minute()
+        let format = ZoneFormatter.hourMinuteFormat(locale: locale, zone: zone)
         var dates = Set(zone.displayChanges(after: now, count: count))
         // Every UTC offset is a multiple of 15 minutes, so stepping by 15 minutes from a quarter
         // hour visits every wall-clock hour; compare each with the minute before it.

@@ -77,7 +77,7 @@ import WorldClockCore
         now = clock()
         formatterA = ZoneFormatter(zone: a, locale: locale)
         formatterB = ZoneFormatter(zone: b, locale: locale)
-        twelveHour = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: locale)?.contains("a") ?? false
+        twelveHour = locale.usesTwelveHourTime
         let utc = TimeZone(identifier: "UTC")!
         let hour = Date.FormatStyle(locale: locale, timeZone: utc).hour()
         scrubberMarks = stride(from: 0, to: 24 * 60, by: 6 * 60).map { minute in

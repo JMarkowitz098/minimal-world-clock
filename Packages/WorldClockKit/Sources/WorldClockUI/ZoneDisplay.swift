@@ -12,8 +12,6 @@ public struct ZoneDisplay: Equatable, Sendable {
     public var dateText: String
     /// "Tokyo"
     public var cityText: String
-    /// "UTC+9"
-    public var offsetText: String
 }
 
 /// Builds `ZoneDisplay`s for one zone at a time. Keeps its formatters, since creating a
@@ -41,9 +39,13 @@ final class ZoneFormatter {
             timeText: String(time.characters),
             time: time,
             dateText: date.string(from: instant),
-            cityText: zone.city,
-            offsetText: zone.utcOffsetText(at: instant)
+            cityText: zone.city
         )
+    }
+
+    /// Hours and minutes in `zone` without AM/PM ("9:00", or "21:00" in a 24-hour locale).
+    static func hourMinuteFormat(locale: Locale, zone: Zone) -> Date.FormatStyle {
+        Date.FormatStyle(locale: locale, timeZone: zone.timeZone).hour(.defaultDigits(amPM: .omitted)).minute()
     }
 
     private static func formatter(template: String, locale: Locale, zone: Zone) -> DateFormatter {

@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// A window's colors: background, text, and an accent for the zone button (city and globe).
-/// Themes follow well-known palettes and are fixed (the same in light and dark mode).
-/// Planned (see design_doc.md): a System theme as the default, and a choice in Settings.
+/// The colors of the windows and the widget: background, text, and an accent (the city and
+/// globe, hover states, Compare's difference and strip), plus a softer `surface` for popovers.
+/// Themes follow well-known palettes; a `ThemePair` picks the light or dark one to match the
+/// Mac. Planned (see design_doc.md): a choice of themes in Settings (M7).
 public struct Theme: Sendable, Equatable {
     public let name: String
     public let background: Color

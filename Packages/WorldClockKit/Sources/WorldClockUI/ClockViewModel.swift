@@ -17,8 +17,6 @@ import WorldClockCore
     public var dateText: String { display.dateText }
     /// "Tokyo"
     public var cityText: String { display.cityText }
-    /// "UTC+9"
-    public var offsetText: String { display.offsetText }
 
     @ObservationIgnored private let store: SettingsStore
     @ObservationIgnored private let clock: () -> Date
