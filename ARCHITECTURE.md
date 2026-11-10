@@ -51,7 +51,6 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Zone search field and results list, system look or themed (surface background, accent ring, cursor, hover and checkmark) | `WorldClockUI/ZonePicker.swift` |
 | UI test helpers (`FakeClock`, `FakeTicker`, `makeClock(…)`, `makeCompare(…)`, `nnbsp`) | `Tests/WorldClockUITests/TestSupport.swift` |
 | Views rendered for visual checks (and later App Store screenshots) | `Tools/Snapshots/Sources/Snapshots/Catalog.swift` |
-| M6 design prototypes: the Compare window option sheet (`compare-options`), mock windows for the user to pick from; not app code. Also holds `TrafficLights` (mock window buttons) | `Tools/Snapshots/Sources/Snapshots/CompareOptions.swift` |
 | What the pre-commit check runs (tests, app build, team-signing check, snapshot tool build) | `scripts/check.sh` (hook: `scripts/hooks/pre-commit`) |
 | Commands pre-approved for Claude Code | `.claude/settings.json` |
 | The `/milestone` workflow | `.claude/skills/milestone/SKILL.md` |
@@ -87,7 +86,7 @@ Update this table as milestones add files.
 
 **Snapshot a view:** add a `Snapshot` to `catalog` in `Tools/Snapshots/Sources/Snapshots/Catalog.swift`, built from fixed instants and zones (never the real clock). Run `swift run --package-path Tools/Snapshots Snapshots <name>`; output is `build/snapshots/<name>-light.png` and `-dark.png`. The tool draws through an offscreen `NSHostingView` (not `ImageRenderer`, which can't draw text fields, lists or sliders) with the light or dark appearance set, so AppKit controls and colors render correctly. For a view model, pass fixed instants, `InMemorySettingsStore`, `Locale(identifier: "en_US")`, and the catalog's `StillTicker` (the `clockModel`/`compareModel` helpers do this; `compareModel(…, scrubTo:)` renders a scrubbed state).
 
-**Explore a design with the user:** add prototype views in a file beside `Tools/Snapshots/Sources/Snapshots/CompareOptions.swift` (or there) and put 4–8 options on one sheet, two per row, each in a mock window frame (`TrafficLights` draws the window buttons); render and let the user pick or mix. Build only the chosen option into WorldClockUI.
+**Explore a design with the user:** add a prototype file under `Tools/Snapshots/Sources/Snapshots/` (e.g. `WidgetOptions.swift`), register its sheet in `Catalog.swift`, and put 4–8 options on one sheet, two per row, each in a mock window frame with fixed dates and zones; render and let the user pick or mix (keep the ones they keep, drop the rest, and iterate). Build only the chosen option into WorldClockUI, then delete the prototype file. Examples in git history: `ClockOptions.swift` and `CompareOptions.swift` (the latter at commit 8ab9350, with `TrafficLights` for mock window buttons).
 
 **Add a window:** add a `Window` scene in `Apps/Mac/WorldClockMacApp.swift` with `.keyboardShortcut` (it gets a Window menu item automatically) and `.defaultSize` if the content has a greedy control (a `Slider`'s ideal width is 900 pt; `frame(idealWidth:)` doesn't help). The first scene opens at launch. macOS autosaves each window's frame (`NSWindow Frame <id>` in the app's defaults), so after changing a default size, delete that key before checking it.
 
