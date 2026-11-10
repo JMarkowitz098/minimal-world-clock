@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The desktop widget's content, colors from `themes` (light or dark to match the Mac). Medium
+/// The desktop widget's content, in `\.theme`'s colors. Medium
 /// has the Clock window's look: the city in the accent at the top right, the live time (AM/PM
 /// smaller) and the date centered. Small stacks the city and date at the top left and the time
 /// at the bottom left (chosen by the user in M6: "like the Apple Watch"). The widget target adds
@@ -12,16 +12,13 @@ public struct ZoneWidgetView: View {
 
     let display: WidgetDisplay
     let size: Size
-    let themes: ThemePair
     let frozenTime: Date?
-    @Environment(\.colorScheme) private var colorScheme
-    private var theme: Theme { themes.theme(for: colorScheme) }
+    @Environment(\.theme) private var theme
 
     /// - Parameter frozenTime: shows this instant instead of the live time. For snapshots only.
-    public init(display: WidgetDisplay, size: Size, themes: ThemePair, frozenTime: Date? = nil) {
+    public init(display: WidgetDisplay, size: Size, frozenTime: Date? = nil) {
         self.display = display
         self.size = size
-        self.themes = themes
         self.frozenTime = frozenTime
     }
 
@@ -56,7 +53,7 @@ public struct ZoneWidgetView: View {
 
     private var city: some View {
         Text(display.cityText)
-            .font(.system(size: 14, weight: .semibold))
+            .font(.system(size: TimeStyle.widgetCitySize, weight: .semibold))
             .foregroundStyle(theme.accent)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
@@ -65,7 +62,7 @@ public struct ZoneWidgetView: View {
 
     private var date: some View {
         Text(size == .small ? display.shortDateText : display.dateText)
-            .font(.system(size: 13))
+            .font(.system(size: TimeStyle.widgetDateSize))
             .lineLimit(1)
             .minimumScaleFactor(0.7)
     }

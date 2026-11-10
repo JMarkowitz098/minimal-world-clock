@@ -7,9 +7,9 @@ public struct ZoneButton: View {
     let zone: Zone
     let now: Date
     let accessibilityName: String
-    let theme: Theme
     let scale: CGFloat
     let onSelect: (Zone) -> Void
+    @Environment(\.theme) private var theme
     @State private var picker: ZonePickerViewModel?
     /// Whether the pointer is over the button (shows a pill behind it).
     @State private var isHovered = false
@@ -17,15 +17,13 @@ public struct ZoneButton: View {
     /// - Parameters:
     ///   - now: the instant the picker's offsets are shown for.
     ///   - accessibilityName: what VoiceOver calls the button, e.g. "Time zone".
-    ///   - theme: colors for the button (accent) and the picker popover (surface).
     ///   - scale: size relative to normal (Compare scales with its window).
     public init(zone: Zone, now: Date, accessibilityName: String = "Time zone",
-                theme: Theme, scale: CGFloat = 1, onSelect: @escaping (Zone) -> Void) {
+                scale: CGFloat = 1, onSelect: @escaping (Zone) -> Void) {
         self.scale = scale
         self.zone = zone
         self.now = now
         self.accessibilityName = accessibilityName
-        self.theme = theme
         self.onSelect = onSelect
     }
 
@@ -33,13 +31,12 @@ public struct ZoneButton: View {
         Button {
             picker = ZonePickerViewModel(now: now)
         } label: {
-            // macOS's headline (13 pt bold) and callout (12 pt) sizes, scaled.
             HStack(spacing: 6 * scale) {
                 Text(zone.city)
-                    .font(.system(size: 13 * scale, weight: .bold))
+                    .font(.system(size: TimeStyle.citySize * scale, weight: .bold))
                     .lineLimit(1)
                 Image(systemName: "globe")
-                    .font(.system(size: 12 * scale))
+                    .font(.system(size: TimeStyle.globeSize * scale))
             }
             // Colored here, not by the caller: a foreground style set on the button would
             // also color the popover's contents.
@@ -48,9 +45,7 @@ public struct ZoneButton: View {
             .padding(.vertical, 3 * scale)
             .background(theme.accent.opacity(isHovered ? 0.15 : 0), in: Capsule())
             .contentShape(Capsule())
-            .onHover { hovering in
-                withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
-            }
+            .trackingHover($isHovered)
         }
         .buttonStyle(.plain)
         .help("Choose a time zone")
@@ -58,10 +53,12 @@ public struct ZoneButton: View {
         .accessibilityValue(zone.city)
         .accessibilityHint("Choose a different time zone")
         .popover(item: $picker, arrowEdge: .bottom) { picker in
-            ZonePicker(model: picker, selected: zone, theme: theme) { zone in
+            ZonePicker(model: picker, selected: zone) { zone in
                 onSelect(zone)
                 self.picker = nil
             }
+            // Passed on explicitly: a popover is a separate window.
+            .environment(\.theme, theme)
             .presentationBackground(theme.surface)
         }
     }

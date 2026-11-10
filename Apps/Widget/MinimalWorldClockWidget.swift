@@ -90,11 +90,18 @@ struct Provider: AppIntentTimelineProvider {
         let zone = zone(for: configuration)
         let now = Date()
         let dates = [now] + WidgetDisplay.entryDates(zone: zone, after: now, locale: .current, count: 3)
+        Log.widget.info("Timeline for \(zone.identifier, privacy: .public): \(dates.map { $0.formatted(.iso8601) }.joined(separator: ", "), privacy: .public)")
         return Timeline(entries: dates.map { Entry(date: $0, zone: zone) }, policy: .atEnd)
     }
 
+    /// The configured zone, or the Mac's when none is set yet or the saved one is no longer known.
     private func zone(for configuration: SelectZoneIntent) -> Zone {
-        configuration.zone?.zone ?? ZoneQuery(systemZone: .current).defaultZone
+        guard let entity = configuration.zone else { return ZoneQuery(systemZone: .current).defaultZone }
+        guard let zone = entity.zone else {
+            Log.widget.error("Configured zone \(entity.id, privacy: .public) is unknown; showing the Mac's zone.")
+            return ZoneQuery(systemZone: .current).defaultZone
+        }
+        return zone
     }
 }
 
@@ -108,9 +115,10 @@ struct EntryView: View {
     var body: some View {
         ZoneWidgetView(
             display: WidgetDisplay(zone: entry.zone, at: entry.date, locale: locale),
-            size: family == .systemSmall ? .small : .medium,
-            themes: themes
+            size: family == .systemSmall ? .small : .medium
         )
-        .containerBackground(for: .widget) { WidgetBackground(themes: themes) }
+        .themed(themes)
+        // Themed on its own: WidgetKit draws the container background apart from the content.
+        .containerBackground(for: .widget) { WidgetBackground().themed(themes) }
     }
 }

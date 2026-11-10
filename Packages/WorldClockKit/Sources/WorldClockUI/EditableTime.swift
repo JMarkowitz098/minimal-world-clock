@@ -11,13 +11,13 @@ struct EditableTime: View {
     let time: AttributedString
     /// What VoiceOver calls it: "Time in Tokyo".
     let label: String
-    let theme: Theme
     /// Size relative to normal (Compare scales with its window).
     var scale: CGFloat = 1
     /// Called with the typed text; returns whether it was a time.
     let onCommit: (String) -> Bool
 
     /// The text being typed; `nil` when not editing.
+    @Environment(\.theme) private var theme
     @State private var draft: String?
     @State private var isHovered = false
     @FocusState private var isFocused: Bool
@@ -51,9 +51,7 @@ struct EditableTime: View {
         .background(theme.accent.opacity(isHovered || draft != nil ? 0.12 : 0), in: RoundedRectangle(cornerRadius: 10 * scale))
         .contentShape(RoundedRectangle(cornerRadius: 10 * scale))
         .onTapGesture { begin() }
-        .onHover { hovering in
-            withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
-        }
+        .trackingHover($isHovered)
         #if os(macOS)
         .pointerStyle(.horizontalText)
         #endif

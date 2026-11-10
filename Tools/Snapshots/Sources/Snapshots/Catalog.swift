@@ -46,11 +46,10 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
 struct ThemedPicker: View {
     var query = ""
     var selected: Zone? = nil
-    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
-        ZonePicker(model: pickerModel(query: query), selected: selected,
-                   theme: ThemePair.solarized.theme(for: scheme)) { _ in }
+        ZonePicker(model: pickerModel(query: query), selected: selected) { _ in }
+            .themed(.solarized)
     }
 }
 
@@ -67,41 +66,42 @@ struct WidgetMock: View {
     let now: Date
 
     var body: some View {
-        ZoneWidgetView(display: display, size: size, themes: .solarized, frozenTime: now)
+        ZoneWidgetView(display: display, size: size, frozenTime: now)
             .padding(16)
-            .background(WidgetBackground(themes: .solarized))
+            .background(WidgetBackground())
             .clipShape(RoundedRectangle(cornerRadius: 20))
             .containerShape(RoundedRectangle(cornerRadius: 20))
+            .themed(.solarized)
             .padding(12)
     }
 }
 
 @MainActor let catalog: [Snapshot] = [
     Snapshot(name: "clock", size: CGSize(width: 300, height: 162)) {
-        AnyView(ClockView(model: clockModel("Asia/Tokyo"), themes: .solarized).safeAreaPadding(.top, 28))
+        AnyView(ClockView(model: clockModel("Asia/Tokyo")).themed(.solarized).safeAreaPadding(.top, 28))
     },
     // Longest city name in the catalog, to check it fits.
     Snapshot(name: "clock-long-name", size: CGSize(width: 300, height: 162)) {
-        AnyView(ClockView(model: clockModel("America/Bahia_Banderas"), themes: .solarized).safeAreaPadding(.top, 28))
+        AnyView(ClockView(model: clockModel("America/Bahia_Banderas")).themed(.solarized).safeAreaPadding(.top, 28))
     },
     // Resized larger than natural: the time and date scale up with the window.
     Snapshot(name: "clock-resized", size: CGSize(width: 560, height: 300)) {
-        AnyView(ClockView(model: clockModel("Asia/Tokyo"), themes: .solarized).safeAreaPadding(.top, 28))
+        AnyView(ClockView(model: clockModel("Asia/Tokyo")).themed(.solarized).safeAreaPadding(.top, 28))
     },
     Snapshot(name: "compare", size: CGSize(width: 640, height: 230)) {
-        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo"), themes: .solarized).safeAreaPadding(.top, 28))
+        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo")).themed(.solarized).safeAreaPadding(.top, 28))
     },
     // Scrubbed to 3 PM in New York: Tokyo is on the next day, and Now is enabled.
     Snapshot(name: "compare-scrubbed", size: CGSize(width: 640, height: 230)) {
-        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 15 * 60), themes: .solarized).safeAreaPadding(.top, 28))
+        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 15 * 60)).themed(.solarized).safeAreaPadding(.top, 28))
     },
     // Resized larger than natural: everything but the title bar strip scales up.
     Snapshot(name: "compare-resized", size: CGSize(width: 960, height: 345)) {
-        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 15 * 60), themes: .solarized).safeAreaPadding(.top, 28))
+        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 15 * 60)).themed(.solarized).safeAreaPadding(.top, 28))
     },
     // Longest city name on both sides, with a half-hour difference.
     Snapshot(name: "compare-long-names", size: CGSize(width: 640, height: 230)) {
-        AnyView(CompareView(model: compareModel("America/Bahia_Banderas", "America/St_Johns"), themes: .solarized).safeAreaPadding(.top, 28))
+        AnyView(CompareView(model: compareModel("America/Bahia_Banderas", "America/St_Johns")).themed(.solarized).safeAreaPadding(.top, 28))
     },
     // Accra selected (checkmark).
     Snapshot(name: "zone-picker", size: CGSize(width: 300, height: 380)) {

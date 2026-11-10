@@ -64,8 +64,7 @@ import WorldClockCore
     }
 
     @ObservationIgnored private let store: SettingsStore
-    @ObservationIgnored private let clock: () -> Date
-    @ObservationIgnored private let ticker: Ticker
+    @ObservationIgnored private let minutes: MinuteClock
     @ObservationIgnored private let formatterA: ZoneFormatter
     @ObservationIgnored private let formatterB: ZoneFormatter
     /// Whether the locale shows 12-hour time, for reading typed times without AM/PM.
@@ -77,8 +76,7 @@ import WorldClockCore
     public init(store: SettingsStore, defaultZones: (a: Zone, b: Zone), locale: Locale = .autoupdatingCurrent,
                 clock: @escaping () -> Date, ticker: Ticker) {
         self.store = store
-        self.clock = clock
-        self.ticker = ticker
+        minutes = MinuteClock(clock: clock, ticker: ticker)
         let a = store.compareZoneA ?? defaultZones.a
         let b = store.compareZoneB ?? defaultZones.b
         zoneA = a
@@ -96,12 +94,12 @@ import WorldClockCore
 
     /// Refreshes the time and ticks on every minute boundary until `stop`. Call when the window appears.
     public func start() {
-        tick()
+        minutes.start { [weak self] in self?.now = $0 }
     }
 
     /// Stops ticking. Call when the window is hidden.
     public func stop() {
-        ticker.cancel()
+        minutes.stop()
     }
 
     /// Shows the time `minutes` after midnight in zone A, on the day zone A was on when
@@ -139,7 +137,7 @@ import WorldClockCore
     /// Goes back to showing the current time.
     public func returnToNow() {
         scrubbed = nil
-        now = clock()
+        now = minutes.now()
     }
 
     /// Exchanges the zones, keeping the instant shown.
@@ -176,18 +174,13 @@ import WorldClockCore
         zoneB = zone
         store.compareZoneB = zone
     }
-
-    private func tick() {
-        now = clock()
-        ticker.schedule(at: now.nextMinuteBoundary) { [weak self] in self?.tick() }
-    }
 }
 
 extension CompareViewModel {
     /// The app's model: saved in UserDefaults, real time, the Mac's zone (A) and UTC (B) by default.
     public static func live() -> CompareViewModel {
         CompareViewModel(
-            store: UserDefaultsSettingsStore(),
+            store: UserDefaultsSettingsStore.live(),
             defaultZones: (.macZoneOrUTC, .utc),
             clock: Date.init,
             ticker: DispatchTicker()

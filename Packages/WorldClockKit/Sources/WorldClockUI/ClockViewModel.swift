@@ -19,8 +19,7 @@ import WorldClockCore
     public var cityText: String { display.cityText }
 
     @ObservationIgnored private let store: SettingsStore
-    @ObservationIgnored private let clock: () -> Date
-    @ObservationIgnored private let ticker: Ticker
+    @ObservationIgnored private let minutes: MinuteClock
     @ObservationIgnored private let formatter: ZoneFormatter
 
     /// - Parameters:
@@ -29,8 +28,7 @@ import WorldClockCore
     public init(store: SettingsStore, defaultZone: Zone, locale: Locale = .autoupdatingCurrent,
                 clock: @escaping () -> Date, ticker: Ticker) {
         self.store = store
-        self.clock = clock
-        self.ticker = ticker
+        minutes = MinuteClock(clock: clock, ticker: ticker)
         let zone = store.clockZone ?? defaultZone
         self.zone = zone
         self.now = clock()
@@ -39,12 +37,12 @@ import WorldClockCore
 
     /// Refreshes the time and ticks on every minute boundary until `stop`. Call when the window appears.
     public func start() {
-        tick()
+        minutes.start { [weak self] in self?.now = $0 }
     }
 
     /// Stops ticking. Call when the window is hidden, so the app does no work in the background.
     public func stop() {
-        ticker.cancel()
+        minutes.stop()
     }
 
     /// Shows `zone` and saves it for the next launch.
@@ -53,18 +51,13 @@ import WorldClockCore
         self.zone = zone
         store.clockZone = zone
     }
-
-    private func tick() {
-        now = clock()
-        ticker.schedule(at: now.nextMinuteBoundary) { [weak self] in self?.tick() }
-    }
 }
 
 extension ClockViewModel {
     /// The app's model: saved in UserDefaults, real time, and the Mac's zone as the default.
     public static func live() -> ClockViewModel {
         ClockViewModel(
-            store: UserDefaultsSettingsStore(),
+            store: UserDefaultsSettingsStore.live(),
             defaultZone: .macZoneOrUTC,
             clock: Date.init,
             ticker: DispatchTicker()

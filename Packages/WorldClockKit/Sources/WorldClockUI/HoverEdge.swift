@@ -3,8 +3,9 @@ import SwiftUI
 /// A thin accent line along a window's edge, following its rounded corners, shown while the
 /// pointer is over the window (Clock and Compare). Ignores the safe area so it reaches the top.
 struct HoverEdge: View {
-    let color: Color
     let isVisible: Bool
+    @Environment(\.theme) private var theme
+    private var color: Color { theme.accent }
 
     var body: some View {
         Group {

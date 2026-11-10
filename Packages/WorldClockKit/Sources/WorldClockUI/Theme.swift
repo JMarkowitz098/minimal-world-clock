@@ -66,3 +66,25 @@ extension Color {
                   blue: Double(hex & 0xFF) / 255)
     }
 }
+
+extension EnvironmentValues {
+    /// The theme views draw in. Each window and the widget set it once with `.themed(_:)`;
+    /// everything inside reads it, so changing the theme (M7's setting) changes one value.
+    @Entry public var theme: Theme = .solarizedLight
+}
+
+extension View {
+    /// Sets `\.theme` to `themes`' light or dark theme, matching the Mac's appearance.
+    public func themed(_ themes: ThemePair) -> some View {
+        modifier(Themed(themes: themes))
+    }
+}
+
+private struct Themed: ViewModifier {
+    let themes: ThemePair
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content.environment(\.theme, themes.theme(for: colorScheme))
+    }
+}

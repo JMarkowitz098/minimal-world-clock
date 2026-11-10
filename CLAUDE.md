@@ -28,9 +28,9 @@ A minimal macOS world clock (macOS 15+): a Clock window, a Compare window for tw
 - **WorldClockCore imports Foundation only.** No SwiftUI, AppKit, WidgetKit, or AppIntents. Side effects (persistence) are protocols defined in Core and implemented outside it or with Foundation.
 - **Time is injected.** Core never calls `Date()`; time-dependent functions take `at now: Date`. Tests use fixed instants, never the Mac's own time zone (`TimeZone.current`).
 - **App and widget targets stay thin.** Anything shareable goes in WorldClockKit.
-- **Views are small reusable pieces** that read display-ready values from a view model.
+- **Views are small reusable pieces** that read display-ready values from a view model. Colors come from `@Environment(\.theme)`, sizes from `TimeStyle`, hover through `.trackingHover`, and both windows sit in `ScalingWindow` (ARCHITECTURE.md → Invariants).
 - **Builds are signed with the development team** (`project.yml`), never ad-hoc: macOS drops an ad-hoc widget's settings. A build step and `check.sh` enforce it; don't remove them.
-- **Saved data stays backward compatible:** decoding is lenient and falls back to defaults.
+- **Saved data stays backward compatible:** decoding is lenient and falls back to defaults (and the fallback is logged, see `Log`).
 - **Accessible by default:** every control has a VoiceOver label; color is never the only signal (assume color-blind users); respect Reduce Motion, Increase Contrast, and Reduce Transparency.
 - **Lightweight and minimal:** no third-party dependencies; no timers faster than the display needs (once a minute unless seconds are shown); no background work while windows are hidden; no feature, option, or UI element that the requirements don't call for (the user dislikes feature-heavy clock apps).
 

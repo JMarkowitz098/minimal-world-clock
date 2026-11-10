@@ -6,6 +6,9 @@ import Foundation
 public protocol SettingsStore: AnyObject {
     func data(forKey key: String) -> Data?
     func setData(_ data: Data?, forKey key: String)
+    /// Called when a saved value can't be read (it then reads as `nil`), so the app can log it:
+    /// otherwise a lost setting is invisible. Core can't log itself (Foundation only).
+    func reportUnreadable(key: String, error: any Error)
 }
 
 /// Keys used in a `SettingsStore`. Never rename one: saved data from older versions uses it.
@@ -16,10 +19,19 @@ public enum SettingsKey {
 }
 
 extension SettingsStore {
-    /// The value saved under `key`, or `nil` when there is none or it doesn't decode.
+    /// Does nothing; stores that can report (the app's) override it.
+    public func reportUnreadable(key: String, error: any Error) {}
+
+    /// The value saved under `key`, or `nil` when there is none or it doesn't decode (reported
+    /// with `reportUnreadable`).
     public func load<T: Decodable>(_ type: T.Type, forKey key: String) -> T? {
         guard let data = data(forKey: key) else { return nil }
-        return try? JSONDecoder().decode(type, from: data)
+        do {
+            return try JSONDecoder().decode(type, from: data)
+        } catch {
+            reportUnreadable(key: key, error: error)
+            return nil
+        }
     }
 
     /// Saves `value` under `key`; `nil` removes it. If `value` fails to encode, the saved
@@ -53,9 +65,17 @@ extension SettingsStore {
 /// Persists settings in `UserDefaults` (the standard defaults in the app).
 public final class UserDefaultsSettingsStore: SettingsStore {
     private let defaults: UserDefaults
+    private let onUnreadable: (String, any Error) -> Void
 
-    public init(defaults: UserDefaults = .standard) {
+    /// - Parameter onUnreadable: called with the key and error when a saved value can't be read;
+    ///   the app logs it.
+    public init(defaults: UserDefaults = .standard, onUnreadable: @escaping (String, any Error) -> Void = { _, _ in }) {
         self.defaults = defaults
+        self.onUnreadable = onUnreadable
+    }
+
+    public func reportUnreadable(key: String, error: any Error) {
+        onUnreadable(key, error)
     }
 
     public func data(forKey key: String) -> Data? {

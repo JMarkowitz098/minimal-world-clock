@@ -85,3 +85,23 @@ private func withTemporaryDefaults(_ body: (UserDefaults) throws -> Void) rethro
     #expect(store.compareZoneA == zone("Europe/London"))
     #expect(store.compareZoneB == nil)
 }
+
+@Test func unreadableSavedValueIsReported() {
+    // Reading still falls back to nil, but the failure isn't silent: the app logs it.
+    withTemporaryDefaults { defaults in
+        var reports: [String] = []
+        let store = UserDefaultsSettingsStore(defaults: defaults) { key, _ in reports.append(key) }
+        store.setData(Data("garbage".utf8), forKey: SettingsKey.clockZone)
+        #expect(store.clockZone == nil)
+        #expect(reports == [SettingsKey.clockZone])
+    }
+}
+
+@Test func missingSavedValueIsNotReported() {
+    withTemporaryDefaults { defaults in
+        var reports: [String] = []
+        let store = UserDefaultsSettingsStore(defaults: defaults) { key, _ in reports.append(key) }
+        #expect(store.clockZone == nil)
+        #expect(reports.isEmpty)
+    }
+}

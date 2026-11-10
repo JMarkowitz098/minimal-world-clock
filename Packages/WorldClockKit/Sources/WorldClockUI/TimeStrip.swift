@@ -9,7 +9,6 @@ struct TimeStrip: View {
     /// The thumb's position, in minutes since midnight.
     let minuteOfDay: Int
     let marks: [CompareViewModel.ScrubberMark]
-    let theme: Theme
     /// What VoiceOver calls it and reads as its value: "Time in New York", "3:00 PM".
     let label: String
     let value: String
@@ -22,6 +21,8 @@ struct TimeStrip: View {
     /// Room at each end for half the thumb.
     private var inset: CGFloat { 7 * scale }
     private var trackY: CGFloat { 12 * scale }
+    @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var isFocused: Bool
     @State private var isHovered = false
     /// The quarter hour under the pointer (where a click moves the thumb), while hovering.
@@ -61,7 +62,7 @@ struct TimeStrip: View {
                     .position(x: x(minuteOfDay), y: trackY)
                 ForEach(marks, id: \.minuteOfDay) { mark in
                     Text(mark.label)
-                        .font(.system(size: 10 * scale))  // macOS's caption size
+                        .font(.system(size: TimeStyle.stripLabelSize * scale))
                         .monospacedDigit()
                         .opacity(0.75)
                         .fixedSize()
@@ -73,10 +74,10 @@ struct TimeStrip: View {
                 switch phase {
                 case .active(let point):
                     hoverMinute = Self.snapped(Double(point.x - inset) / Double(track) * Double(24 * 60))
-                    if !isHovered { withAnimation(.easeOut(duration: 0.15)) { isHovered = true } }
+                    if !isHovered { withAnimation(reduceMotion ? nil : .hover) { isHovered = true } }
                 case .ended:
                     hoverMinute = nil
-                    withAnimation(.easeOut(duration: 0.15)) { isHovered = false }
+                    withAnimation(reduceMotion ? nil : .hover) { isHovered = false }
                 }
             }
             .gesture(

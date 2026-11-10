@@ -1,14 +1,26 @@
 import SwiftUI
 
-/// The look shared by both windows and the widget: type sizes, and the time drawn with its day
-/// period (AM/PM) smaller than the digits (the widget draws it as two texts instead: see
-/// `ZoneWidgetView.time`).
+/// The type shared by both windows and the widget: every text size (windows multiply theirs by
+/// their scale), and the time drawn with its day period (AM/PM) smaller than the digits (the
+/// widget draws it as two texts instead: see `ZoneWidgetView.time`).
 public enum TimeStyle {
     /// The large time in the Clock and Compare windows.
     public static let windowTimeSize: CGFloat = 56
+    /// The date under a window's time.
+    static let dateSize: CGFloat = 12
+    /// The city on the zone button (macOS's headline size) and its globe (callout size).
+    static let citySize: CGFloat = 13
+    static let globeSize: CGFloat = 12
+    /// Compare's difference ("+14 h") and swap arrows (macOS's title3 size).
+    static let differenceSize: CGFloat = 15
+    /// The hour labels under Compare's strip (macOS's caption size).
+    static let stripLabelSize: CGFloat = 10
     /// The time in the small and medium widgets.
     static let smallWidgetTimeSize: CGFloat = 42
     static let mediumWidgetTimeSize: CGFloat = 56
+    /// The widget's city and date.
+    static let widgetCitySize: CGFloat = 14
+    static let widgetDateSize: CGFloat = 13
     static let timeWeight: Font.Weight = .light
     /// AM/PM as a fraction of the time's size.
     static let dayPeriodScale: CGFloat = 0.4

@@ -2,20 +2,19 @@ import SwiftUI
 import WorldClockCore
 
 /// A search field over every zone and the matching results. Picking a row calls `onSelect`;
-/// Return picks the first result. Drawn in `theme`: its softer `surface` background (also set on
-/// the popover by `ZoneButton`) and text color, and its accent for the search field's focus
+/// Return picks the first result. Drawn in `\.theme`: its softer `surface` background (also set
+/// on the popover by `ZoneButton`) and text color, and its accent for the search field's focus
 /// ring, the hovered row and the checkmark.
 public struct ZonePicker: View {
     @Bindable var model: ZonePickerViewModel
     let selected: Zone?
-    let theme: Theme
     let onSelect: (Zone) -> Void
+    @Environment(\.theme) private var theme
     @FocusState private var searchFocused: Bool
 
-    public init(model: ZonePickerViewModel, selected: Zone?, theme: Theme, onSelect: @escaping (Zone) -> Void) {
+    public init(model: ZonePickerViewModel, selected: Zone?, onSelect: @escaping (Zone) -> Void) {
         self.model = model
         self.selected = selected
-        self.theme = theme
         self.onSelect = onSelect
     }
 
@@ -30,7 +29,7 @@ public struct ZonePicker: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List(model.rows) { row in
-                    ZonePickerRow(row: row, isSelected: row.zone == selected, accent: theme.accent) { onSelect(row.zone) }
+                    ZonePickerRow(row: row, isSelected: row.zone == selected) { onSelect(row.zone) }
                         .listRowSeparatorTint(theme.text.opacity(0.12))
                         .listRowBackground(Color.clear)
                 }
@@ -76,8 +75,8 @@ public struct ZonePicker: View {
 struct ZonePickerRow: View {
     let row: ZonePickerViewModel.Row
     let isSelected: Bool
-    let accent: Color
     let action: () -> Void
+    @Environment(\.theme) private var theme
     @State private var isHovered = false
 
     var body: some View {
@@ -92,16 +91,17 @@ struct ZonePickerRow: View {
                 Spacer()
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .foregroundStyle(accent)
+                        .foregroundStyle(theme.accent)
                         .accessibilityHidden(true)
                 }
             }
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(accent.opacity(isHovered ? 0.15 : 0), in: RoundedRectangle(cornerRadius: 6))
+            .background(theme.accent.opacity(isHovered ? 0.15 : 0), in: RoundedRectangle(cornerRadius: 6))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        // Instant, not faded (`trackingHover`): a fade lags when running the pointer down a list.
         .onHover { isHovered = $0 }
         .accessibilityLabel("\(row.city), \(row.detail)")
         .accessibilityAddTraits(isSelected ? .isSelected : [])

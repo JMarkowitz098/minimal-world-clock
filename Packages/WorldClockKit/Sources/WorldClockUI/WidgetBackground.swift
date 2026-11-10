@@ -6,15 +6,11 @@ import SwiftUI
 /// every widget, so a border on the edge looked broken; inset, the gap reads as deliberate. The
 /// border's corners stay concentric with the widget's (`ContainerRelativeShape`).
 public struct WidgetBackground: View {
-    let themes: ThemePair
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.theme) private var theme
 
-    public init(themes: ThemePair) {
-        self.themes = themes
-    }
+    public init() {}
 
     public var body: some View {
-        let theme = themes.theme(for: colorScheme)
         theme.background
             .overlay { ContainerRelativeShape().inset(by: 6).strokeBorder(theme.text, lineWidth: 1.5) }
     }
