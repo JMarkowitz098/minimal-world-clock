@@ -8,34 +8,44 @@ let root = URL(fileURLWithPath: #filePath)
 
 /// Renders every catalog entry whose name contains the optional filter argument, in light and
 /// dark mode (or only light, for `lightOnly` entries), to build/snapshots/<name>-<light|dark>.png
-/// at 2× scale.
+/// at 2× scale. Design prototypes (`prototypes`, temporary option sheets) go to
+/// build/prototypes/ instead, so they never mix with the views the app ships.
 @main
 struct Snapshots {
     @MainActor static func main() throws {
         let filter = CommandLine.arguments.dropFirst().first ?? ""
-        let output = root.appending(path: "build/snapshots")
-        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
-
-        // Delete renders no catalog entry makes any more (e.g. a removed prototype sheet), so the
+        let folders = [(catalog, root.appending(path: "build/snapshots")),
+                       (prototypes, root.appending(path: "build/prototypes"))]
+        // Delete renders no entry makes any more (e.g. a removed prototype sheet), so each
         // folder only ever holds current views.
-        let current = Set(catalog.flatMap { snapshot in snapshot.schemes.map { snapshot.fileName($0) } })
-        for file in try FileManager.default.contentsOfDirectory(at: output, includingPropertiesForKeys: nil)
-        where file.pathExtension == "png" && !current.contains(file.lastPathComponent) {
-            try FileManager.default.removeItem(at: file)
-            print("Removed stale \(file.lastPathComponent)")
+        for (entries, folder) in folders {
+            try removeStale(in: folder, keeping: entries)
         }
 
-        let selected = catalog.filter { filter.isEmpty || $0.name.contains(filter) }
+        let selected = folders.flatMap { entries, folder in
+            entries.filter { filter.isEmpty || $0.name.contains(filter) }.map { ($0, folder) }
+        }
         guard !selected.isEmpty else {
-            print("No snapshot matches \"\(filter)\". Names: \(catalog.map(\.name).joined(separator: ", "))")
+            print("No snapshot matches \"\(filter)\". Names: \((catalog + prototypes).map(\.name).joined(separator: ", "))")
             exit(1)
         }
-        for snapshot in selected {
+        for (snapshot, folder) in selected {
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             for scheme in snapshot.schemes {
-                let file = output.appending(path: snapshot.fileName(scheme))
+                let file = folder.appending(path: snapshot.fileName(scheme))
                 try render(snapshot, scheme: scheme, to: file)
                 print("Wrote \(file.path)")
             }
+        }
+    }
+
+    @MainActor static func removeStale(in folder: URL, keeping entries: [Snapshot]) throws {
+        guard FileManager.default.fileExists(atPath: folder.path) else { return }
+        let current = Set(entries.flatMap { snapshot in snapshot.schemes.map { snapshot.fileName($0) } })
+        for file in try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
+        where file.pathExtension == "png" && !current.contains(file.lastPathComponent) {
+            try FileManager.default.removeItem(at: file)
+            print("Removed stale \(file.lastPathComponent)")
         }
     }
 
