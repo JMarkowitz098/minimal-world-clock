@@ -20,31 +20,43 @@ struct EditableTime: View {
     @FocusState private var isFocused: Bool
 
     var body: some View {
-        Text(TimeStyle.shrinkingDayPeriod(time, timeSize: TimeStyle.windowTimeSize))
-            .font(TimeStyle.timeFont(size: TimeStyle.windowTimeSize))
-            .monospacedDigit()
-            .lineLimit(1)
-            .minimumScaleFactor(0.5)
-            // Keeps its size while editing, so the layout doesn't jump.
-            .opacity(draft == nil ? 1 : 0)
-            .overlay { if draft != nil { field } }
-            .padding(.horizontal, 10)
-            .background(theme.accent.opacity(isHovered || draft != nil ? 0.12 : 0), in: RoundedRectangle(cornerRadius: 10))
-            .contentShape(RoundedRectangle(cornerRadius: 10))
-            .onTapGesture { begin() }
-            .onHover { hovering in
-                withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
+        Group {
+            if let draft {
+                // The field draws AM/PM full size, so it's sized by a hidden copy of the typed
+                // text (plus room for the cursor) rather than by the shown time.
+                Text(draft.isEmpty ? " " : draft)
+                    .font(TimeStyle.timeFont(size: TimeStyle.windowTimeSize))
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .fixedSize()
+                    .padding(.trailing, 8)
+                    .hidden()
+                    .overlay { field }
+            } else {
+                Text(TimeStyle.shrinkingDayPeriod(time, timeSize: TimeStyle.windowTimeSize))
+                    .font(TimeStyle.timeFont(size: TimeStyle.windowTimeSize))
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
             }
-            #if os(macOS)
-            .pointerStyle(.horizontalText)
-            #endif
-            .help("Click to type a time")
-            .accessibilityElement(children: draft == nil ? .ignore : .contain)
-            .accessibilityLabel(label)
-            .accessibilityValue(String(time.characters))
-            .accessibilityHint("Type a different time")
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAction { begin() }
+        }
+        .padding(.horizontal, 10)
+        .background(theme.accent.opacity(isHovered || draft != nil ? 0.12 : 0), in: RoundedRectangle(cornerRadius: 10))
+        .contentShape(RoundedRectangle(cornerRadius: 10))
+        .onTapGesture { begin() }
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
+        }
+        #if os(macOS)
+        .pointerStyle(.horizontalText)
+        #endif
+        .help("Click to type a time")
+        .accessibilityElement(children: draft == nil ? .ignore : .contain)
+        .accessibilityLabel(label)
+        .accessibilityValue(String(time.characters))
+        .accessibilityHint("Type a different time")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { begin() }
     }
 
     private var field: some View {

@@ -19,6 +19,7 @@ struct TimeStrip: View {
     /// Room at each end for half the thumb.
     private let inset: CGFloat = 7
     private let trackY: CGFloat = 12
+    @FocusState private var isFocused: Bool
 
     var body: some View {
         GeometryReader { proxy in
@@ -39,6 +40,10 @@ struct TimeStrip: View {
                     .position(x: (inset + x(minuteOfDay)) / 2, y: trackY)
                 Circle().fill(theme.accent)
                     .frame(width: 14, height: 14)
+                    // Keyboard focus: a soft ring around the thumb instead of the system's
+                    // focus rectangle, which ignores the theme and covers the labels.
+                    .padding(4)
+                    .overlay(Circle().strokeBorder(theme.accent.opacity(isFocused ? 0.4 : 0), lineWidth: 3))
                     .position(x: x(minuteOfDay), y: trackY)
                 ForEach(marks, id: \.minuteOfDay) { mark in
                     Text(mark.label)
@@ -59,6 +64,8 @@ struct TimeStrip: View {
         }
         .frame(height: 40)
         .focusable()
+        .focused($isFocused)
+        .focusEffectDisabled()
         .onKeyPress(.leftArrow) { nudge(-1); return .handled }
         .onKeyPress(.rightArrow) { nudge(1); return .handled }
         .accessibilityElement()
