@@ -79,6 +79,10 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
     Snapshot(name: "zone-picker", size: CGSize(width: 300, height: 380)) {
         AnyView(ZonePicker(model: ZonePickerViewModel(now: jan15Noon), selected: Zone(identifier: "Africa/Accra")) { _ in })
     },
+    // Themed, as the Clock window shows it (Accra selected).
+    Snapshot(name: "zone-picker-themed", size: CGSize(width: 300, height: 380)) {
+        AnyView(ZonePicker(model: ZonePickerViewModel(now: jan15Noon), selected: Zone(identifier: "Africa/Accra"), theme: .solarizedLight) { _ in })
+    },
     Snapshot(name: "zone-picker-search", size: CGSize(width: 300, height: 380)) {
         AnyView(ZonePicker(model: pickerModel(query: "new"), selected: nil) { _ in })
     },
@@ -98,4 +102,4 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
     Snapshot(name: "widget-medium-long", size: CGSize(width: 388, height: 194)) {
         widget("America/St_Johns", .medium, at: Date(timeIntervalSince1970: 1_790_784_000))
     },
-] + clockOptionSnapshots
+] + clockOptionSnapshots + hoverOptionSnapshots + pickerOptionSnapshots

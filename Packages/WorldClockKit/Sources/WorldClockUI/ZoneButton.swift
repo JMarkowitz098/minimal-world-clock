@@ -16,18 +16,23 @@ public struct ZoneButton: View {
     let now: Date
     let style: Style
     let accessibilityName: String
+    let theme: Theme?
     let onSelect: (Zone) -> Void
     @State private var picker: ZonePickerViewModel?
+    /// Whether the pointer is over the button (`.cityWithGlobe` shows a pill behind it).
+    @State private var isHovered = false
 
     /// - Parameters:
     ///   - now: the instant the picker's offsets are shown for.
     ///   - accessibilityName: what VoiceOver calls the button, e.g. "Time zone".
+    ///   - theme: colors for the button (accent) and the picker popover (surface); `nil` uses the system's.
     public init(zone: Zone, now: Date, style: Style = .cityName, accessibilityName: String = "Time zone",
-                onSelect: @escaping (Zone) -> Void) {
+                theme: Theme? = nil, onSelect: @escaping (Zone) -> Void) {
         self.zone = zone
         self.now = now
         self.style = style
         self.accessibilityName = accessibilityName
+        self.theme = theme
         self.onSelect = onSelect
     }
 
@@ -53,7 +58,16 @@ public struct ZoneButton: View {
                     Image(systemName: "globe")
                         .font(.callout)
                 }
-                .contentShape(Rectangle())
+                // Colored here, not by the caller: a foreground style set on the button would
+                // also color the popover's contents.
+                .foregroundStyle(theme?.accent ?? Color.accentColor)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background((theme?.accent ?? Color.accentColor).opacity(isHovered ? 0.15 : 0), in: Capsule())
+                .contentShape(Capsule())
+                .onHover { hovering in
+                    withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
+                }
             }
         }
         .buttonStyle(.plain)
@@ -62,10 +76,11 @@ public struct ZoneButton: View {
         .accessibilityValue(zone.city)
         .accessibilityHint("Choose a different time zone")
         .popover(item: $picker, arrowEdge: .bottom) { picker in
-            ZonePicker(model: picker, selected: zone) { zone in
+            ZonePicker(model: picker, selected: zone, theme: theme) { zone in
                 onSelect(zone)
                 self.picker = nil
             }
+            .presentationBackground(theme?.surface ?? Color.clear)
         }
     }
 }

@@ -22,6 +22,9 @@ public struct ClockView: View {
     @State private var naturalSize: CGSize = .zero
     /// Height of the hidden title bar's strip (the top safe area).
     @State private var topInset: CGFloat = 0
+    /// Whether the pointer is over the window: the time takes the accent color and a thin
+    /// accent edge traces the window.
+    @State private var isHovered = false
 
     public var body: some View {
         // An invisible copy at the normal size gives the window its natural size; the visible
@@ -41,6 +44,16 @@ public struct ClockView: View {
             .foregroundStyle(theme.text)
             .overlay(alignment: .top) { topStrip }
             .background(theme.background.ignoresSafeArea())
+            .overlay { hoverEdge }
+            .onHover { hovering in
+                withAnimation(.easeOut(duration: 0.15)) { isHovered = hovering }
+            }
+            #if os(macOS)
+            // Dragging anywhere on the clock moves the window (the city/globe button still
+            // takes clicks), even when the window isn't active yet.
+            .gesture(WindowDragGesture())
+            .allowsWindowActivationEvents(true)
+            #endif
             .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.top } action: { topInset = $0 }
             #if os(macOS)
             // The window keeps the content's proportions, so the time fills it at any size.
@@ -64,6 +77,7 @@ public struct ClockView: View {
                 .monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
+                .foregroundStyle(isHovered ? theme.accent : theme.text)
             Text(model.dateText)
                 .font(.system(size: 12 * scale))
         }
@@ -74,15 +88,31 @@ public struct ClockView: View {
         .padding(.bottom, 20 * scale)
     }
 
+    /// A thin accent line along the window's edge while hovered, following its rounded corners.
+    @ViewBuilder private var hoverEdge: some View {
+        Group {
+            if #available(macOS 26, iOS 26, *) {
+                // Centered on the edge; the window clips the outer half, leaving 2 pt.
+                ConcentricRectangle().stroke(theme.accent.opacity(0.6), lineWidth: 4)
+            } else {
+                RoundedRectangle(cornerRadius: 10).strokeBorder(theme.accent.opacity(0.6), lineWidth: 2)
+            }
+        }
+        .opacity(isHovered ? 1 : 0)
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
     /// The city and globe, right-aligned in the title bar's strip.
     private var topStrip: some View {
         GeometryReader { proxy in
             HStack {
                 Spacer()
-                ZoneButton(zone: model.zone, now: model.now, style: .cityWithGlobe) { model.select($0) }
-                    .foregroundStyle(theme.accent)
+                ZoneButton(zone: model.zone, now: model.now, style: .cityWithGlobe, theme: theme) { model.select($0) }
             }
-            .padding(.trailing, 14)
+            // The button's hover pill adds 8 pt on each side.
+            .padding(.trailing, 6)
             // Fill exactly the strip above the content: the top safe area.
             .frame(height: proxy.safeAreaInsets.top)
             .offset(y: -proxy.safeAreaInsets.top)

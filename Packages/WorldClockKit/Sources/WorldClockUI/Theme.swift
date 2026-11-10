@@ -8,12 +8,16 @@ public struct Theme: Sendable, Equatable {
     public let background: Color
     public let text: Color
     public let accent: Color
+    /// A softer background for popovers (the zone picker): between `background` and white for
+    /// light themes. A full `background` there looked too heavy, plain white too stark.
+    public let surface: Color
 
-    public init(name: String, background: Color, text: Color, accent: Color) {
+    public init(name: String, background: Color, text: Color, accent: Color, surface: Color) {
         self.name = name
         self.background = background
         self.text = text
         self.accent = accent
+        self.surface = surface
     }
 
     /// Solarized light (Ethan Schoonover): base3 background, base01 text, blue accent.
@@ -21,7 +25,8 @@ public struct Theme: Sendable, Equatable {
         name: "Solarized Light",
         background: Color(hex: 0xFDF6E3),
         text: Color(hex: 0x586E75),
-        accent: Color(hex: 0x268BD2)
+        accent: Color(hex: 0x268BD2),
+        surface: Color(hex: 0xFEFAF1)  // base3 halfway to white
     )
 }
 

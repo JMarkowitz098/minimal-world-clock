@@ -18,9 +18,9 @@ struct WorldClockMacApp: App {
         // the window opens large. This is below the content's natural size, which is the
         // minimum, so a new window opens at exactly its natural size.
         .defaultSize(width: 200, height: 100)
-        // No title bar (the close/minimize buttons stay); drag anywhere to move the window.
+        // No title bar (the close/minimize buttons stay). ClockView makes the whole clock a
+        // drag handle (WindowDragGesture); the scene's background drag doesn't reach under it.
         .windowStyle(.hiddenTitleBar)
-        .windowBackgroundDragBehavior(.enabled)
         .windowResizability(.contentSize)
         .keyboardShortcut("1")
 
