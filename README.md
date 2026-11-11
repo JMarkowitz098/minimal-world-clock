@@ -6,7 +6,7 @@ A minimal world clock for macOS:
 - **Compare window:** two time zones side by side, with a scrubber to answer "3 pm here is what time there?"
 - **Desktop widget:** the time in a chosen zone, on your desktop.
 
-Status: early development. See [ROADMAP.md](ROADMAP.md) for what's done and what's next.
+Status: version 1.0.0, being prepared for the App Store. See [ROADMAP.md](ROADMAP.md) for what's done and what's next.
 
 ## Layout
 
@@ -16,7 +16,7 @@ Status: early development. See [ROADMAP.md](ROADMAP.md) for what's done and what
 - `Apps/Mac/`: macOS app entry point, kept small
 - `Apps/Widget/`: desktop widget extension (embedded in the app), kept small
 - `project.yml`: XcodeGen spec. Generates `WorldClock.xcodeproj`, which isn't committed.
-- `scripts/`: setup and check scripts, and `make-zone-names.swift` (regenerates the zone → country and zone-name table search uses) (install and release scripts come in M10 and M11); `scripts/hooks/`: git hooks
+- `scripts/`: setup, check and install scripts; `make-icon.swift` (draws the app icon into `Apps/Mac/Assets.xcassets`) and `make-zone-names.swift` (regenerates the zone → country and zone-name table search uses); the release script comes in M11; `scripts/hooks/`: git hooks
 - `Tools/Snapshots/`: renders the SwiftUI views to PNG for visual checks
 - `.claude/`: Claude Code settings and the `/milestone` skill
 - `ROADMAP.md`: milestones. `design_doc.md`: requirements and decisions. `ARCHITECTURE.md`: how the code fits together. `CLAUDE.md`: instructions for AI agents working in the repo.
@@ -62,6 +62,9 @@ pluginkit -m -p com.apple.widgetkit-extension | grep worldclock   # registered?
 # Render views to PNG (light + dark; light only where colors are fixed; some also with Increase Contrast) in build/snapshots/ (design option sheets: build/prototypes/; also removes renders no entry makes)
 swift run --package-path Tools/Snapshots Snapshots [name-filter]
 
+# Redraw the app icon (after editing drawIcon() in the script) into Apps/Mac/Assets.xcassets
+swift scripts/make-icon.swift
+
 # Regenerate the search table of zone countries and names (after a macOS update changes the zone list)
 swift scripts/make-zone-names.swift
 
@@ -78,7 +81,28 @@ The repo is built one roadmap milestone per chat. Start a new chat and run `/mil
 
 ## Deploying
 
-Not set up yet. These arrive with the roadmap:
+```sh
+# Build a Release copy (universal: Apple silicon + Intel), install it to /Applications over any
+# older copy, restart the widget extension so the desktop widget runs the new code, and launch it.
+./scripts/install.sh
+```
 
-- **M10:** `./scripts/install.sh` installs a Release build to /Applications (until then, copy the Debug build as in Testing locally).
+### Lightweight budget
+
+Measured on the Release build (1.0.0, 2026-11-11, macOS 27, Apple silicon) with both windows open and idle for a minute (`top -stats cpu,idlew,power`, `footprint`):
+
+| | Measured | Budget |
+|---|---|---|
+| App bundle (universal, widget included) | 7.6 MB | under 10 MB |
+| Idle CPU | 0.0% (0.7% for one sample at the minute tick) | near 0% |
+| Energy (`top`'s power, Activity Monitor's Energy Impact) and idle wakeups | 0.0 and 0 between ticks | low |
+| Memory (footprint) | app 29 MB (peak 32 MB), widget extension 13 MB | under 50 MB |
+| Timers while a window is hidden | none: ticking pauses while a window is minimized, covered, on another Space or the app is hidden | none |
+
+No third-party dependencies.
+
+### App Store
+
+Not set up yet:
+
 - **M11:** `./scripts/release.sh` checks, bumps the build number, archives, signs, uploads to App Store Connect, and tags the release. It follows the same process as `~/Projects/pomodoro_timer`, whose README has the full App Store Connect and TestFlight steps. This section will hold this app's copy of them.

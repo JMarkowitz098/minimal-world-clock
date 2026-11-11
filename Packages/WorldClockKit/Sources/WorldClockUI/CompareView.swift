@@ -30,6 +30,7 @@ public struct CompareView: View {
         }
         .onAppear { model.start() }
         .onDisappear { model.stop() }
+        .onWindowVisibilityChange { model.setVisible($0) }
     }
 
     /// - Parameter measuring: lay out the widest the content gets as time passes (two-digit

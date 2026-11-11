@@ -245,3 +245,14 @@ import Testing
     let (relaunched, _, _) = makeCompare(store: store)
     #expect(relaunched.placeB == Place(zone("America/Los_Angeles"), city: "San Francisco"))
 }
+
+@Test @MainActor func hiddenCompareWindowStopsTicking() {
+    let (model, clock, ticker) = makeCompare()
+    model.start()
+    model.setVisible(false)
+    #expect(ticker.scheduledDate == nil)
+    clock.now = utc(2026, 1, 15, 13, 0, 10)
+    model.setVisible(true)
+    #expect(model.a.timeText == "8:00\(nnbsp)AM")
+    #expect(ticker.scheduledDate == utc(2026, 1, 15, 13, 1))
+}

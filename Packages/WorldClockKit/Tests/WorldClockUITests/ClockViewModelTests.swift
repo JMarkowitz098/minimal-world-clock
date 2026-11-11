@@ -104,3 +104,40 @@ import Testing
     #expect(second.cityText == "San Francisco")
     #expect(second.zone == zone("America/Los_Angeles"))
 }
+
+// MARK: - Hidden windows (M10: no timer activity while minimized or covered)
+
+@Test @MainActor func hidingTheWindowStopsTicking() {
+    let (model, _, ticker) = makeClock()
+    model.start()
+    model.setVisible(false)
+    #expect(ticker.scheduledDate == nil)
+}
+
+@Test @MainActor func showingTheWindowAgainRefreshesAndTicks() {
+    let (model, clock, ticker) = makeClock()
+    model.start()
+    model.setVisible(false)
+    clock.now = utc(2026, 1, 15, 15, 30, 20)
+    model.setVisible(true)
+    #expect(model.timeText == "12:30\(nnbsp)AM")
+    #expect(ticker.scheduledDate == utc(2026, 1, 15, 15, 31))
+}
+
+@Test @MainActor func showingAClosedWindowDoesNothing() {
+    let (model, _, ticker) = makeClock()
+    model.start()
+    model.stop()
+    model.setVisible(false)
+    model.setVisible(true)
+    #expect(ticker.scheduledDate == nil)
+}
+
+@Test @MainActor func startWhileHiddenReadsTheTimeButDoesntTick() {
+    let (model, clock, ticker) = makeClock()
+    model.setVisible(false)
+    clock.now = utc(2026, 1, 15, 15, 30)
+    model.start()
+    #expect(model.timeText == "12:30\(nnbsp)AM")
+    #expect(ticker.scheduledDate == nil)
+}

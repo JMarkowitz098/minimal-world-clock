@@ -23,6 +23,7 @@ public struct ClockView: View {
         }
         .onAppear { model.start() }
         .onDisappear { model.stop() }
+        .onWindowVisibilityChange { model.setVisible($0) }
     }
 
     private func timeAndDate(scale: CGFloat, isHovered: Bool) -> some View {

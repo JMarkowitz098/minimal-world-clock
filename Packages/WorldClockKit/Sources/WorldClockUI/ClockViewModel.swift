@@ -44,9 +44,16 @@ import WorldClockCore
         minutes.start { [weak self] in self?.now = $0 }
     }
 
-    /// Stops ticking. Call when the window is hidden, so the app does no work in the background.
+    /// Stops ticking. Call when the window closes.
     public func stop() {
         minutes.stop()
+    }
+
+    /// Pauses ticking while the window can't be seen (minimized, covered, on another Space) and
+    /// refreshes the time when it can again, so a hidden window does no work. Feed it from
+    /// `.onWindowVisibilityChange`.
+    public func setVisible(_ visible: Bool) {
+        minutes.setVisible(visible)
     }
 
     /// Formats times and dates for `locale` from now on (the 12/24-hour setting changed, or

@@ -135,9 +135,16 @@ import WorldClockCore
         minutes.start { [weak self] in self?.now = $0 }
     }
 
-    /// Stops ticking. Call when the window is hidden.
+    /// Stops ticking. Call when the window closes.
     public func stop() {
         minutes.stop()
+    }
+
+    /// Pauses ticking while the window can't be seen (minimized, covered, on another Space) and
+    /// refreshes the time when it can again, so a hidden window does no work. Feed it from
+    /// `.onWindowVisibilityChange`.
+    public func setVisible(_ visible: Bool) {
+        minutes.setVisible(visible)
     }
 
     /// Shows the time `minutes` after midnight in zone A, on the day zone A was on when

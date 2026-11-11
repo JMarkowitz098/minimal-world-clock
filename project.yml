@@ -48,9 +48,11 @@ targets:
         # Permanent once on the App Store; shared with a future iPhone app (Universal Purchase).
         PRODUCT_BUNDLE_IDENTIFIER: com.jaredmarkowitz.minimalworldclock
         ENABLE_HARDENED_RUNTIME: YES
-        MARKETING_VERSION: "0.1.0"
+        MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         CODE_SIGN_ENTITLEMENTS: Apps/Mac/WorldClock.entitlements
+        # Drawn by scripts/make-icon.swift into Apps/Mac/Assets.xcassets.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
 
   # Named after the app: Apple's Clock app ships an extension called WorldClockWidget.
   MinimalWorldClockWidget:
@@ -86,6 +88,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.jaredmarkowitz.minimalworldclock.widget
         ENABLE_HARDENED_RUNTIME: YES
         # Must match the app's versions, or App Store validation rejects the upload.
-        MARKETING_VERSION: "0.1.0"
+        MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         CODE_SIGN_ENTITLEMENTS: Apps/Widget/MinimalWorldClockWidget.entitlements
