@@ -18,7 +18,7 @@ A minimal macOS world clock (macOS 15+): a Clock window, a Compare window for tw
 | Run Debug app | `open "build/Build/Products/Debug/Minimal World Clock.app"` |
 | Quit it | `pkill -x "Minimal World Clock"` |
 | Try the widget (macOS only offers widgets from /Applications) | build, then `pkill -x MinimalWorldClockWidget; rm -rf "/Applications/Minimal World Clock.app" && cp -R "build/Build/Products/Debug/Minimal World Clock.app" /Applications/ && open "/Applications/Minimal World Clock.app"`; unregister the build copy with `pluginkit -r "build/Build/Products/Debug/Minimal World Clock.app/Contents/PlugIns/MinimalWorldClockWidget.appex"`; check with `pluginkit -m -p com.apple.widgetkit-extension \| grep worldclock`. The user checks the desktop (agents can't see it). Stopping `MinimalWorldClockWidget` matters: the running extension keeps the old code otherwise. |
-| **Render views to PNG** (light + dark, or light only for `lightOnly` entries, into `build/snapshots/`; temporary option sheets from `Prototypes.swift` go to `build/prototypes/`; both keep only current entries; then Read them) | `swift run --package-path Tools/Snapshots Snapshots [name-filter]` |
+| **Render views to PNG** (light + dark, or light only for `lightOnly` entries, plus `-contrast` renders with Increase Contrast for `increasedContrast` entries, into `build/snapshots/`; temporary option sheets from `Prototypes.swift` go to `build/prototypes/`; both keep only current entries; then Read them) | `swift run --package-path Tools/Snapshots Snapshots [name-filter]` |
 | One-time setup after cloning (git hooks + Xcode project) | `./scripts/setup.sh` |
 
 `WorldClock.xcodeproj` and `Apps/*/Info.plist` are generated: never hand-edit them; change `project.yml` instead.

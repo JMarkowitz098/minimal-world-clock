@@ -59,7 +59,7 @@ pluginkit -m -p com.apple.widgetkit-extension | grep worldclock   # registered?
 # Then right-click the desktop → Edit Widgets → search "Minimal World Clock".
 # After a signing change, remove and re-add the widget before judging it.
 
-# Render views to PNG (light + dark; light only where colors are fixed) in build/snapshots/ (design option sheets: build/prototypes/; also removes renders no entry makes)
+# Render views to PNG (light + dark; light only where colors are fixed; some also with Increase Contrast) in build/snapshots/ (design option sheets: build/prototypes/; also removes renders no entry makes)
 swift run --package-path Tools/Snapshots Snapshots [name-filter]
 
 # Open in Xcode instead

@@ -29,6 +29,17 @@ extension Zone {
         return Self.sign(seconds) + parts.joined(separator: " ")
     }
 
+    /// `offsetText` as VoiceOver should say it: "14 hours ahead", "3 hours 30 minutes behind",
+    /// "1 hour ahead", or "same time" (lowercase: it's read inside a longer sentence).
+    public func spokenOffset(from reference: Zone, at now: Date) -> String {
+        let seconds = offset(from: reference, at: now)
+        guard seconds != 0 else { return "same time" }
+        let (hours, minutes) = Self.hoursAndMinutes(seconds)
+        let parts = (hours > 0 ? [hours == 1 ? "1 hour" : "\(hours) hours"] : [])
+            + (minutes > 0 ? [minutes == 1 ? "1 minute" : "\(minutes) minutes"] : [])
+        return parts.joined(separator: " ") + (seconds > 0 ? " ahead" : " behind")
+    }
+
     /// Typographic signs: "+" and the minus sign U+2212, not a hyphen.
     private static func sign(_ seconds: Int) -> String {
         seconds < 0 ? "\u{2212}" : "+"

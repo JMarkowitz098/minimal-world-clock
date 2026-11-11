@@ -17,6 +17,8 @@ import WorldClockCore
     public var dateText: String { display.dateText }
     /// "Tokyo"
     public var cityText: String { display.cityText }
+    /// What VoiceOver reads for the time and date: "Tokyo, 9:00 PM, Thursday, January 15".
+    public var spokenText: String { "\(display.cityText), \(display.timeText), \(display.dateText)" }
 
     @ObservationIgnored private let store: SettingsStore
     @ObservationIgnored private let minutes: MinuteClock

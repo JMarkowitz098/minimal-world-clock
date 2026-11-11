@@ -6,7 +6,6 @@ import WorldClockCore
 public struct ZoneButton: View {
     let zone: Zone
     let now: Date
-    let accessibilityName: String
     let scale: CGFloat
     let onSelect: (Zone) -> Void
     @Environment(\.theme) private var theme
@@ -16,14 +15,11 @@ public struct ZoneButton: View {
 
     /// - Parameters:
     ///   - now: the instant the picker's offsets are shown for.
-    ///   - accessibilityName: what VoiceOver calls the button, e.g. "Time zone".
     ///   - scale: size relative to normal (Compare scales with its window).
-    public init(zone: Zone, now: Date, accessibilityName: String = "Time zone",
-                scale: CGFloat = 1, onSelect: @escaping (Zone) -> Void) {
+    public init(zone: Zone, now: Date, scale: CGFloat = 1, onSelect: @escaping (Zone) -> Void) {
         self.scale = scale
         self.zone = zone
         self.now = now
-        self.accessibilityName = accessibilityName
         self.onSelect = onSelect
     }
 
@@ -43,13 +39,13 @@ public struct ZoneButton: View {
             .foregroundStyle(theme.accent)
             .padding(.horizontal, 8 * scale)
             .padding(.vertical, 3 * scale)
-            .background(theme.accent.opacity(isHovered ? 0.15 : 0), in: Capsule())
+            .background(theme.accent.opacity(isHovered ? Theme.hoverFill : 0), in: Capsule())
             .contentShape(Capsule())
             .trackingHover($isHovered)
         }
         .buttonStyle(.plain)
         .help("Choose a time zone")
-        .accessibilityLabel(accessibilityName)
+        .accessibilityLabel("Time zone")
         .accessibilityValue(zone.city)
         .accessibilityHint("Choose a different time zone")
         .popover(item: $picker, arrowEdge: .bottom) { picker in

@@ -31,9 +31,9 @@ struct Snapshots {
         }
         for (snapshot, folder) in selected {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            for scheme in snapshot.schemes {
-                let file = folder.appending(path: snapshot.fileName(scheme))
-                try render(snapshot, scheme: scheme, to: file)
+            for variant in snapshot.variants {
+                let file = folder.appending(path: snapshot.fileName(variant))
+                try render(snapshot, variant: variant, to: file)
                 print("Wrote \(file.path)")
             }
         }
@@ -41,7 +41,7 @@ struct Snapshots {
 
     @MainActor static func removeStale(in folder: URL, keeping entries: [Snapshot]) throws {
         guard FileManager.default.fileExists(atPath: folder.path) else { return }
-        let current = Set(entries.flatMap { snapshot in snapshot.schemes.map { snapshot.fileName($0) } })
+        let current = Set(entries.flatMap { snapshot in snapshot.variants.map { snapshot.fileName($0) } })
         for file in try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
         where file.pathExtension == "png" && !current.contains(file.lastPathComponent) {
             try FileManager.default.removeItem(at: file)
@@ -51,16 +51,28 @@ struct Snapshots {
 
     /// Draws through an `NSHostingView` rather than `ImageRenderer`, which can't draw
     /// AppKit-backed controls (text fields, lists, sliders) and shows a placeholder instead.
-    @MainActor static func render(_ snapshot: Snapshot, scheme: ColorScheme, to file: URL) throws {
+    @MainActor static func render(_ snapshot: Snapshot, variant: Snapshot.Variant, to file: URL) throws {
+        let scheme = variant.scheme
         let content = snapshot.view()
             .frame(width: snapshot.size.width, height: snapshot.size.height)
             .background(Color(nsColor: .windowBackgroundColor))
             .environment(\.colorScheme, scheme)
+            // The appearance below alone doesn't reach SwiftUI's `colorSchemeContrast` in an
+            // offscreen view; this is the setter Xcode previews use.
+            .environment(\._colorSchemeContrast, variant.increasedContrast ? .increased : .standard)
         let view = NSHostingView(rootView: content)
         view.frame = CGRect(origin: .zero, size: snapshot.size)
         // AppKit colors (windowBackgroundColor…) and controls follow the view's appearance,
         // not SwiftUI's colorScheme, so set both.
-        view.appearance = NSAppearance(named: scheme == .light ? .aqua : .darkAqua)!
+        // The high-contrast appearances are what Increase Contrast gives a window; SwiftUI's
+        // `colorSchemeContrast` follows them.
+        let appearance: NSAppearance.Name = switch (scheme, variant.increasedContrast) {
+        case (.dark, false): .darkAqua
+        case (.dark, true): .accessibilityHighContrastDarkAqua
+        case (_, false): .aqua
+        case (_, true): .accessibilityHighContrastAqua
+        }
+        view.appearance = NSAppearance(named: appearance)!
         // An offscreen window gives the view a real view hierarchy to lay out and draw in.
         let window = NSWindow(contentRect: view.frame, styleMask: [.borderless], backing: .buffered, defer: false)
         window.contentView = view

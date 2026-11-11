@@ -5,15 +5,14 @@ import SwiftUI
 struct HoverEdge: View {
     let isVisible: Bool
     @Environment(\.theme) private var theme
-    private var color: Color { theme.accent }
 
     var body: some View {
         Group {
             if #available(macOS 26, iOS 26, *) {
                 // Centered on the edge; the window clips the outer half, leaving 2 pt.
-                ConcentricRectangle().stroke(color.opacity(0.6), lineWidth: 4)
+                ConcentricRectangle().stroke(theme.ring(0.6), lineWidth: 4)
             } else {
-                RoundedRectangle(cornerRadius: 10).strokeBorder(color.opacity(0.6), lineWidth: 2)
+                RoundedRectangle(cornerRadius: 10).strokeBorder(theme.ring(0.6), lineWidth: 2)
             }
         }
         .opacity(isVisible ? 1 : 0)

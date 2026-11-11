@@ -32,6 +32,28 @@ import WorldClockCore
         return "\(date) · \(dayRelationText.lowercased())"
     }
 
+    /// `zoneBDateText` as VoiceOver reads it: "Friday, January 16, next day".
+    public var zoneBSpokenDate: String {
+        zoneBDateText.replacingOccurrences(of: " · ", with: ", ")
+    }
+
+    /// What VoiceOver reads for the difference: "Tokyo is 14 hours ahead of New York",
+    /// "UTC has the same time as London".
+    public var spokenDifference: String {
+        let (a, b) = (zoneA.city, zoneB.city)
+        guard zoneB.offset(from: zoneA, at: instant) != 0 else { return "\(b) has the same time as \(a)" }
+        let offset = zoneB.spokenOffset(from: zoneA, at: instant)
+        return "\(b) is \(offset)\(offset.hasSuffix("ahead") ? " of" : "") \(a)"
+    }
+
+    /// The scrubber's value for VoiceOver: A's time, then where that puts B, so adjusting it
+    /// says the answer: "3:00 PM; in Tokyo 5:00 AM, next day".
+    public var scrubberSpokenValue: String {
+        let relation = zoneB.dayRelation(from: zoneA, at: instant)
+        let day = relation == .today ? "" : ", \(Self.label(for: relation).lowercased())"
+        return "\(a.timeText); in \(b.cityText) \(b.timeText)\(day)"
+    }
+
     /// `zoneBDateText` with the longest day label ("2 days earlier"), for sizing the window so
     /// it doesn't change size while scrubbing.
     public var widestZoneBDateText: String {

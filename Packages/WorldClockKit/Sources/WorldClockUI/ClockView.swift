@@ -14,7 +14,7 @@ public struct ClockView: View {
     }
 
     public var body: some View {
-        ScalingWindow(minWidth: 240) { layout in
+        ScalingWindow(minWidth: 240, accessibilityName: "Clock") { layout in
             timeAndDate(scale: layout.scale, isHovered: layout.isHovered)
         } strip: {
             // The button's hover pill adds 8 pt on each side.
@@ -37,7 +37,9 @@ public struct ClockView: View {
                 .font(.system(size: TimeStyle.dateSize * scale))
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(model.timeText), \(model.dateText)")
+        .accessibilityLabel(model.spokenText)
+        // Text, not the AXUnknown an ignoring element gets by default.
+        .accessibilityAddTraits(.isStaticText)
         .padding(.horizontal, 16 * scale)
         .padding(.top, 2 * scale)
         .padding(.bottom, 20 * scale)

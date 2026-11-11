@@ -26,3 +26,43 @@ import Testing
     picker.query = "zzz"
     #expect(picker.rows.isEmpty)
 }
+
+// Keyboard (M8): ↓/↑ in the search field move a highlight; Return picks it.
+
+@Test @MainActor func arrowKeysMoveTheHighlight() {
+    let picker = makePicker()
+    #expect(picker.highlighted == nil)
+    picker.moveHighlight(by: 1)
+    #expect(picker.highlighted == zone("Asia/Calcutta"))
+    picker.moveHighlight(by: 1)
+    #expect(picker.highlighted == zone("America/New_York"))
+    picker.moveHighlight(by: -1)
+    #expect(picker.highlighted == zone("Asia/Calcutta"))
+}
+
+@Test @MainActor func highlightStopsAtTheEnds() {
+    let picker = makePicker()
+    picker.moveHighlight(by: -1)
+    #expect(picker.highlighted == zone("Asia/Calcutta"))
+    for _ in 0..<10 { picker.moveHighlight(by: 1) }
+    #expect(picker.highlighted == zone("UTC"))
+}
+
+@Test @MainActor func typingClearsTheHighlight() {
+    let picker = makePicker()
+    picker.moveHighlight(by: 1)
+    picker.query = "new"
+    #expect(picker.highlighted == nil)
+    picker.query = "zzz"
+    picker.moveHighlight(by: 1)
+    #expect(picker.highlighted == nil)
+}
+
+@Test @MainActor func returnPicksTheHighlightedRowElseTheFirst() {
+    let picker = makePicker()
+    #expect(picker.choice == zone("Asia/Calcutta"))
+    picker.moveHighlight(by: 2)
+    #expect(picker.choice == zone("America/New_York"))
+    picker.query = "zzz"
+    #expect(picker.choice == nil)
+}

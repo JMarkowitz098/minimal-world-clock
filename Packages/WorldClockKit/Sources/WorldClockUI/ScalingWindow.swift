@@ -35,6 +35,8 @@ struct ScalingWindow<Content: View, Strip: View>: View {
     let minWidth: CGFloat
     /// Moves the strip's controls down from the strip's center.
     var stripNudge: CGFloat = 0
+    /// What VoiceOver calls the window's content ("Clock"); the audit flags it unnamed.
+    let accessibilityName: String
     @ViewBuilder let content: (WindowLayout) -> Content
     /// Right-aligned in the top strip.
     @ViewBuilder let strip: () -> Strip
@@ -83,6 +85,7 @@ struct ScalingWindow<Content: View, Strip: View>: View {
             #if os(macOS)
             // The window keeps the content's proportions, so the content fills it at any size.
             .background(WindowAspectRatio(ratio: CGSize(width: naturalSize.width, height: naturalSize.height + topInset)))
+            .background(WindowAccessibilityName(name: accessibilityName))
             #endif
     }
 

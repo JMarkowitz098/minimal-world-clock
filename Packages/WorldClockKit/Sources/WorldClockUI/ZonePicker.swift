@@ -2,7 +2,7 @@ import SwiftUI
 import WorldClockCore
 
 /// A search field over every zone and the matching results. Picking a row calls `onSelect`;
-/// Return picks the first result. Drawn in `\.theme`: its softer `surface` background (also set
+/// ↓/↑ highlight a row and Return picks it (the first result if none is highlighted). Drawn in `\.theme`: its softer `surface` background (also set
 /// on the popover by `ZoneButton`) and text color, and its accent for the search field's focus
 /// ring, the hovered row and the checkmark.
 public struct ZonePicker: View {
@@ -22,19 +22,24 @@ public struct ZonePicker: View {
         VStack(spacing: 0) {
             searchField
                 .padding(10)
-            Rectangle().fill(theme.text.opacity(0.12)).frame(height: 1)
+            Rectangle().fill(theme.line(0.12)).frame(height: 1)
             if model.rows.isEmpty {
                 Text("No matching time zones")
-                    .opacity(0.7)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List(model.rows) { row in
-                    ZonePickerRow(row: row, isSelected: row.zone == selected) { onSelect(row.zone) }
-                        .listRowSeparatorTint(theme.text.opacity(0.12))
-                        .listRowBackground(Color.clear)
+                ScrollViewReader { scroller in
+                    List(model.rows) { row in
+                        ZonePickerRow(row: row, isSelected: row.zone == selected,
+                                      isHighlighted: row.zone == model.highlighted) { onSelect(row.zone) }
+                            .listRowSeparatorTint(theme.line(0.12))
+                            .listRowBackground(Color.clear)
+                    }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .onChange(of: model.highlighted) { _, zone in
+                        if let zone { scroller.scrollTo(zone.identifier) }
+                    }
                 }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
             }
         }
         .frame(width: 300, height: 380)
@@ -47,13 +52,16 @@ public struct ZonePicker: View {
     private var searchField: some View {
         HStack(spacing: 6) {
             Image(systemName: "magnifyingglass")
-                .opacity(0.6)
+                .foregroundStyle(theme.line(0.6))
                 .accessibilityHidden(true)
             TextField("Search", text: $model.query, prompt: Text("City, region, or abbreviation"))
                 .accessibilityLabel("Search time zones")
                 .onSubmit {
-                    if let first = model.rows.first { onSelect(first.zone) }
+                    if let choice = model.choice { onSelect(choice) }
                 }
+                // ↓/↑ move through the results without leaving the field (M8, keyboard use).
+                .onKeyPress(.downArrow) { model.moveHighlight(by: 1); return .handled }
+                .onKeyPress(.upArrow) { model.moveHighlight(by: -1); return .handled }
                 .textFieldStyle(.plain)
                 .focused($searchFocused)
                 // The text cursor in the accent (reports say macOS may ignore tint unless the
@@ -62,19 +70,22 @@ public struct ZonePicker: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 5)
-        .background(theme.text.opacity(0.07), in: RoundedRectangle(cornerRadius: 7))
+        .background(theme.line(0.07), in: RoundedRectangle(cornerRadius: 7))
         .overlay {
             RoundedRectangle(cornerRadius: 7)
-                .strokeBorder(theme.accent.opacity(searchFocused ? 0.7 : 0), lineWidth: 2)
+                .strokeBorder(searchFocused ? theme.ring(0.7) : .clear, lineWidth: 2)
         }
     }
 }
 
 /// One result: city, then region and offset; an accent checkmark marks the current zone, and an
-/// accent pill shows behind the row while the pointer is over it.
+/// accent pill shows behind the row while the pointer is over it; the row the arrow keys reach
+/// also gets a solid accent outline.
 struct ZonePickerRow: View {
     let row: ZonePickerViewModel.Row
     let isSelected: Bool
+    /// Reached with the arrow keys: drawn like a hovered row.
+    let isHighlighted: Bool
     let action: () -> Void
     @Environment(\.theme) private var theme
     @State private var isHovered = false
@@ -84,9 +95,9 @@ struct ZonePickerRow: View {
             HStack {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(row.city)
+                    // Solid, not faded: faded text failed contrast on the softer themes (M8).
                     Text(row.detail)
                         .font(.caption)
-                        .opacity(0.7)
                 }
                 Spacer()
                 if isSelected {
@@ -97,13 +108,18 @@ struct ZonePickerRow: View {
             }
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(theme.accent.opacity(isHovered ? 0.15 : 0), in: RoundedRectangle(cornerRadius: 6))
+            .background(theme.accent.opacity(isHovered || isHighlighted ? Theme.hoverFill : 0), in: RoundedRectangle(cornerRadius: 6))
+            // The keyboard's row needs a clear outline, not just the faint hover fill (a focus
+            // indicator: 3:1 against the surface, which `everyThemesAccentMeetsAA` checks).
+            .overlay {
+                RoundedRectangle(cornerRadius: 6).strokeBorder(isHighlighted ? theme.accent : .clear, lineWidth: 2)
+            }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         // Instant, not faded (`trackingHover`): a fade lags when running the pointer down a list.
         .onHover { isHovered = $0 }
-        .accessibilityLabel("\(row.city), \(row.detail)")
+        .accessibilityLabel(row.spokenLabel)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

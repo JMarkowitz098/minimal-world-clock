@@ -10,12 +10,26 @@ struct Snapshot {
     /// Render only the light appearance: for views whose colors don't depend on it (a dark
     /// render would be the same picture).
     var lightOnly = false
+    /// Also render with Increase Contrast on (`<name>-<light|dark>-contrast.png`).
+    var increasedContrast = false
     let view: @MainActor () -> AnyView
 
-    var schemes: [ColorScheme] { lightOnly ? [.light] : [.light, .dark] }
+    /// One render: an appearance, with or without Increase Contrast.
+    struct Variant {
+        let scheme: ColorScheme
+        let increasedContrast: Bool
+    }
 
-    func fileName(_ scheme: ColorScheme) -> String {
-        "\(name)-\(scheme == .light ? "light" : "dark").png"
+    var variants: [Variant] {
+        let schemes: [ColorScheme] = lightOnly ? [.light] : [.light, .dark]
+        return schemes.flatMap { scheme in
+            [Variant(scheme: scheme, increasedContrast: false)]
+                + (increasedContrast ? [Variant(scheme: scheme, increasedContrast: true)] : [])
+        }
+    }
+
+    func fileName(_ variant: Variant) -> String {
+        "\(name)-\(variant.scheme == .light ? "light" : "dark")\(variant.increasedContrast ? "-contrast" : "").png"
     }
 }
 
@@ -44,9 +58,10 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
     return model
 }
 
-@MainActor func pickerModel(query: String) -> ZonePickerViewModel {
+@MainActor func pickerModel(query: String, highlight: Int = 0) -> ZonePickerViewModel {
     let model = ZonePickerViewModel(now: jan15Noon)
     model.query = query
+    if highlight > 0 { model.moveHighlight(by: highlight) }
     return model
 }
 
@@ -55,9 +70,11 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
 struct ThemedPicker: View {
     var query = ""
     var selected: Zone? = nil
+    /// Rows to move down with ↓ (0: no highlight).
+    var highlight = 0
 
     var body: some View {
-        ZonePicker(model: pickerModel(query: query), selected: selected) { _ in }
+        ZonePicker(model: pickerModel(query: query, highlight: highlight), selected: selected) { _ in }
             .renderTheme()
     }
 }
@@ -105,7 +122,8 @@ private struct RenderTheme: ViewModifier {
     @Environment(\.colorScheme) private var scheme
 
     func body(content: Content) -> some View {
-        content.environment(\.theme, scheme == .dark ? .solarizedDark : .solarizedLight)
+        // `themed` (as the app does), so Increase Contrast renders apply.
+        content.themed(scheme == .dark ? .solarizedDark : .solarizedLight)
     }
 }
 
@@ -132,7 +150,7 @@ struct ThemeGallery: View {
 }
 
 @MainActor let catalog: [Snapshot] = [
-    Snapshot(name: "clock", size: CGSize(width: 300, height: 162)) {
+    Snapshot(name: "clock", size: CGSize(width: 300, height: 162), increasedContrast: true) {
         AnyView(ClockView(model: clockModel("Asia/Tokyo")).renderTheme().safeAreaPadding(.top, 28))
     },
     // Longest city name in the catalog, to check it fits.
@@ -147,7 +165,7 @@ struct ThemeGallery: View {
         AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo")).renderTheme().safeAreaPadding(.top, 28))
     },
     // Scrubbed to 3 PM in New York: Tokyo is on the next day, and Now is enabled.
-    Snapshot(name: "compare-scrubbed", size: CGSize(width: 640, height: 230)) {
+    Snapshot(name: "compare-scrubbed", size: CGSize(width: 640, height: 230), increasedContrast: true) {
         AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 15 * 60)).renderTheme().safeAreaPadding(.top, 28))
     },
     // Resized larger than natural: everything but the title bar strip scales up.
@@ -159,11 +177,15 @@ struct ThemeGallery: View {
         AnyView(CompareView(model: compareModel("America/Bahia_Banderas", "America/St_Johns")).renderTheme().safeAreaPadding(.top, 28))
     },
     // Accra selected (checkmark).
-    Snapshot(name: "zone-picker", size: CGSize(width: 300, height: 380)) {
+    Snapshot(name: "zone-picker", size: CGSize(width: 300, height: 380), increasedContrast: true) {
         AnyView(ThemedPicker(selected: Zone(identifier: "Africa/Accra")))
     },
     Snapshot(name: "zone-picker-search", size: CGSize(width: 300, height: 380)) {
         AnyView(ThemedPicker(query: "new"))
+    },
+    // The third row reached with ↓ (keyboard), drawn like a hovered row.
+    Snapshot(name: "zone-picker-highlighted", size: CGSize(width: 300, height: 380)) {
+        AnyView(ThemedPicker(highlight: 3))
     },
     Snapshot(name: "zone-picker-empty", size: CGSize(width: 300, height: 380)) {
         AnyView(ThemedPicker(query: "zzz"))

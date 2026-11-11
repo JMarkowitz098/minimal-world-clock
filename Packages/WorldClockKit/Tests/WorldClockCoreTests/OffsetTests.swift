@@ -64,3 +64,26 @@ import Testing
     #expect(sydney.offsetText(from: london, at: jan15Noon) == "+11 h")
     #expect(sydney.offsetText(from: london, at: jul15Noon) == "+9 h")
 }
+
+// MARK: Spoken difference (VoiceOver)
+
+@Test func spokenDifferenceInHours() {
+    let newYork = zone("America/New_York"), tokyo = zone("Asia/Tokyo")
+    #expect(tokyo.spokenOffset(from: newYork, at: jan15Noon) == "14 hours ahead")
+    #expect(newYork.spokenOffset(from: tokyo, at: jan15Noon) == "14 hours behind")
+}
+
+@Test func spokenDifferenceWithMinutes() {
+    let london = zone("Europe/London")
+    #expect(zone("Asia/Calcutta").spokenOffset(from: london, at: jan15Noon) == "5 hours 30 minutes ahead")
+    #expect(zone("America/St_Johns").spokenOffset(from: london, at: jan15Noon) == "3 hours 30 minutes behind")
+    #expect(zone("Asia/Kathmandu").spokenOffset(from: zone("Asia/Calcutta"), at: jan15Noon) == "15 minutes ahead")
+}
+
+@Test func spokenDifferenceIsSingularForOneHour() {
+    #expect(zone("Europe/Paris").spokenOffset(from: zone("Europe/London"), at: jan15Noon) == "1 hour ahead")
+}
+
+@Test func spokenDifferenceSameTime() {
+    #expect(zone("Europe/London").spokenOffset(from: zone("UTC"), at: jan15Noon) == "same time")
+}

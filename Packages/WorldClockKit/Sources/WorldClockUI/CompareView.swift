@@ -18,7 +18,7 @@ public struct CompareView: View {
     }
 
     public var body: some View {
-        ScalingWindow(minWidth: 600, stripNudge: 3) { layout in
+        ScalingWindow(minWidth: 600, stripNudge: 3, accessibilityName: "Compare") { layout in
             content(scale: layout.scale, measuring: layout.measuring)
         } strip: {
             // "Now" only while scrubbed; like the Clock's city, it keeps its size as the window
@@ -38,17 +38,19 @@ public struct CompareView: View {
     private func content(scale s: CGFloat, measuring: Bool) -> some View {
         VStack(spacing: 18 * s) {
             HStack(alignment: .center, spacing: 12 * s) {
-                side(model.a, zone: model.zoneA, date: model.a.dateText, name: "First time zone",
+                side(model.a, zone: model.zoneA, date: model.a.dateText, spokenDate: model.a.dateText,
+                     name: "First time zone",
                      scale: s, measuring: measuring, select: model.selectA, type: model.typeTimeA)
                 difference(scale: s)
                 side(model.b, zone: model.zoneB,
                      date: measuring ? model.widestZoneBDateText : model.zoneBDateText,
+                     spokenDate: model.zoneBSpokenDate,
                      name: "Second time zone", scale: s, measuring: measuring,
                      select: model.selectB, type: model.typeTimeB)
             }
             TimeStrip(
                 minuteOfDay: model.scrubberMinuteOfDay, marks: model.scrubberMarks,
-                label: "Time in \(model.a.cityText)", value: model.a.timeText, scale: s
+                label: "Time in \(model.a.cityText)", value: model.scrubberSpokenValue, scale: s
             ) { model.scrub(toMinuteOfDay: $0) }
         }
         .padding(.horizontal, 28 * s)
@@ -56,16 +58,20 @@ public struct CompareView: View {
         .padding(.bottom, 16 * s)
     }
 
-    private func side(_ display: ZoneDisplay, zone: Zone, date: String, name: String, scale s: CGFloat,
+    private func side(_ display: ZoneDisplay, zone: Zone, date: String, spokenDate: String, name: String, scale s: CGFloat,
                       measuring: Bool, select: @escaping (Zone) -> Void,
                       type: @escaping (String) -> Bool) -> some View {
         VStack(spacing: 2 * s) {
-            ZoneButton(zone: zone, now: model.instant, accessibilityName: name, scale: s, onSelect: select)
+            ZoneButton(zone: zone, now: model.instant, scale: s, onSelect: select)
             EditableTime(time: measuring ? TimeStyle.widestTime(display.time) : display.time,
                          label: "Time in \(display.cityText)", scale: s, onCommit: type)
             Text(date).font(.system(size: TimeStyle.dateSize * s)).lineLimit(1)
+                .accessibilityLabel(spokenDate)
         }
         .frame(maxWidth: .infinity)
+        // VoiceOver reads one zone at a time (city, time, date), not both cities, then both times.
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(name)
     }
 
     /// B's difference from A (accent) above the swap button.
@@ -75,10 +81,13 @@ public struct CompareView: View {
                 .font(.system(size: TimeStyle.differenceSize * s, weight: .medium))
                 .monospacedDigit()
                 .foregroundStyle(theme.accent)
+                .accessibilityLabel(model.spokenDifference)
             SwapButton(scale: s) { model.swap() }
         }
         .fixedSize()
+        // Its own group between the zones' (unlabeled, it was folded into the first zone's).
         .accessibilityElement(children: .contain)
+        .accessibilityLabel("Difference")
     }
 }
 
@@ -95,7 +104,7 @@ private struct SwapButton: View {
             Image(systemName: "arrow.left.arrow.right")
                 .font(.system(size: TimeStyle.differenceSize * scale))
                 .foregroundStyle(theme.accent)
-                .background(Circle().inset(by: -6 * scale).fill(theme.accent.opacity(isHovered ? 0.15 : 0)))
+                .background(Circle().inset(by: -6 * scale).fill(theme.accent.opacity(isHovered ? Theme.hoverFill : 0)))
                 .contentShape(Circle().inset(by: -6 * scale))
                 .trackingHover($isHovered)
         }
@@ -105,7 +114,8 @@ private struct SwapButton: View {
     }
 }
 
-/// The accent "↩ Now" pill; a deeper pill on hover.
+/// "↩ Now" in the background color on a solid accent pill (solid, not tinted, for contrast:
+/// M8); a ring around it on hover.
 private struct NowButton: View {
     let action: () -> Void
     @Environment(\.theme) private var theme
@@ -117,10 +127,12 @@ private struct NowButton: View {
                 Image(systemName: "arrow.uturn.backward").font(.caption.weight(.semibold))
                 Text("Now").font(.headline)
             }
-            .foregroundStyle(theme.accent)
+            .foregroundStyle(theme.background)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(theme.accent.opacity(isHovered ? 0.25 : 0.15), in: Capsule())
+            .background(theme.accent, in: Capsule())
+            .padding(2)
+            .overlay(Capsule().strokeBorder(isHovered ? theme.ring(0.4) : .clear, lineWidth: 2))
             .contentShape(Capsule())
             .trackingHover($isHovered)
         }
