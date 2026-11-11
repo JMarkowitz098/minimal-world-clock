@@ -95,3 +95,19 @@ Minimal World Clock is a regular windowed app with a Dock icon. It opens the Clo
 The desktop widget: right-click the desktop → **Edit Widgets…** → search "Minimal World Clock". Right-click a placed widget → **Edit "Minimal World Clock"** to choose its city. The widget reads the theme and time format chosen in Settings through an App Group shared with the app.
 
 Open at login is off by default and only enabled by the user (Settings). The app makes no network connections.
+
+## TestFlight (Test Information)
+
+Beta App Description [4000]:
+
+    Minimal World Clock is a calm, minimal world clock for the Mac: a clock window for any city, a window that compares two time zones, and desktop widgets.
+
+    What to try:
+    • Clock window: click the city name at the top right to search by city, country or time zone name ("San Francisco", "Japan", "Pacific Time"). Hover a result and click the star to make it a favorite.
+    • Compare window (Window → Compare, ⌘2): drag along the bar to move through the day, or click a time and type one ("9:30 pm").
+    • Widgets: right-click the desktop → Edit Widgets… → search "Minimal World Clock". Right-click a placed widget → Edit "Minimal World Clock" to choose its city.
+    • Settings (⌘,): pick a theme or 12/24-hour time, and check that both windows and the widgets follow.
+
+    Please report anything that looks wrong, clips, or doesn't follow your settings.
+
+Feedback email: apps@jaredmarkowitz.com. Marketing URL and privacy policy URL: as above. Beta App Review contact (external testers only): same as the App Review contact.
