@@ -51,7 +51,7 @@ CLOCK
 • Search by city, country, or time zone name: "San Francisco", "Japan", "Pacific Time"
 • Star the cities you use most to keep them at the top of the list
 
-COMPARE
+COMPARE (Window → Compare, ⌘2)
 • Two cities side by side, with the difference between them
 • Drag across the day to see the time in both places, or type a time
 • Shows when the other city is already on the next day
