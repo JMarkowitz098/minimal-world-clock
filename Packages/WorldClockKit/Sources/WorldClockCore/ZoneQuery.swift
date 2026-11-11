@@ -21,18 +21,19 @@ public struct ZoneQuery: Sendable {
         self.defaultZone = Zone(systemZone: systemZone)
     }
 
-    /// Zones for saved identifiers, skipping any the system no longer knows.
-    public func zones(withIdentifiers identifiers: [String]) -> [Zone] {
-        identifiers.compactMap(Zone.init(identifier:))
+    /// Places for saved IDs (`Place.id`; widgets saved before M9 hold bare identifiers),
+    /// skipping any whose zone the system no longer knows.
+    public func places(withIDs ids: [String]) -> [Place] {
+        ids.compactMap(Place.init(id:))
     }
 
-    /// Same matching and ranking as the windows' zone picker.
-    public func search(_ query: String, at now: Date) -> [Zone] {
-        catalog.search(query, at: now)
+    /// Same matching, ranking and names as the windows' zone picker, favorites first.
+    public func search(_ query: String, at now: Date, favorites: [Place] = []) -> [Place] {
+        catalog.matches(query, at: now, favorites: favorites)
     }
 
-    /// Every zone, in city order.
-    public var suggestedZones: [Zone] {
-        catalog.search("", at: Date(timeIntervalSince1970: 0))
+    /// The favorites, then every zone in city order.
+    public func suggestedPlaces(favorites: [Place] = []) -> [Place] {
+        catalog.matches("", at: Date(timeIntervalSince1970: 0), favorites: favorites)
     }
 }

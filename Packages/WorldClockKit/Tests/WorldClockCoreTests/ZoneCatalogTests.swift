@@ -33,7 +33,9 @@ import Testing
 @Test func searchMatchesRegion() {
     let results = ZoneCatalog.system.search("australia", at: jan15Noon)
     #expect(results.contains(zone("Australia/Sydney")))
-    #expect(results.allSatisfy { $0.region == "Australia" })
+    // Plus two Antarctic zones on Australian time (country and zone-name search, M9).
+    let antarctic = [zone("Antarctica/Macquarie"), zone("Antarctica/Casey")]
+    #expect(results.allSatisfy { $0.region == "Australia" || antarctic.contains($0) })
 }
 
 @Test func searchMatchesFullIdentifier() {
@@ -41,13 +43,14 @@ import Testing
 }
 
 @Test func cityPrefixMatchesRankBeforeOtherMatches() {
-    // "lo" starts London, Los Angeles, Lome… and appears inside Colombo.
-    let results = ZoneCatalog.system.search("lo", at: jan15Noon)
-    let startsWith = results.map { $0.city.lowercased().hasPrefix("lo") }
+    // "lo" starts London, Los Angeles, Lome… and appears inside Colombo. Since M9 a result's
+    // name may be another city in the zone ("Long Beach" for Los Angeles), so check names.
+    let results = ZoneCatalog.system.matches("lo", at: jan15Noon)
+    let startsWith = results.map { $0.name.lowercased().hasPrefix("lo") }
     let firstOther = startsWith.firstIndex(of: false) ?? startsWith.count
     #expect(startsWith[..<firstOther].allSatisfy { $0 })
     #expect(startsWith[firstOther...].allSatisfy { !$0 })
-    #expect(results.contains(zone("Asia/Colombo")))
+    #expect(results.map(\.zone).contains(zone("Asia/Colombo")))
 }
 
 @Test func searchMatchesAbbreviationForThatDate() {

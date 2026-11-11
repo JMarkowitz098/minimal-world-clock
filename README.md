@@ -16,7 +16,7 @@ Status: early development. See [ROADMAP.md](ROADMAP.md) for what's done and what
 - `Apps/Mac/`: macOS app entry point, kept small
 - `Apps/Widget/`: desktop widget extension (embedded in the app), kept small
 - `project.yml`: XcodeGen spec. Generates `WorldClock.xcodeproj`, which isn't committed.
-- `scripts/`: setup and check scripts (install and release scripts come in M10 and M11); `scripts/hooks/`: git hooks
+- `scripts/`: setup and check scripts, and `make-zone-names.swift` (regenerates the zone → country and zone-name table search uses) (install and release scripts come in M10 and M11); `scripts/hooks/`: git hooks
 - `Tools/Snapshots/`: renders the SwiftUI views to PNG for visual checks
 - `.claude/`: Claude Code settings and the `/milestone` skill
 - `ROADMAP.md`: milestones. `design_doc.md`: requirements and decisions. `ARCHITECTURE.md`: how the code fits together. `CLAUDE.md`: instructions for AI agents working in the repo.
@@ -61,6 +61,9 @@ pluginkit -m -p com.apple.widgetkit-extension | grep worldclock   # registered?
 
 # Render views to PNG (light + dark; light only where colors are fixed; some also with Increase Contrast) in build/snapshots/ (design option sheets: build/prototypes/; also removes renders no entry makes)
 swift run --package-path Tools/Snapshots Snapshots [name-filter]
+
+# Regenerate the search table of zone countries and names (after a macOS update changes the zone list)
+swift scripts/make-zone-names.swift
 
 # Open in Xcode instead
 open WorldClock.xcodeproj

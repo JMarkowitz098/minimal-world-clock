@@ -4,10 +4,13 @@ import WorldClockCore
 
 /// Display values for the Compare window: the same instant in two zones. The instant is live
 /// (now, refreshed on minute boundaries between `start` and `stop`) until the user scrubs to a
-/// time of day in zone A; `returnToNow` goes back to live. Both zones are saved in `store`.
+/// time of day in zone A; `returnToNow` goes back to live. Both places (zone and city) are
+/// saved in `store`.
 @MainActor @Observable public final class CompareViewModel {
-    public private(set) var zoneA: Zone
-    public private(set) var zoneB: Zone
+    public private(set) var placeA: Place
+    public private(set) var placeB: Place
+    public var zoneA: Zone { placeA.zone }
+    public var zoneB: Zone { placeB.zone }
     public private(set) var now: Date
     /// The time the user scrubbed to, read on zone A's clocks; `nil` while live.
     private(set) var scrubbed: WallTime?
@@ -40,7 +43,7 @@ import WorldClockCore
     /// What VoiceOver reads for the difference: "Tokyo is 14 hours ahead of New York",
     /// "UTC has the same time as London".
     public var spokenDifference: String {
-        let (a, b) = (zoneA.city, zoneB.city)
+        let (a, b) = (placeA.name, placeB.name)
         guard zoneB.offset(from: zoneA, at: instant) != 0 else { return "\(b) has the same time as \(a)" }
         let offset = zoneB.spokenOffset(from: zoneA, at: instant)
         return "\(b) is \(offset)\(offset.hasSuffix("ahead") ? " of" : "") \(a)"
@@ -99,13 +102,13 @@ import WorldClockCore
                 clock: @escaping () -> Date, ticker: Ticker) {
         self.store = store
         minutes = MinuteClock(clock: clock, ticker: ticker)
-        let a = store.compareZoneA ?? defaultZones.a
-        let b = store.compareZoneB ?? defaultZones.b
-        zoneA = a
-        zoneB = b
+        let a = store.comparePlaceA ?? Place(defaultZones.a)
+        let b = store.comparePlaceB ?? Place(defaultZones.b)
+        placeA = a
+        placeB = b
         now = clock()
-        formatterA = ZoneFormatter(zone: a, locale: locale)
-        formatterB = ZoneFormatter(zone: b, locale: locale)
+        formatterA = ZoneFormatter(place: a, locale: locale)
+        formatterB = ZoneFormatter(place: b, locale: locale)
         twelveHour = locale.usesTwelveHourTime
         scrubberMarks = Self.marks(locale: locale)
     }
@@ -178,7 +181,7 @@ import WorldClockCore
     /// Exchanges the zones, keeping the instant shown.
     public func swap() {
         let shown = instant
-        let (oldA, oldB) = (zoneA, zoneB)
+        let (oldA, oldB) = (placeA, placeB)
         setZoneA(oldB)
         setZoneB(oldA)
         if scrubbed != nil {
@@ -188,26 +191,26 @@ import WorldClockCore
         }
     }
 
-    /// Changes zone A. A scrubbed time keeps its reading (3 PM stays 3 PM in the new zone).
-    public func selectA(_ zone: Zone) {
-        setZoneA(zone)
+    /// Changes place A. A scrubbed time keeps its reading (3 PM stays 3 PM in the new zone).
+    public func selectA(_ place: Place) {
+        setZoneA(place)
     }
 
-    /// Changes zone B; the instant stays the same.
-    public func selectB(_ zone: Zone) {
-        setZoneB(zone)
+    /// Changes place B; the instant stays the same.
+    public func selectB(_ place: Place) {
+        setZoneB(place)
     }
 
-    private func setZoneA(_ zone: Zone) {
-        formatterA.zone = zone
-        zoneA = zone
-        store.compareZoneA = zone
+    private func setZoneA(_ place: Place) {
+        formatterA.place = place
+        placeA = place
+        store.comparePlaceA = place
     }
 
-    private func setZoneB(_ zone: Zone) {
-        formatterB.zone = zone
-        zoneB = zone
-        store.compareZoneB = zone
+    private func setZoneB(_ place: Place) {
+        formatterB.place = place
+        placeB = place
+        store.comparePlaceB = place
     }
 }
 

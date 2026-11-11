@@ -10,19 +10,21 @@ public struct ZoneDisplay: Equatable, Sendable {
     public var time: AttributedString
     /// "Thursday, January 15", the date in the zone.
     public var dateText: String
-    /// "Tokyo"
+    /// "Tokyo", or the city picked in the zone ("San Francisco")
     public var cityText: String
 }
 
 /// Builds `ZoneDisplay`s for one zone at a time. Keeps its formatters, since creating a
 /// `DateFormatter` is costly.
 final class ZoneFormatter {
-    var zone: Zone {
+    /// The zone and the city shown for it (`cityText`).
+    var place: Place {
         didSet {
             time.timeZone = zone.timeZone
             date.timeZone = zone.timeZone
         }
     }
+    var zone: Zone { place.zone }
 
     /// Changing it rebuilds the formatters (the 12/24-hour setting changes it).
     var locale: Locale {
@@ -35,8 +37,13 @@ final class ZoneFormatter {
     private var time: Date.FormatStyle
     private var date: DateFormatter
 
-    init(zone: Zone, locale: Locale) {
-        self.zone = zone
+    convenience init(zone: Zone, locale: Locale) {
+        self.init(place: Place(zone), locale: locale)
+    }
+
+    init(place: Place, locale: Locale) {
+        let zone = place.zone
+        self.place = place
         self.locale = locale
         time = Self.timeFormat(locale: locale, zone: zone)
         date = Self.formatter(template: "EEEEMMMMd", locale: locale, zone: zone)
@@ -48,7 +55,7 @@ final class ZoneFormatter {
             timeText: String(time.characters),
             time: time,
             dateText: date.string(from: instant),
-            cityText: zone.city
+            cityText: place.name
         )
     }
 

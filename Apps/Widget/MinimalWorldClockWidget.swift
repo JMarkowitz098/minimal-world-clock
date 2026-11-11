@@ -31,39 +31,46 @@ struct SelectZoneIntent: WidgetConfigurationIntent {
     var zone: ZoneEntity?
 }
 
-/// Stores only the zone identifier, as in Apple's sample; everything else derives from `id`.
+/// Stores only the place's `id`, as in Apple's sample; everything else derives from it. Widgets
+/// configured before M9 saved a bare zone identifier, which reads as the zone's own city.
 struct ZoneEntity: AppEntity {
     static let typeDisplayRepresentation: TypeDisplayRepresentation = "Time Zone"
     static let defaultQuery = ZoneEntityQuery()
 
     let id: String
 
-    init(zone: Zone) {
-        id = zone.identifier
+    init(place: Place) {
+        id = place.id
     }
 
-    /// Nil if the system no longer knows the saved identifier.
-    var zone: Zone? { Zone(identifier: id) }
+    /// Nil if the system no longer knows the saved zone.
+    var place: Place? { Place(id: id) }
 
+    /// "Tokyo" over "Asia"; a city picked in a zone over the zone's city ("San Francisco" over
+    /// "Los Angeles"), as in the app's picker.
     var displayRepresentation: DisplayRepresentation {
-        guard let zone, !zone.region.isEmpty else { return DisplayRepresentation(title: "\(zone?.city ?? id)") }
-        return DisplayRepresentation(title: "\(zone.city)", subtitle: "\(zone.region)")
+        guard let place else { return DisplayRepresentation(title: "\(id)") }
+        let detail = place.city != nil ? place.zone.city : place.zone.region
+        guard !detail.isEmpty else { return DisplayRepresentation(title: "\(place.name)") }
+        return DisplayRepresentation(title: "\(place.name)", subtitle: "\(detail)")
     }
 }
 
+/// Lists the favorites starred in the app's zone picker first (read from the App Group).
 struct ZoneEntityQuery: EntityStringQuery {
     private var query: ZoneQuery { ZoneQuery(systemZone: .current) }
+    private var favorites: [Place] { AppGroup.settingsStore().favorites.places }
 
     func entities(for identifiers: [String]) async throws -> [ZoneEntity] {
-        query.zones(withIdentifiers: identifiers).map(ZoneEntity.init)
+        query.places(withIDs: identifiers).map(ZoneEntity.init)
     }
 
     func entities(matching string: String) async throws -> [ZoneEntity] {
-        query.search(string, at: Date()).map(ZoneEntity.init)
+        query.search(string, at: Date(), favorites: favorites).map(ZoneEntity.init)
     }
 
     func suggestedEntities() async throws -> [ZoneEntity] {
-        query.suggestedZones.map(ZoneEntity.init)
+        query.suggestedPlaces(favorites: favorites).map(ZoneEntity.init)
     }
 }
 
@@ -71,7 +78,7 @@ struct ZoneEntityQuery: EntityStringQuery {
 
 struct Entry: TimelineEntry {
     let date: Date
-    let zone: Zone
+    let place: Place
     /// The Settings window's choices, read from the App Group (the app reloads the widget's
     /// timelines when they change).
     let theme: Theme
@@ -87,34 +94,37 @@ private func sharedSettings() -> (theme: Theme, locale: Locale) {
 struct Provider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> Entry {
         let (theme, locale) = sharedSettings()
-        return Entry(date: Date(), zone: ZoneQuery(systemZone: .current).defaultZone, theme: theme, locale: locale)
+        return Entry(date: Date(), place: Place(ZoneQuery(systemZone: .current).defaultZone), theme: theme, locale: locale)
     }
 
     func snapshot(for configuration: SelectZoneIntent, in context: Context) async -> Entry {
         let (theme, locale) = sharedSettings()
-        return Entry(date: Date(), zone: zone(for: configuration), theme: theme, locale: locale)
+        return Entry(date: Date(), place: place(for: configuration), theme: theme, locale: locale)
     }
 
     /// Hours and minutes update on their own, so entries are only needed when the date, AM/PM,
     /// offset or the time's width changes (`WidgetDisplay.entryDates`): now, then the next
     /// three; WidgetKit asks again after the last.
     func timeline(for configuration: SelectZoneIntent, in context: Context) async -> Timeline<Entry> {
-        let zone = zone(for: configuration)
+        let place = place(for: configuration)
+        let zone = place.zone
         let (theme, locale) = sharedSettings()
         let now = Date()
         let dates = [now] + WidgetDisplay.entryDates(zone: zone, after: now, locale: locale, count: 3)
-        Log.widget.info("Timeline for \(zone.identifier, privacy: .public) in \(theme.id, privacy: .public), \(locale.identifier, privacy: .public): \(dates.map { $0.formatted(.iso8601) }.joined(separator: ", "), privacy: .public)")
-        return Timeline(entries: dates.map { Entry(date: $0, zone: zone, theme: theme, locale: locale) }, policy: .atEnd)
+        Log.widget.info("Timeline for \(place.id, privacy: .public) in \(theme.id, privacy: .public), \(locale.identifier, privacy: .public): \(dates.map { $0.formatted(.iso8601) }.joined(separator: ", "), privacy: .public)")
+        return Timeline(entries: dates.map { Entry(date: $0, place: place, theme: theme, locale: locale) }, policy: .atEnd)
     }
 
-    /// The configured zone, or the Mac's when none is set yet or the saved one is no longer known.
-    private func zone(for configuration: SelectZoneIntent) -> Zone {
-        guard let entity = configuration.zone else { return ZoneQuery(systemZone: .current).defaultZone }
-        guard let zone = entity.zone else {
+    /// The configured place, or the Mac's zone when none is set yet or the saved one is no
+    /// longer known.
+    private func place(for configuration: SelectZoneIntent) -> Place {
+        let macZone = Place(ZoneQuery(systemZone: .current).defaultZone)
+        guard let entity = configuration.zone else { return macZone }
+        guard let place = entity.place else {
             Log.widget.error("Configured zone \(entity.id, privacy: .public) is unknown; showing the Mac's zone.")
-            return ZoneQuery(systemZone: .current).defaultZone
+            return macZone
         }
-        return zone
+        return place
     }
 }
 
@@ -124,7 +134,7 @@ struct EntryView: View {
 
     var body: some View {
         ZoneWidgetView(
-            display: WidgetDisplay(zone: entry.zone, at: entry.date, locale: entry.locale),
+            display: WidgetDisplay(zone: entry.place.zone, city: entry.place.city, at: entry.date, locale: entry.locale),
             size: family == .systemSmall ? .small : .medium
         )
         .themed(entry.theme)

@@ -17,6 +17,7 @@ public enum SettingsKey {
     public static let compareZoneA = "compareZoneA"
     public static let compareZoneB = "compareZoneB"
     public static let appSettings = "appSettings"
+    public static let favoriteZones = "favoriteZones"
 }
 
 extension SettingsStore {
@@ -43,22 +44,22 @@ extension SettingsStore {
         setData(data, forKey: key)
     }
 
-    /// The zone shown in the Clock window.
-    public var clockZone: Zone? {
-        get { load(Zone.self, forKey: SettingsKey.clockZone) }
+    /// The place shown in the Clock window (saved before M9 as a bare zone, which reads as one).
+    public var clockPlace: Place? {
+        get { load(Place.self, forKey: SettingsKey.clockZone) }
         set { save(newValue, forKey: SettingsKey.clockZone) }
     }
 
-    /// The Compare window's first zone (the one the scrubber sets the time in). Saved apart
-    /// from `compareZoneB`, so one unreadable zone doesn't lose the other.
-    public var compareZoneA: Zone? {
-        get { load(Zone.self, forKey: SettingsKey.compareZoneA) }
+    /// The Compare window's first place (the one the scrubber sets the time in). Saved apart
+    /// from `comparePlaceB`, so one unreadable place doesn't lose the other.
+    public var comparePlaceA: Place? {
+        get { load(Place.self, forKey: SettingsKey.compareZoneA) }
         set { save(newValue, forKey: SettingsKey.compareZoneA) }
     }
 
-    /// The Compare window's second zone.
-    public var compareZoneB: Zone? {
-        get { load(Zone.self, forKey: SettingsKey.compareZoneB) }
+    /// The Compare window's second place.
+    public var comparePlaceB: Place? {
+        get { load(Place.self, forKey: SettingsKey.compareZoneB) }
         set { save(newValue, forKey: SettingsKey.compareZoneB) }
     }
 }

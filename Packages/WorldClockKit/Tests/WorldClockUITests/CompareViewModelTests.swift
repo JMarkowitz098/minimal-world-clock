@@ -101,7 +101,7 @@ import Testing
 @Test @MainActor func changingZoneAKeepsTheScrubbedWallTime() {
     let (model, _, _) = makeCompare()
     model.scrub(toMinuteOfDay: 15 * 60)
-    model.selectA(zone("Europe/London"))
+    model.selectA(place("Europe/London"))
     #expect(model.a.timeText == "3:00\(nnbsp)PM")
     #expect(model.instant == utc(2026, 1, 15, 15, 0))
     #expect(model.b.timeText == "12:00\(nnbsp)AM")
@@ -110,7 +110,7 @@ import Testing
 @Test @MainActor func changingZoneBKeepsTheInstant() {
     let (model, _, _) = makeCompare()
     model.scrub(toMinuteOfDay: 15 * 60)
-    model.selectB(zone("Europe/London"))
+    model.selectB(place("Europe/London"))
     #expect(model.instant == utc(2026, 1, 15, 20, 0))
     #expect(model.b.timeText == "8:00\(nnbsp)PM")
     #expect(model.differenceText == "+5 h")
@@ -119,10 +119,10 @@ import Testing
 @Test @MainActor func dayRelationLabels() {
     let (model, _, _) = makeCompare(a: zone("Europe/London"), b: zone("Europe/Paris"))
     #expect(model.dayRelationText == "Same day")
-    model.selectB(zone("Pacific/Kiritimati"))  // UTC+14: 2 AM Friday at 12:00 UTC Thursday
+    model.selectB(place("Pacific/Kiritimati"))  // UTC+14: 2 AM Friday at 12:00 UTC Thursday
     #expect(model.dayRelationText == "Next day")
-    model.selectA(zone("Pacific/Kiritimati"))
-    model.selectB(zone("Pacific/Pago_Pago"))  // UTC−11: 1 AM Thursday vs. 2 AM Friday
+    model.selectA(place("Pacific/Kiritimati"))
+    model.selectB(place("Pacific/Pago_Pago"))  // UTC−11: 1 AM Thursday vs. 2 AM Friday
     #expect(model.dayRelationText == "Previous day")
 }
 
@@ -138,8 +138,8 @@ import Testing
     // 12:00 UTC Thursday: 2 AM Friday in Kiritimati (UTC+14).
     let (model, _, _) = makeCompare(a: zone("Europe/London"), b: zone("Pacific/Kiritimati"))
     #expect(model.zoneBDateText == "Friday, January 16 · next day")
-    model.selectB(zone("America/New_York"))
-    model.selectA(zone("Pacific/Kiritimati"))
+    model.selectB(place("America/New_York"))
+    model.selectA(place("Pacific/Kiritimati"))
     #expect(model.zoneBDateText == "Thursday, January 15 · previous day")
 }
 
@@ -209,8 +209,8 @@ import Testing
 @Test @MainActor func compareZonesPersistAcrossLaunches() {
     let store = InMemorySettingsStore()
     let (first, _, _) = makeCompare(store: store)
-    first.selectA(zone("Europe/London"))
-    first.selectB(zone("Australia/Sydney"))
+    first.selectA(place("Europe/London"))
+    first.selectB(place("Australia/Sydney"))
     let (second, _, _) = makeCompare(store: store)
     #expect(second.zoneA == zone("Europe/London"))
     #expect(second.zoneB == zone("Australia/Sydney"))
@@ -231,4 +231,17 @@ import Testing
     let (model, _, _) = makeCompare(store: store, a: zone("Europe/Paris"), b: zone("UTC"))
     #expect(model.zoneA == zone("Europe/Paris"))
     #expect(model.zoneB == zone("UTC"))
+}
+
+// A city picked inside a zone (M9) names that side, in text and for VoiceOver.
+@Test @MainActor func compareShowsPickedCities() {
+    let store = InMemorySettingsStore()
+    let (model, _, _) = makeCompare(store: store)
+    model.selectA(Place(zone("America/Los_Angeles"), city: "San Francisco"))
+    #expect(model.a.cityText == "San Francisco")
+    #expect(model.spokenDifference == "Tokyo is 17 hours ahead of San Francisco")
+    model.swap()
+    #expect(model.b.cityText == "San Francisco")
+    let (relaunched, _, _) = makeCompare(store: store)
+    #expect(relaunched.placeB == Place(zone("America/Los_Angeles"), city: "San Francisco"))
 }

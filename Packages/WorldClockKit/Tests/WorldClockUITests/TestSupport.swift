@@ -79,3 +79,8 @@ final class FakeClock {
     )
     return (model, clock, ticker)
 }
+
+/// A zone shown under its own city.
+func place(_ identifier: String) -> Place {
+    Place(zone(identifier))
+}

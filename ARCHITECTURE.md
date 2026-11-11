@@ -24,15 +24,20 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Targets, bundle IDs, versions, Info.plist keys, signing (development team for every build) and the widget's "Require team signing" build step | `project.yml` |
 | Package targets | `Packages/WorldClockKit/Package.swift` |
 | Time zone value (validation, city/region names, Codable, `Zone.utc`) | `WorldClockCore/Zone.swift` |
-| Zone list and search (matching, ranking) | `WorldClockCore/ZoneCatalog.swift` |
+| What the user picked: a zone plus the city chosen in it (`Place`: "San Francisco" in America/Los_Angeles; `name`, `id` = `identifier#city` or the bare identifier, Codable as that string, so zones saved before M9 read as places) | `WorldClockCore/Place.swift` |
+| Zone list and search: matching (city, cities in the zone, region, identifier, country, zone name, abbreviation), ranking (own city exact, other exact names, major prefix, other prefix, the rest), favorites first; `matches` returns places named for the matched city | `WorldClockCore/ZoneCatalog.swift` |
+| The city table's parser (`CityTable`: aliases per zone, major cities, other country names) | `WorldClockCore/CityTable.swift` |
+| The bundled city table: ~1,800 hand-written city names by zone (`*` = major, ranks first) and other country names ("UK", "Holland") | `WorldClockCore/CityData.swift` |
+| Each zone's country and English zone names ("Japan", "Pacific Time"); generated, don't edit | `WorldClockCore/ZoneNames.swift` (by `scripts/make-zone-names.swift`) |
+| Favorite places (`Favorites`: order, toggle) and their lenient saving (`SettingsStore.favorites`: unknown zones dropped and reported) | `WorldClockCore/Favorites.swift` |
 | Wall-clock time at an instant, and wall time → instant (DST gaps and overlaps) | `WorldClockCore/WallTime.swift` |
 | UTC offset text (`UTC+5:30`) and difference between zones (`−3 h 30 min`, `Same time`; spoken for VoiceOver: `3 hours 30 minutes behind`) | `WorldClockCore/Offsets.swift` |
 | Reading a typed time of day (`9`, `9:30 pm`, `21:30`, `930`; no AM/PM keeps the edited time's half of the day in 12-hour locales) | `WorldClockCore/TimeEntry.swift` |
 | Yesterday / today / tomorrow relative to another zone | `WorldClockCore/DayRelation.swift` |
 | When a zone's date, AM/PM or offset next changes (next midnight, noon or DST transition): the widget's timeline dates | `WorldClockCore/DisplayChanges.swift` |
-| The widget's zone lookups (resolve identifiers, search, suggestions, default) and `Zone(systemZone:)` (the Mac's zone or UTC) | `WorldClockCore/ZoneQuery.swift` |
+| The widget's zone lookups (resolve place IDs, search, suggestions with favorites first, default) and `Zone(systemZone:)` (the Mac's zone or UTC) | `WorldClockCore/ZoneQuery.swift` |
 | The Settings window's saved choices (`AppSettings`: `TimeFormat` system/12/24-hour, theme ID), decoded leniently per key with unreadable values reported; `SettingsStore.appSettings` | `WorldClockCore/AppSettings.swift` |
-| Saved settings: the `SettingsStore` protocol, its keys, typed accessors (`clockZone`, `compareZoneA`, `compareZoneB`; `appSettings` is in `AppSettings.swift`), UserDefaults and in-memory stores; `reportUnreadable` for values that can't be read (the app logs them) | `WorldClockCore/SettingsStore.swift` |
+| Saved settings: the `SettingsStore` protocol, its keys, typed accessors (`clockPlace`, `comparePlaceA`, `comparePlaceB`, stored under the pre-M9 keys `clockZone`, `compareZoneA`, `compareZoneB`; `favorites` is in `Favorites.swift`, `appSettings` is in `AppSettings.swift`), UserDefaults and in-memory stores; `reportUnreadable` for values that can't be read (the app logs them) | `WorldClockCore/SettingsStore.swift` |
 | Fixed test instants and helpers (`jan15Noon`, `mar15Noon`, `utc(…)`, `wall(…)`, `zone(…)`) | `Tests/WorldClockCoreTests/TestSupport.swift` |
 | Ticking on minute boundaries: the `Ticker` protocol, the app's `DispatchTicker`, `Date.nextMinuteBoundary` | `WorldClockUI/Ticker.swift` |
 | The view models' current time: read now and on each minute boundary between `start` and `stop` (`MinuteClock`; the one place ticking rules change, e.g. pausing while minimized in M10) | `WorldClockUI/MinuteClock.swift` |
@@ -46,7 +51,7 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | Color themes (background, text, accent, a softer `surface` for popovers, `isDark`; some colors nudged for WCAG AA, marked "AA"), the list Settings offers (`Theme.all`, `Theme.named`, `Theme.default`); Increase Contrast (`increasedContrast`, `line(_:)` for faint lines and fills, `ring(_:)` for accent rings, `Theme.hoverFill`); the `\.theme` environment value and `.themed(_:)` (sets it with the Mac's Increase Contrast setting, and the window's light/dark appearance), which each window and the widget apply once | `WorldClockUI/Theme.swift` |
 | Keeps a window at its content's proportions while resizing (`NSWindow.contentAspectRatio`, macOS only) | `WorldClockUI/WindowAspectRatio.swift` |
 | Names a window's hosting view for VoiceOver ("Clock", "Compare"; unnamed, Accessibility Inspector's audit flags it) | `WorldClockUI/WindowAccessibilityName.swift` |
-| Clock window display strings (and `spokenText` for VoiceOver), ticking, zone choice and its persistence, `setLocale` (12/24-hour changes); `ClockViewModel.live(locale:)` wires the app's dependencies | `WorldClockUI/ClockViewModel.swift` |
+| Clock window display strings (and `spokenText` for VoiceOver), ticking, place choice (zone + picked city) and its persistence, `setLocale` (12/24-hour changes); `ClockViewModel.live(locale:)` wires the app's dependencies | `WorldClockUI/ClockViewModel.swift` |
 | The frame both windows share (`ScalingWindow`): no title bar, theme background and text color, content scaling with the window (`WindowLayout.scale(fitting:in:)`), aspect ratio, hover edge, click to end typing, drag to move, top strip, the window's VoiceOver name | `WorldClockUI/ScalingWindow.swift` |
 | Hover effects: `.trackingHover($isHovered)` (fades with `Animation.hover`, instant with Reduce Motion) | `WorldClockUI/Hover.swift` |
 | Clock window content: time and date (time in the accent while hovered), city + globe in the top strip; start/stop on appear/disappear | `WorldClockUI/ClockView.swift` |
@@ -58,15 +63,18 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | The widget's strings at an entry date (city, date, short date) and its live hours-and-minutes format with the fixed `timeText` that sizes it, AM/PM as fixed text (nil in 24-hour locales), and the timeline's dates (`entryDates`: date, AM/PM or the time's width changes, and DST transitions) | `WorldClockUI/WidgetDisplay.swift` |
 | The widget's container background: theme background and a thin border in the text color, 6 pt in from the edge, corners concentric with the widget's | `WorldClockUI/WidgetBackground.swift` |
 | The widget's layout: medium in the Clock window's look (city top-right in the accent, time with a smaller AM/PM and date centered); small with city and date top-left, time bottom-left; theme colors (no WidgetKit import; snapshots can freeze the time) | `WorldClockUI/ZoneWidgetView.swift` |
-| Button that opens the zone picker in a popover: city with globe and hover pill (Clock and Compare); passes `\.theme` on to the popover (a separate window) | `WorldClockUI/ZoneButton.swift` |
-| Zone search rows (`city`, `Asia · UTC+9`, `spokenLabel` without the `·`), the keyboard highlight (`moveHighlight(by:)`, `choice` for Return) | `WorldClockUI/ZonePickerViewModel.swift` |
-| Zone search field and results list, drawn in the window's theme (surface background, accent ring, cursor, hover and checkmark); ↓/↑ in the field highlight a row (solid accent outline), Return picks it | `WorldClockUI/ZonePicker.swift` |
+| Button that opens the zone picker in a popover: the place's city with globe and hover pill (Clock and Compare); passes `\.theme` and the environment's `FavoritesModel` on to the picker (a popover is a separate window) |
+| The favorites both windows' pickers share (`FavoritesModel`, `live()` saves in the App Group for the widget); the app puts one in the environment | `WorldClockUI/FavoritesModel.swift` | `WorldClockUI/ZoneButton.swift` |
+| Zone search rows (`place`, `city`, `Asia · UTC+9` or the zone's city for a matched city, `isFavorite`, `spokenLabel` without the `·`), favorites first (`favoriteCount`, fixed until the next search so a starred row doesn't move), `toggleFavorite`, the keyboard highlight (`moveHighlight(by:)`, `choice` for Return) | `WorldClockUI/ZonePickerViewModel.swift` |
+| Zone search field and results list, drawn in the window's theme (surface background, accent ring, cursor, hover, checkmark, stars); favorites in a first section with a stronger line under it; a star on hover (filled for favorites), right-click and a VoiceOver action toggle a favorite; ↓/↑ in the field highlight a row (solid accent outline), Return picks it, ⌘D stars it | `WorldClockUI/ZonePicker.swift` |
 | WCAG AA contrast of every theme (text, accent, hovered states, the Now pill) and the Increase Contrast helpers | `Tests/WorldClockUITests/ThemeContrastTests.swift` |
 | What VoiceOver reads (Clock, Compare, picker rows) | `Tests/WorldClockUITests/SpokenTextTests.swift` |
+| Wider search (countries, zone names, city table, ranking), favorites, places | `Tests/WorldClockCoreTests/ZoneSearchTests.swift`, `FavoritesTests.swift`, `PlaceTests.swift` |
 | UI test helpers (`FakeClock`, `FakeTicker`, `makeClock(…)`, `makeCompare(…)`, `nnbsp`) | `Tests/WorldClockUITests/TestSupport.swift` |
 | Views rendered for visual checks (and later App Store screenshots) | `Tools/Snapshots/Sources/Snapshots/Catalog.swift` |
 | Temporary design option sheets (`prototypes`, rendered to `build/prototypes/`; empty between explorations) | `Tools/Snapshots/Sources/Snapshots/Prototypes.swift` |
 | The snapshot renderer (offscreen `NSHostingView`, light and dark, 2×, plus Increase Contrast variants; catalog → `build/snapshots/`, prototypes → `build/prototypes/`; deletes renders no entry makes) | `Tools/Snapshots/Sources/Snapshots/Snapshots.swift` |
+| Regenerating `ZoneNames.swift` from macOS's `zone.tab` and Foundation's English names | `scripts/make-zone-names.swift` |
 | What the pre-commit check runs (tests, app build, team-signing check, snapshot tool build) | `scripts/check.sh` (hook: `scripts/hooks/pre-commit`) |
 | One-time setup after cloning (installs the hook, generates the Xcode project) | `scripts/setup.sh` |
 | Commands pre-approved for Claude Code | `.claude/settings.json` |
@@ -101,6 +109,8 @@ Update this table as milestones add files.
 - Windows without a title bar (Clock): content respects the top safe area (the title bar strip); only the background and the strip's controls extend into it. Snapshots of such a view add `.safeAreaPadding(.top, 28)`.
 - A view's `.foregroundStyle` also colors the popovers it presents, so a button that opens a popover colors its own label (`ZoneButton` does) instead of the caller styling the button.
 - App Intents types (`AppEntity`, `WidgetConfigurationIntent`) live in the widget target, where Xcode extracts their metadata; their logic lives in the package (`ZoneQuery`).
+- **Places, not zones, for what the user picked** (M9): the windows, favorites and the widget's entity hold a `Place` (zone + picked city) and show `place.name`; time math uses `place.zone`. Saved as `Place.id`, which is a bare identifier for the zone's own city, so data saved as a `Zone` still reads.
+- Search names are English (`ZoneNames` is generated in English; asking Foundation at launch cost ~30 ms per process). Localized names belong with the "Later" localization work.
 - Settings are read leniently: missing, corrupt, or unknown data reads as `nil` and the caller uses its default. `SettingsKey` values are never renamed.
 
 ## Recipes
@@ -108,6 +118,8 @@ Update this table as milestones add files.
 **Add a source file to the package:** create it under `Packages/WorldClockKit/Sources/<Module>/`. SwiftPM picks it up; no project regeneration needed.
 
 **Add a saved setting:** a Settings window choice goes in `AppSettings` (a property with a default, a `CodingKeys` case, and a `value(…) ?? default` line in its lenient `init(from:)`), then a property on `SettingsViewModel` that saves and calls `onChange`, and a control in `SettingsView`; the widget sees it through the App Group. Per-window state (like a zone) gets its own key in `SettingsKey` and a typed property beside `clockZone` in `SettingsStore.swift` (Codable, `nil` when unreadable). Test missing, corrupt and unknown values with `InMemorySettingsStore`.
+
+**Add a city to search:** add its name to its zone's line in `CityData.swift` (`*` before it if it's a major metro; a city that names a zone needs no entry). Same-named cities in different zones are fine (the row's detail shows the zone's city); `everyCityPointsToAKnownZone` rejects unknown zones, a zone's own city and duplicates within a zone. For a country nickname, add it to `CityData.countryNames` by ISO code.
 
 **Add a theme:** add a `static let` in `Theme.swift` with a new, permanent `id` (it's saved), set `isDark` to match the background (`darkThemesHaveDarkBackgrounds` checks), make it pass `ThemeContrastTests` (darken or lighten the accent in the same hue if needed, and say so in the credits), add it to `Theme.all`, credit its palette in `Apps/Mac/Credits.rtf` and design_doc.md, and look at the `themes` and `settings` snapshots.
 

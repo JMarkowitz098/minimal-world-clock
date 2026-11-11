@@ -12,48 +12,48 @@ private func withTemporaryDefaults(_ body: (UserDefaults) throws -> Void) rethro
 
 @Test func clockZoneRoundTripsThroughUserDefaults() {
     withTemporaryDefaults { defaults in
-        UserDefaultsSettingsStore(defaults: defaults).clockZone = zone("Asia/Tokyo")
+        UserDefaultsSettingsStore(defaults: defaults).clockPlace = place("Asia/Tokyo")
         // A new store over the same defaults stands in for a relaunch.
-        #expect(UserDefaultsSettingsStore(defaults: defaults).clockZone == zone("Asia/Tokyo"))
+        #expect(UserDefaultsSettingsStore(defaults: defaults).clockPlace == place("Asia/Tokyo"))
     }
 }
 
 @Test func missingClockZoneIsNil() {
     withTemporaryDefaults { defaults in
-        #expect(UserDefaultsSettingsStore(defaults: defaults).clockZone == nil)
+        #expect(UserDefaultsSettingsStore(defaults: defaults).clockPlace == nil)
     }
 }
 
 @Test func corruptClockZoneIsNil() {
     withTemporaryDefaults { defaults in
         defaults.set(Data("not json".utf8), forKey: SettingsKey.clockZone)
-        #expect(UserDefaultsSettingsStore(defaults: defaults).clockZone == nil)
+        #expect(UserDefaultsSettingsStore(defaults: defaults).clockPlace == nil)
     }
 }
 
 @Test func unknownSavedZoneIsNil() {
     let store = InMemorySettingsStore()
     store.setData(Data(#""Mars/Olympus_Mons""#.utf8), forKey: SettingsKey.clockZone)
-    #expect(store.clockZone == nil)
+    #expect(store.clockPlace == nil)
 }
 
 @Test func wrongTypeInUserDefaultsIsNil() {
     withTemporaryDefaults { defaults in
         defaults.set(42, forKey: SettingsKey.clockZone)
-        #expect(UserDefaultsSettingsStore(defaults: defaults).clockZone == nil)
+        #expect(UserDefaultsSettingsStore(defaults: defaults).clockPlace == nil)
     }
 }
 
 @Test func inMemoryStoreRoundTrips() {
     let store = InMemorySettingsStore()
-    store.clockZone = zone("Europe/London")
-    #expect(store.clockZone == zone("Europe/London"))
+    store.clockPlace = place("Europe/London")
+    #expect(store.clockPlace == place("Europe/London"))
 }
 
 @Test func savingNilRemovesTheValue() {
     let store = InMemorySettingsStore()
-    store.clockZone = zone("Europe/London")
-    store.clockZone = nil
+    store.clockPlace = place("Europe/London")
+    store.clockPlace = nil
     #expect(store.data(forKey: SettingsKey.clockZone) == nil)
 }
 
@@ -62,28 +62,28 @@ private func withTemporaryDefaults(_ body: (UserDefaults) throws -> Void) rethro
         func encode(to encoder: any Encoder) throws { throw EncodingError.invalidValue(0, .init(codingPath: [], debugDescription: "")) }
     }
     let store = InMemorySettingsStore()
-    store.clockZone = zone("Europe/London")
+    store.clockPlace = place("Europe/London")
     store.save(Unencodable(), forKey: SettingsKey.clockZone)
-    #expect(store.clockZone == zone("Europe/London"))
+    #expect(store.clockPlace == place("Europe/London"))
 }
 
 @Test func compareZonesRoundTripThroughUserDefaults() {
     withTemporaryDefaults { defaults in
         let store = UserDefaultsSettingsStore(defaults: defaults)
-        store.compareZoneA = zone("America/New_York")
-        store.compareZoneB = zone("Asia/Tokyo")
+        store.comparePlaceA = place("America/New_York")
+        store.comparePlaceB = place("Asia/Tokyo")
         let relaunched = UserDefaultsSettingsStore(defaults: defaults)
-        #expect(relaunched.compareZoneA == zone("America/New_York"))
-        #expect(relaunched.compareZoneB == zone("Asia/Tokyo"))
+        #expect(relaunched.comparePlaceA == place("America/New_York"))
+        #expect(relaunched.comparePlaceB == place("Asia/Tokyo"))
     }
 }
 
 @Test func compareZonesAreSavedIndependently() {
     let store = InMemorySettingsStore()
-    store.compareZoneA = zone("Europe/London")
+    store.comparePlaceA = place("Europe/London")
     store.setData(Data("garbage".utf8), forKey: SettingsKey.compareZoneB)
-    #expect(store.compareZoneA == zone("Europe/London"))
-    #expect(store.compareZoneB == nil)
+    #expect(store.comparePlaceA == place("Europe/London"))
+    #expect(store.comparePlaceB == nil)
 }
 
 @Test func unreadableSavedValueIsReported() {
@@ -92,7 +92,7 @@ private func withTemporaryDefaults(_ body: (UserDefaults) throws -> Void) rethro
         var reports: [String] = []
         let store = UserDefaultsSettingsStore(defaults: defaults) { key, _ in reports.append(key) }
         store.setData(Data("garbage".utf8), forKey: SettingsKey.clockZone)
-        #expect(store.clockZone == nil)
+        #expect(store.clockPlace == nil)
         #expect(reports == [SettingsKey.clockZone])
     }
 }
@@ -101,7 +101,7 @@ private func withTemporaryDefaults(_ body: (UserDefaults) throws -> Void) rethro
     withTemporaryDefaults { defaults in
         var reports: [String] = []
         let store = UserDefaultsSettingsStore(defaults: defaults) { key, _ in reports.append(key) }
-        #expect(store.clockZone == nil)
+        #expect(store.clockPlace == nil)
         #expect(reports.isEmpty)
     }
 }

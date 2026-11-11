@@ -3,9 +3,11 @@ import Observation
 import WorldClockCore
 
 /// Display values for the Clock window: the time in one zone, refreshed on minute boundaries
-/// while the window is visible (`start` / `stop`). The chosen zone is saved in `store`.
+/// while the window is visible (`start` / `stop`). The chosen place (zone and city) is saved in
+/// `store`.
 @MainActor @Observable public final class ClockViewModel {
-    public private(set) var zone: Zone
+    public private(set) var place: Place
+    public var zone: Zone { place.zone }
     public private(set) var now: Date
 
     private var display: ZoneDisplay { formatter.display(at: now) }
@@ -15,7 +17,7 @@ import WorldClockCore
     public var time: AttributedString { display.time }
     /// "Thursday, January 15", the date in `zone`.
     public var dateText: String { display.dateText }
-    /// "Tokyo"
+    /// "Tokyo", or the city picked in the zone ("San Francisco")
     public var cityText: String { display.cityText }
     /// What VoiceOver reads for the time and date: "Tokyo, 9:00 PM, Thursday, January 15".
     public var spokenText: String { "\(display.cityText), \(display.timeText), \(display.dateText)" }
@@ -31,10 +33,10 @@ import WorldClockCore
                 clock: @escaping () -> Date, ticker: Ticker) {
         self.store = store
         minutes = MinuteClock(clock: clock, ticker: ticker)
-        let zone = store.clockZone ?? defaultZone
-        self.zone = zone
+        let place = store.clockPlace ?? Place(defaultZone)
+        self.place = place
         self.now = clock()
-        formatter = ZoneFormatter(zone: zone, locale: locale)
+        formatter = ZoneFormatter(place: place, locale: locale)
     }
 
     /// Refreshes the time and ticks on every minute boundary until `stop`. Call when the window appears.
@@ -54,11 +56,11 @@ import WorldClockCore
         now = minutes.now()
     }
 
-    /// Shows `zone` and saves it for the next launch.
-    public func select(_ zone: Zone) {
-        formatter.zone = zone
-        self.zone = zone
-        store.clockZone = zone
+    /// Shows `place` and saves it for the next launch.
+    public func select(_ place: Place) {
+        formatter.place = place
+        self.place = place
+        store.clockPlace = place
     }
 }
 

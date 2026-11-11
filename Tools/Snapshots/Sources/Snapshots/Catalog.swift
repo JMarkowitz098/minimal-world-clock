@@ -42,24 +42,32 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
     func cancel() {}
 }
 
-@MainActor func clockModel(_ identifier: String, at now: Date = jan15Noon) -> ClockViewModel {
+/// en_US (12-hour) unless a snapshot asks for another locale; `en_GB` shows 24-hour time.
+@MainActor func clockModel(_ identifier: String, at now: Date = jan15Noon, locale: String = "en_US") -> ClockViewModel {
     ClockViewModel(
         store: InMemorySettingsStore(), defaultZone: Zone(identifier: identifier)!,
-        locale: Locale(identifier: "en_US"), clock: { now }, ticker: StillTicker()
+        locale: Locale(identifier: locale), clock: { now }, ticker: StillTicker()
     )
 }
 
-@MainActor func compareModel(_ a: String, _ b: String, at now: Date = jan15Noon, scrubTo minutes: Int? = nil) -> CompareViewModel {
+@MainActor func compareModel(_ a: String, _ b: String, at now: Date = jan15Noon, scrubTo minutes: Int? = nil,
+                             locale: String = "en_US") -> CompareViewModel {
     let model = CompareViewModel(
         store: InMemorySettingsStore(), defaultZones: (Zone(identifier: a)!, Zone(identifier: b)!),
-        locale: Locale(identifier: "en_US"), clock: { now }, ticker: StillTicker()
+        locale: Locale(identifier: locale), clock: { now }, ticker: StillTicker()
     )
     if let minutes { model.scrub(toMinuteOfDay: minutes) }
     return model
 }
 
-@MainActor func pickerModel(query: String, highlight: Int = 0) -> ZonePickerViewModel {
-    let model = ZonePickerViewModel(now: jan15Noon)
+/// - Parameter favorites: starred zones (identifiers); nil: a picker without stars.
+@MainActor func pickerModel(query: String, highlight: Int = 0, favorites: [String]? = nil) -> ZonePickerViewModel {
+    let favoritesModel = favorites.map { identifiers in
+        let store = InMemorySettingsStore()
+        store.favorites = Favorites(identifiers.map { Place(id: $0)! })
+        return FavoritesModel(store: store)
+    }
+    let model = ZonePickerViewModel(now: jan15Noon, favorites: favoritesModel)
     model.query = query
     if highlight > 0 { model.moveHighlight(by: highlight) }
     return model
@@ -69,20 +77,21 @@ let jan15Noon = Date(timeIntervalSince1970: 1_768_478_400)
 /// theme's `surface` (the popover's background in the app).
 struct ThemedPicker: View {
     var query = ""
-    var selected: Zone? = nil
+    var selected: Place? = nil
     /// Rows to move down with ↓ (0: no highlight).
     var highlight = 0
+    var favorites: [String]? = nil
 
     var body: some View {
-        ZonePicker(model: pickerModel(query: query, highlight: highlight), selected: selected) { _ in }
+        ZonePicker(model: pickerModel(query: query, highlight: highlight, favorites: favorites), selected: selected) { _ in }
             .renderTheme()
     }
 }
 
 /// The widget at a fixed instant, on its background with the widget's rounded corners (the real
 /// container comes from WidgetKit). Sizes are macOS's small and medium widgets.
-@MainActor func widget(_ identifier: String, _ size: ZoneWidgetView.Size, at now: Date = jan15Noon) -> AnyView {
-    let display = WidgetDisplay(zone: Zone(identifier: identifier)!, at: now, locale: Locale(identifier: "en_US"))
+@MainActor func widget(_ identifier: String, _ size: ZoneWidgetView.Size, at now: Date = jan15Noon, locale: String = "en_US") -> AnyView {
+    let display = WidgetDisplay(zone: Zone(identifier: identifier)!, at: now, locale: Locale(identifier: locale))
     return AnyView(WidgetMock(display: display, size: size, now: now))
 }
 
@@ -157,6 +166,12 @@ struct ThemeGallery: View {
     Snapshot(name: "clock-long-name", size: CGSize(width: 300, height: 162)) {
         AnyView(ClockView(model: clockModel("America/Bahia_Banderas")).renderTheme().safeAreaPadding(.top, 28))
     },
+    // A city picked inside a zone (M9): San Francisco, in Los Angeles's zone.
+    Snapshot(name: "clock-picked-city", size: CGSize(width: 300, height: 162)) {
+        let model = clockModel("America/Los_Angeles")
+        model.select(Place(id: "America/Los_Angeles#San Francisco")!)
+        return AnyView(ClockView(model: model).renderTheme().safeAreaPadding(.top, 28))
+    },
     // Resized larger than natural: the time and date scale up with the window.
     Snapshot(name: "clock-resized", size: CGSize(width: 560, height: 300)) {
         AnyView(ClockView(model: clockModel("Asia/Tokyo")).renderTheme().safeAreaPadding(.top, 28))
@@ -178,7 +193,7 @@ struct ThemeGallery: View {
     },
     // Accra selected (checkmark).
     Snapshot(name: "zone-picker", size: CGSize(width: 300, height: 380), increasedContrast: true) {
-        AnyView(ThemedPicker(selected: Zone(identifier: "Africa/Accra")))
+        AnyView(ThemedPicker(selected: Place(Zone(identifier: "Africa/Accra")!)))
     },
     Snapshot(name: "zone-picker-search", size: CGSize(width: 300, height: 380)) {
         AnyView(ThemedPicker(query: "new"))
@@ -189,6 +204,21 @@ struct ThemeGallery: View {
     },
     Snapshot(name: "zone-picker-empty", size: CGSize(width: 300, height: 380)) {
         AnyView(ThemedPicker(query: "zzz"))
+    },
+    // Favorites (M9): three starred places in their own section (one starred as a city inside a
+    // zone), San Francisco selected; the first other row reached with ↓ shows the outlined star
+    // a hovered row shows.
+    Snapshot(name: "zone-picker-favorites", size: CGSize(width: 300, height: 380), increasedContrast: true) {
+        AnyView(ThemedPicker(selected: Place(id: "America/Los_Angeles#San Francisco"), highlight: 4,
+                             favorites: ["America/Los_Angeles#San Francisco", "Europe/London", "Asia/Tokyo"]))
+    },
+    // Cities found inside a zone (M9): "San Francisco" with "Los Angeles · UTC−8".
+    Snapshot(name: "zone-picker-alias", size: CGSize(width: 300, height: 380)) {
+        AnyView(ThemedPicker(query: "san", favorites: []))
+    },
+    // A country and a zone name (M9).
+    Snapshot(name: "zone-picker-country", size: CGSize(width: 300, height: 380)) {
+        AnyView(ThemedPicker(query: "united states", favorites: ["America/Chicago"]))
     },
     Snapshot(name: "widget-small", size: CGSize(width: 194, height: 194)) {
         widget("Asia/Tokyo", .small)
@@ -202,6 +232,20 @@ struct ThemeGallery: View {
     },
     Snapshot(name: "widget-medium-long", size: CGSize(width: 388, height: 194)) {
         widget("America/St_Johns", .medium, at: Date(timeIntervalSince1970: 1_790_784_000))
+    },
+    // 24-hour time (M9): en_GB, "09:00"-style hours with no AM/PM, at their widest.
+    Snapshot(name: "clock-24h", size: CGSize(width: 300, height: 162)) {
+        AnyView(ClockView(model: clockModel("Asia/Tokyo", locale: "en_GB")).renderTheme().safeAreaPadding(.top, 28))
+    },
+    Snapshot(name: "compare-24h", size: CGSize(width: 640, height: 230)) {
+        AnyView(CompareView(model: compareModel("America/New_York", "Asia/Tokyo", scrubTo: 23 * 60 + 45, locale: "en_GB"))
+            .renderTheme().safeAreaPadding(.top, 28))
+    },
+    Snapshot(name: "widget-small-24h", size: CGSize(width: 194, height: 194)) {
+        widget("America/Bahia_Banderas", .small, locale: "en_GB")
+    },
+    Snapshot(name: "widget-medium-24h", size: CGSize(width: 388, height: 194)) {
+        widget("America/St_Johns", .medium, at: Date(timeIntervalSince1970: 1_790_784_000), locale: "en_GB")
     },
     Snapshot(name: "settings", size: CGSize(width: 480, height: 640)) {
         AnyView(SettingsView(model: settingsModel()))

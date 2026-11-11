@@ -38,11 +38,11 @@ public struct CompareView: View {
     private func content(scale s: CGFloat, measuring: Bool) -> some View {
         VStack(spacing: 18 * s) {
             HStack(alignment: .center, spacing: 12 * s) {
-                side(model.a, zone: model.zoneA, date: model.a.dateText, spokenDate: model.a.dateText,
+                side(model.a, place: model.placeA, date: model.a.dateText, spokenDate: model.a.dateText,
                      name: "First time zone",
                      scale: s, measuring: measuring, select: model.selectA, type: model.typeTimeA)
                 difference(scale: s)
-                side(model.b, zone: model.zoneB,
+                side(model.b, place: model.placeB,
                      date: measuring ? model.widestZoneBDateText : model.zoneBDateText,
                      spokenDate: model.zoneBSpokenDate,
                      name: "Second time zone", scale: s, measuring: measuring,
@@ -58,11 +58,11 @@ public struct CompareView: View {
         .padding(.bottom, 16 * s)
     }
 
-    private func side(_ display: ZoneDisplay, zone: Zone, date: String, spokenDate: String, name: String, scale s: CGFloat,
-                      measuring: Bool, select: @escaping (Zone) -> Void,
+    private func side(_ display: ZoneDisplay, place: Place, date: String, spokenDate: String, name: String, scale s: CGFloat,
+                      measuring: Bool, select: @escaping (Place) -> Void,
                       type: @escaping (String) -> Bool) -> some View {
         VStack(spacing: 2 * s) {
-            ZoneButton(zone: zone, now: model.instant, scale: s, onSelect: select)
+            ZoneButton(place: place, now: model.instant, scale: s, onSelect: select)
             EditableTime(time: measuring ? TimeStyle.widestTime(display.time) : display.time,
                          label: "Time in \(display.cityText)", scale: s, onCommit: type)
             Text(date).font(.system(size: TimeStyle.dateSize * s)).lineLimit(1)

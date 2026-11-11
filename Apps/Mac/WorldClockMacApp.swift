@@ -9,6 +9,8 @@ struct WorldClockMacApp: App {
     @State private var settings: SettingsViewModel
     @State private var clock: ClockViewModel
     @State private var compare: CompareViewModel
+    /// Shared by both windows' zone pickers; saved in the App Group for the widget.
+    @State private var favorites = FavoritesModel.live()
 
     /// The windows format with the settings' locale (12/24-hour) and redo it when that changes;
     /// any change also reloads the widget, which reads the settings from the App Group.
@@ -33,7 +35,7 @@ struct WorldClockMacApp: App {
     /// the app menu's Settings… item (⌘,).
     var body: some Scene {
         Window("Clock", id: "clock") {
-            ClockView(model: clock).themed(settings.theme)
+            ClockView(model: clock).themed(settings.theme).environment(favorites)
         }
         // The content can grow (its text scales with the window), so without a default size
         // the window opens large. This is below the content's natural size, which is the
@@ -46,7 +48,7 @@ struct WorldClockMacApp: App {
         .keyboardShortcut("1")
 
         Window("Compare", id: "compare") {
-            CompareView(model: compare).themed(settings.theme)
+            CompareView(model: compare).themed(settings.theme).environment(favorites)
         }
         // No title bar, like the Clock window; CompareView makes its background a drag handle.
         .windowStyle(.hiddenTitleBar)

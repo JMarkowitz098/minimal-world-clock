@@ -30,8 +30,9 @@ public struct WidgetDisplay: Equatable, Sendable {
     /// `Text(_:format:)` takes the locale from the environment, so the view sets `\.locale` too.
     public var locale: Locale
 
-    public init(zone: Zone, at instant: Date, locale: Locale) {
-        let display = ZoneFormatter(zone: zone, locale: locale).display(at: instant)
+    /// - Parameter city: the city picked in the zone (`Place.city`); nil shows the zone's own.
+    public init(zone: Zone, city: String? = nil, at instant: Date, locale: Locale) {
+        let display = ZoneFormatter(place: Place(zone, city: city), locale: locale).display(at: instant)
         let shortDate = DateFormatter()
         shortDate.locale = locale
         shortDate.timeZone = zone.timeZone

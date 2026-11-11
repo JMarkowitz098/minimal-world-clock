@@ -8,7 +8,7 @@ import Testing
 @Test @MainActor func clockSpokenText() {
     let (model, _, _) = makeClock()
     #expect(model.spokenText == "Tokyo, 9:00\(nnbsp)PM, Thursday, January 15")
-    model.select(zone("America/New_York"))
+    model.select(place("America/New_York"))
     #expect(model.spokenText == "New York, 7:00\(nnbsp)AM, Thursday, January 15")
 }
 

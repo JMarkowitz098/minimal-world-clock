@@ -66,7 +66,7 @@ import Testing
 
 @Test @MainActor func changingZoneUpdatesDisplay() {
     let (model, _, _) = makeClock()
-    model.select(zone("America/New_York"))
+    model.select(place("America/New_York"))
     #expect(model.zone == zone("America/New_York"))
     #expect(model.timeText == "7:00\(nnbsp)AM")
     #expect(model.cityText == "New York")
@@ -75,7 +75,7 @@ import Testing
 @Test @MainActor func chosenZonePersistsAcrossLaunches() {
     let store = InMemorySettingsStore()
     let (first, _, _) = makeClock(store: store)
-    first.select(zone("Europe/London"))
+    first.select(place("Europe/London"))
     // A new model over the same store stands in for a relaunch.
     let (second, _, _) = makeClock(store: store)
     #expect(second.zone == zone("Europe/London"))
@@ -91,4 +91,16 @@ import Testing
     store.setData(Data("garbage".utf8), forKey: SettingsKey.clockZone)
     let (model, _, _) = makeClock(store: store, defaultZone: zone("Europe/Paris"))
     #expect(model.zone == zone("Europe/Paris"))
+}
+
+// A city picked inside a zone (M9): "San Francisco" stays San Francisco, not Los Angeles.
+@Test @MainActor func pickedCityIsShownAndSaved() {
+    let store = InMemorySettingsStore()
+    let (first, _, _) = makeClock(store: store)
+    first.select(Place(zone("America/Los_Angeles"), city: "San Francisco"))
+    #expect(first.cityText == "San Francisco")
+    #expect(first.spokenText.hasPrefix("San Francisco, "))
+    let (second, _, _) = makeClock(store: store)
+    #expect(second.cityText == "San Francisco")
+    #expect(second.zone == zone("America/Los_Angeles"))
 }

@@ -18,7 +18,7 @@ public struct ClockView: View {
             timeAndDate(scale: layout.scale, isHovered: layout.isHovered)
         } strip: {
             // The button's hover pill adds 8 pt on each side.
-            ZoneButton(zone: model.zone, now: model.now) { model.select($0) }
+            ZoneButton(place: model.place, now: model.now) { model.select($0) }
                 .padding(.trailing, 6)
         }
         .onAppear { model.start() }

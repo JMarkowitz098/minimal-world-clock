@@ -27,3 +27,8 @@ let oct28Noon = utc(2026, 10, 28, 12, 0)
 func wall(_ year: Int, _ month: Int, _ day: Int, _ hour: Int, _ minute: Int) -> WallTime {
     WallTime(year: year, month: month, day: day, hour: hour, minute: minute)
 }
+
+/// A zone shown under its own city.
+func place(_ identifier: String) -> Place {
+    Place(zone(identifier))
+}

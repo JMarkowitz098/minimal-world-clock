@@ -15,18 +15,27 @@ import Testing
 
 @Test func zoneQueryResolvesIdentifiers() {
     let query = ZoneQuery(systemZone: TimeZone(identifier: "Europe/Paris")!)
-    #expect(query.zones(withIdentifiers: ["Asia/Tokyo", "Nowhere/Zone", "UTC"]) == [zone("Asia/Tokyo"), zone("UTC")])
+    #expect(query.places(withIDs: ["Asia/Tokyo", "Nowhere/Zone", "UTC", "America/Los_Angeles#San Francisco"])
+            == [place("Asia/Tokyo"), place("UTC"), Place(zone("America/Los_Angeles"), city: "San Francisco")])
 }
 
 @Test func zoneQuerySearchMatchesCatalogSearch() {
     let query = ZoneQuery(systemZone: TimeZone(identifier: "Europe/Paris")!)
-    #expect(query.search("new", at: jan15Noon) == ZoneCatalog.system.search("new", at: jan15Noon))
-    #expect(query.search("PST", at: jan15Noon).contains(zone("America/Los_Angeles")))
+    #expect(query.search("new", at: jan15Noon) == ZoneCatalog.system.matches("new", at: jan15Noon))
+    #expect(query.search("PST", at: jan15Noon).contains(place("America/Los_Angeles")))
 }
 
 @Test func zoneQuerySuggestsEveryZoneByCity() {
     let query = ZoneQuery(systemZone: TimeZone(identifier: "Europe/Paris")!)
-    #expect(query.suggestedZones == ZoneCatalog.system.search("", at: jan15Noon))
+    #expect(query.suggestedPlaces().map(\.zone) == ZoneCatalog.system.search("", at: jan15Noon))
+}
+
+@Test func zoneQuerySearchUsesAliases() {
+    // The widget's edit screen finds what the windows' picker finds (M9).
+    let query = ZoneQuery(systemZone: TimeZone(identifier: "Europe/Paris")!)
+    #expect(query.search("San Francisco", at: jan15Noon).first == Place(zone("America/Los_Angeles"), city: "San Francisco"))
+    #expect(query.search("Japan", at: jan15Noon).first == place("Asia/Tokyo"))
+    #expect(query.search("Pacific Time", at: jan15Noon).first == place("America/Los_Angeles"))
 }
 
 @Test func zoneQueryDefaultIsTheMacZone() {
