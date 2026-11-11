@@ -1,6 +1,6 @@
 # App Store listing: Minimal World Clock
 
-Draft (M11). Fields as they appear in App Store Connect; character limits are in brackets. Modeled on `~/Projects/pomodoro_timer/docs/app-store/listing.md`, which shipped.
+Entered in App Store Connect on 2026-11-11 (app record Apple ID 6833419708; bundle ID registered the same day). Fields as they appear in App Store Connect; character limits are in brackets. Modeled on `~/Projects/pomodoro_timer/docs/app-store/listing.md`, which shipped.
 
 ## App information
 
