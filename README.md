@@ -16,8 +16,9 @@ Status: version 1.0.0, being prepared for the App Store. See [ROADMAP.md](ROADMA
 - `Apps/Mac/`: macOS app entry point, kept small
 - `Apps/Widget/`: desktop widget extension (embedded in the app), kept small
 - `project.yml`: XcodeGen spec. Generates `WorldClock.xcodeproj`, which isn't committed.
-- `scripts/`: setup, check and install scripts; `make-icon.swift` (draws the app icon into `Apps/Mac/Assets.xcassets`) and `make-zone-names.swift` (regenerates the zone → country and zone-name table search uses); the release script comes in M11; `scripts/hooks/`: git hooks
-- `Tools/Snapshots/`: renders the SwiftUI views to PNG for visual checks
+- `scripts/`: setup, check and install scripts; `make-icon.swift` (draws the app icon into `Apps/Mac/Assets.xcassets`) and `make-zone-names.swift` (regenerates the zone → country and zone-name table search uses); `release.sh` (App Store uploads, below); `scripts/hooks/`: git hooks
+- `Tools/Snapshots/`: renders the SwiftUI views to PNG for visual checks, and the App Store screenshots
+- `docs/app-store/`: App Store listing text and screenshots (the privacy policy and support pages live on jaredmarkowitz.com/apps/world-clock, from `~/Projects/portfolio`)
 - `.claude/`: Claude Code settings and the `/milestone` skill
 - `ROADMAP.md`: milestones. `design_doc.md`: requirements and decisions. `ARCHITECTURE.md`: how the code fits together. `CLAUDE.md`: instructions for AI agents working in the repo.
 
@@ -103,6 +104,24 @@ No third-party dependencies.
 
 ### App Store
 
-Not set up yet:
+Every release, whether for TestFlight or the App Store, starts the same way: upload a build with `./scripts/release.sh`. What happens next is done in [App Store Connect](https://appstoreconnect.apple.com). The process is the same as `~/Projects/pomodoro_timer`'s, which has shipped; its README has the longer TestFlight walkthrough.
 
-- **M11:** `./scripts/release.sh` checks, bumps the build number, archives, signs, uploads to App Store Connect, and tags the release. It follows the same process as `~/Projects/pomodoro_timer`, whose README has the full App Store Connect and TestFlight steps. This section will hold this app's copy of them.
+```sh
+./scripts/release.sh                  # same version, next build number
+./scripts/release.sh --version 1.1.0  # new version (and next build number)
+./scripts/release.sh --local          # archive only, to check archiving works (no upload, changes nothing)
+
+# Regenerate the App Store screenshots (docs/app-store/screenshots/) after a UI change
+swift run --package-path Tools/Snapshots Snapshots --app-store
+```
+
+**Versions and builds.** The version (`MARKETING_VERSION`, e.g. `1.0.0`) is what users see. The build (`CURRENT_PROJECT_VERSION`) counts uploads; every upload needs a higher one, and the script bumps it. Both are set twice in `project.yml` (app and widget) and must match: the script bumps both and refuses to run if they differ. Keep the version while testing or fixing a rejected submission; bump it (`--version`) once a version is live and you ship changes.
+
+**One-time setup.**
+1. `~/.config/appstore/credentials.env` (shared by all apps, never committed; already set up for pomodoro_timer): `TEAM_ID`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH` (see the header of `scripts/release.sh`).
+2. This Mac registered as a **macOS** device on developer.apple.com (Certificates, Identifiers & Profiles → Devices), done for pomodoro_timer on the same team.
+3. The app record in App Store Connect: **Apps → + → New App**, platform macOS, name "Minimal World Clock", bundle ID `com.jaredmarkowitz.minimalworldclock`, SKU `MINIMAL-WORLD-CLOCK-MAC`. If the bundle ID isn't in the list, register it under Certificates, Identifiers & Profiles → Identifiers first (Xcode also does this on the first release).
+
+**What the script does.** Needs a clean `main`. It runs `./scripts/check.sh`, bumps the build number, archives a universal Release build (signing automatically with the team; the App Group is team-ID prefixed, so no provisioning-profile entitlements and no separate App Store entitlements file), checks the archive (both bundles, privacy manifests, universal, matching versions), uploads, then commits `Release <version> (<build>)`, tags `v<version>-<build>` and pushes. If anything fails it reverts the bump; read `build/release.log` (archive) or `build/upload.log` (upload). The build appears under **TestFlight** after about 15 minutes.
+
+**Submitting.** On the version page fill in the listing from `docs/app-store/listing.md`, the screenshots from `docs/app-store/screenshots/`, and pick the build. The first time, also App Information, App Privacy (**Data Not Collected**, then Publish), Pricing and Availability, and the age rating (values in the listing). Then **Add for Review** → **Submit**. Before the first submission, the privacy and support pages must be live (push `~/Projects/portfolio`). The contact phone needs international format ("+" and country code) or Save fails silently.

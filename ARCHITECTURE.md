@@ -19,7 +19,8 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | App entry point, windows (Clock ⌘1: hidden title bar, default size; Compare ⌘2; Settings ⌘,), the theme from the settings, wiring settings changes to the windows' locale and `WidgetCenter` reloads, app delegate (stay open when the last window closes) | `Apps/Mac/WorldClockMacApp.swift` |
 | Palette credits shown in the standard About window (the themes, and the icon's Solarized cream and orange) | `Apps/Mac/Credits.rtf` |
 | App icon (every macOS size); generated, don't edit | `Apps/Mac/Assets.xcassets` (by `scripts/make-icon.swift`) |
-| App sandbox and App Group entitlements | `Apps/Mac/WorldClock.entitlements` |
+| App sandbox and App Group entitlements (also used for App Store builds: nothing needs a provisioning profile) | `Apps/Mac/WorldClock.entitlements` |
+| Privacy manifests (no tracking, no data collected; UserDefaults reasons CA92.1 and 1C8F.1), one per bundle; keep them in sync | `Apps/Mac/PrivacyInfo.xcprivacy`, `Apps/Widget/PrivacyInfo.xcprivacy` |
 | Desktop widget: `Widget`, zone parameter (`SelectZoneIntent`, `ZoneEntity`, `ZoneEntityQuery`), timeline provider (reads the theme and 12/24-hour choice from the App Group into each entry), entry view. Thin: wraps the package types below | `Apps/Widget/MinimalWorldClockWidget.swift` |
 | Widget sandbox and App Group entitlements | `Apps/Widget/MinimalWorldClockWidget.entitlements` |
 | Targets, bundle IDs, versions, Info.plist keys, signing (development team for every build) and the widget's "Require team signing" build step | `project.yml` |
@@ -73,13 +74,16 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | What VoiceOver reads (Clock, Compare, picker rows) | `Tests/WorldClockUITests/SpokenTextTests.swift` |
 | Wider search (countries, zone names, city table, ranking), favorites, places | `Tests/WorldClockCoreTests/ZoneSearchTests.swift`, `FavoritesTests.swift`, `PlaceTests.swift` |
 | UI test helpers (`FakeClock`, `FakeTicker`, `makeClock(…)`, `makeCompare(…)`, `nnbsp`) | `Tests/WorldClockUITests/TestSupport.swift` |
-| Views rendered for visual checks (and later App Store screenshots) | `Tools/Snapshots/Sources/Snapshots/Catalog.swift` |
+| Views rendered for visual checks | `Tools/Snapshots/Sources/Snapshots/Catalog.swift` |
+| App Store screenshots (headline over the real views; each window drawn on its own, then placed, since Clock and Compare reshape their window; `Snapshots --app-store` → `docs/app-store/screenshots/`, 2880×1800) | `Tools/Snapshots/Sources/Snapshots/AppStore.swift` |
 | Temporary design option sheets (`prototypes`, rendered to `build/prototypes/`; empty between explorations) | `Tools/Snapshots/Sources/Snapshots/Prototypes.swift` |
 | The snapshot renderer (offscreen `NSHostingView`, light and dark, 2×, plus Increase Contrast variants; catalog → `build/snapshots/`, prototypes → `build/prototypes/`; deletes renders no entry makes) | `Tools/Snapshots/Sources/Snapshots/Snapshots.swift` |
 | The app icon: design G (cream dial on navy, hands at 10:10, orange minute hand) drawn from plain shapes on Apple's icon template, written at every size into the asset catalog | `scripts/make-icon.swift` |
 | Release build installed to /Applications (stops a failed build, restarts the widget extension, unregisters the build folder's widget copies) | `scripts/install.sh` |
 | Regenerating `ZoneNames.swift` from macOS's `zone.tab` and Foundation's English names | `scripts/make-zone-names.swift` |
-| What the pre-commit check runs (tests, app build, team-signing check, snapshot tool build) | `scripts/check.sh` (hook: `scripts/hooks/pre-commit`) |
+| What the pre-commit check runs (tests, app build, team-signing and privacy-manifest check, snapshot tool build) | `scripts/check.sh` (hook: `scripts/hooks/pre-commit`) |
+| App Store upload: check, bump the build number (app and widget), archive universal, verify the archive, upload, tag (`--local`: archive only) | `scripts/release.sh` |
+| App Store listing draft and screenshots (privacy and support pages: `~/Projects/portfolio/apps/world-clock/`) | `docs/app-store/` |
 | One-time setup after cloning (installs the hook, generates the Xcode project) | `scripts/setup.sh` |
 | Commands pre-approved for Claude Code | `.claude/settings.json` |
 | The `/milestone` workflow | `.claude/skills/milestone/SKILL.md` |
@@ -134,6 +138,10 @@ Update this table as milestones add files.
 **Add a window:** build its content on `ScalingWindow` (theme, scaling, hover edge, drag) and apply `.themed(settings.theme)` where the scene creates it; add a `Window` scene in `Apps/Mac/WorldClockMacApp.swift` with `.keyboardShortcut` (it gets a Window menu item automatically) and `.defaultSize` if the content has a greedy control (a `Slider`'s ideal width is 900 pt; `frame(idealWidth:)` doesn't help). The first scene opens at launch. macOS autosaves each window's frame (`NSWindow Frame <id>` in the app's defaults), so after changing a default size, delete that key before checking it.
 
 **Change the app icon:** edit `drawIcon()` in `scripts/make-icon.swift` (plain shapes only: SF Symbols are not allowed in icons), run `swift scripts/make-icon.swift`, and check it with `./scripts/install.sh` (Finder and the Dock). Keep the body on Apple's template (824-point rounded square, ~185-point corners, nothing outside it): macOS 26+ boxes an old-style icon that doesn't fit the shape in a gray tile. To explore designs with the user, render an option sheet from the script (the M10 sheet drew several designs at 512, 64, 32 and 16 px on light and dark backdrops into `build/prototypes/`), then keep only the chosen one.
+
+**Update the App Store screenshots:** after a UI change, run `swift run --package-path Tools/Snapshots Snapshots --app-store`, Read the four PNGs in `docs/app-store/screenshots/`, and commit them. To change a shot, edit `appStoreShots` in `AppStore.swift`: windows go through `window(_:size:theme:)` (a larger size shows the content scaled up, as a resized window), widgets through `shotWidget`, the picker through `popover`. Each is drawn into its own image first: placing `ClockView`/`CompareView` directly on the canvas would reshape it to their aspect ratio. Keep the headline and listing text (`docs/app-store/listing.md`) saying the same things.
+
+**Release:** `./scripts/release.sh` (README → App Store). A new entitlement that needs a provisioning profile (`com.apple.developer.*`, e.g. iCloud or a `group.` App Group) would break local builds, which have no profile: put it in a separate App Store entitlements file and pass it from `release.sh` (as pomodoro_timer's `APP_ENTITLEMENTS`). A new required-reason API (file timestamps, disk space, system boot time…) needs a reason in both privacy manifests.
 
 **Add a file to the app or widget target:** create it under `Apps/Mac/` or `Apps/Widget/`, then run `xcodegen generate`.
 

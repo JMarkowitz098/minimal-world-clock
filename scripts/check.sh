@@ -31,8 +31,13 @@ for bundle in "build/Build/Products/Debug/Minimal World Clock.app" \
         echo "SIGNING CHECK FAILED: $(basename "$bundle") has no team ID (ad-hoc signed). See project.yml."
         exit 1
     fi
+    # Each bundle needs its own privacy manifest, or App Store Connect flags the upload (M11).
+    if [ ! -f "$bundle/Contents/Resources/PrivacyInfo.xcprivacy" ]; then
+        echo "PRIVACY MANIFEST MISSING in $(basename "$bundle"). See Apps/*/PrivacyInfo.xcprivacy."
+        exit 1
+    fi
 done
-echo "SIGNING CHECK PASSED"
+echo "SIGNING AND PRIVACY MANIFEST CHECK PASSED"
 
 echo "== Snapshot tool build"
 if ! swift build --package-path Tools/Snapshots > build-snapshots.log 2>&1; then

@@ -11,7 +11,7 @@ A minimal macOS world clock (macOS 15+): a Clock window, a Compare window for tw
 | Task | Command |
 |---|---|
 | **Run a milestone end to end** | `/milestone` (skill in `.claude/skills/milestone/`) |
-| **Pre-commit check** (all tests + app build + team-signing check + snapshot tool build; warnings fail; prints only failures) | `./scripts/check.sh` |
+| **Pre-commit check** (all tests + app build + team-signing and privacy-manifest check + snapshot tool build; warnings fail; prints only failures) | `./scripts/check.sh` |
 | Tests only (fast, use for TDD) | `swift test --package-path Packages/WorldClockKit` |
 | Regenerate Xcode project (after editing `project.yml` or adding/removing app files) | `xcodegen generate` |
 | Build Debug app | `xcodebuild -project WorldClock.xcodeproj -scheme WorldClockMac -configuration Debug -derivedDataPath build build` |
@@ -19,6 +19,8 @@ A minimal macOS world clock (macOS 15+): a Clock window, a Compare window for tw
 | Quit it | `pkill -x "Minimal World Clock"` |
 | Try the widget (macOS only offers widgets from /Applications) | build, then `pkill -x MinimalWorldClockWidget; rm -rf "/Applications/Minimal World Clock.app" && cp -R "build/Build/Products/Debug/Minimal World Clock.app" /Applications/ && open "/Applications/Minimal World Clock.app"`; unregister the build copy with `pluginkit -r "build/Build/Products/Debug/Minimal World Clock.app/Contents/PlugIns/MinimalWorldClockWidget.appex"`; check with `pluginkit -m -p com.apple.widgetkit-extension \| grep worldclock`. The user checks the desktop (agents can't see it). Stopping `MinimalWorldClockWidget` matters: the running extension keeps the old code otherwise. |
 | **Render views to PNG** (light + dark, or light only for `lightOnly` entries, plus `-contrast` renders with Increase Contrast for `increasedContrast` entries, into `build/snapshots/`; temporary option sheets from `Prototypes.swift` go to `build/prototypes/`; both keep only current entries; then Read them) | `swift run --package-path Tools/Snapshots Snapshots [name-filter]` |
+| **Upload to App Store Connect** (check → bump build → archive → upload → tag; needs a clean `main`; `--version 1.1.0` for a new version; `--local` only archives) | `./scripts/release.sh` |
+| Regenerate App Store screenshots (into `docs/app-store/screenshots/`, after UI changes) | `swift run --package-path Tools/Snapshots Snapshots --app-store` |
 | **Install the Release build** to /Applications (replaces the old copy, restarts the widget extension, launches it) | `./scripts/install.sh` |
 | Regenerate the app icon (after editing `drawIcon()`) | `swift scripts/make-icon.swift` |
 | Regenerate `ZoneNames.swift` (each zone's country and English zone names, for search) after a macOS update changes the zone list | `swift scripts/make-zone-names.swift` |
