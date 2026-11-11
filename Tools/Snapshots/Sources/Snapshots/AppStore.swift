@@ -64,7 +64,56 @@ struct AppStoreShot {
             }
         })
     },
+    AppStoreShot(name: "5-accessibility",
+                 headline: "Made for everyone",
+                 subheadline: "VoiceOver reads it in whole sentences, and every theme meets contrast guidelines.") {
+        // Drawn with Increase Contrast on; the caption is the sentence VoiceOver reads for the
+        // difference (the model's own spoken text, not written for the screenshot).
+        let compare = compareModel("America/New_York", "Asia/Tokyo", scrubTo: 19 * 60)
+        let compareWindow = try window(CompareView(model: compare), size: CGSize(width: 900, height: 324),
+                                       theme: .solarizedLight, increasedContrast: true)
+        return AnyView(VStack(spacing: 30) {
+            compareWindow
+            VoiceOverCaption(text: compare.spokenDifference)
+            HStack(spacing: 12) {
+                ForEach(["VoiceOver", "Keyboard control", "Never color alone", "Increase Contrast", "Reduce Motion"],
+                        id: \.self) { Feature(text: $0) }
+            }
+        })
+    },
 ]
+
+/// Suggests VoiceOver's caption panel: what VoiceOver is speaking, in white on a dark box.
+private struct VoiceOverCaption: View {
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "speaker.wave.2.fill")
+                .font(.system(size: 20))
+            Text(text)
+                .font(.system(size: 24, weight: .medium))
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 14)
+        .background(.black.opacity(0.75), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+/// One accessibility feature, as a pill under the window.
+private struct Feature: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 19, weight: .medium))
+            .fixedSize()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(Capsule().fill(shotText.opacity(0.12)))
+    }
+}
 
 /// The marketing background: the app icon's navy and Solarized cream.
 private let shotBackground = Color(red: 0x1B / 255, green: 0x2A / 255, blue: 0x4A / 255)
@@ -98,12 +147,13 @@ struct AppStoreShotView: View {
 /// its own (those views reshape their window, see `Snapshots.bitmap`), with the window buttons,
 /// rounded corners and a shadow. Larger than natural shows the content scaled up, as when the
 /// user resizes the window.
-@MainActor func window(_ view: some View, size: CGSize, theme: Theme) throws -> some View {
+@MainActor func window(_ view: some View, size: CGSize, theme: Theme, increasedContrast: Bool = false) throws -> some View {
     let windowView = view
         .themed(theme)
         .safeAreaPadding(.top, 28)
         .overlay(alignment: .topLeading) { WindowButtons().padding(.leading, 14).padding(.top, 8) }
-    let image = try Snapshots.bitmap(of: AnyView(windowView), size: size)
+    let image = try Snapshots.bitmap(of: AnyView(windowView), size: size,
+                                     variant: .init(scheme: .light, increasedContrast: increasedContrast))
     return framed(image, cornerRadius: 16)
 }
 

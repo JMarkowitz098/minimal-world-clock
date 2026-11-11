@@ -82,7 +82,7 @@ time zone,timezone,converter,meeting planner,utc,gmt,widget,city,travel,remote,t
 
 ## Screenshots
 
-`docs/app-store/screenshots/` (2880×1800, an accepted Mac size): `1-clock`, `2-compare`, `3-search`, `4-themes`. Drawn from the real views with fixed times and cities; regenerate after a UI change with:
+`docs/app-store/screenshots/` (2880×1800, an accepted Mac size): `1-clock`, `2-compare`, `3-search`, `4-themes`, `5-accessibility`. Drawn from the real views with fixed times and cities; regenerate after a UI change with:
 
     swift run --package-path Tools/Snapshots Snapshots --app-store
 
