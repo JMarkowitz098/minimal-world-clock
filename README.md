@@ -6,7 +6,7 @@ A minimal world clock for macOS:
 - **Compare window:** two time zones side by side, with a scrubber to answer "3 pm here is what time there?"
 - **Desktop widget:** the time in a chosen zone, on your desktop.
 
-Status: version 1.0.0, being prepared for the App Store. See [ROADMAP.md](ROADMAP.md) for what's done and what's next.
+Status: version 1.0.0 is [on the Mac App Store](https://apps.apple.com/app/minimal-world-clock/id6833419708) (released 2026-11-23). See [ROADMAP.md](ROADMAP.md) for what's done and what's next.
 
 ## Layout
 
