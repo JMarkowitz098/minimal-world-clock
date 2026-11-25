@@ -12,7 +12,7 @@ Non-obvious findings (API quirks, gotchas, dead ends), grouped by topic, with th
 - Measuring a running app: `top -l 13 -s 5 -pid <pid> -stats pid,cpu,idlew,power,mem,threads` for CPU, idle wakeups and power (Activity Monitor's Energy Impact), `footprint <pid>` for memory, `lipo -info` for architectures. All work against the user's running app. (M10)
 - Measuring screenshots pixel by pixel (a small Swift script with `NSBitmapImageRep.colorAt`) found the widget's edge highlight and centering offset. (M6)
 - BSD `sed` has no `\b`: a rename with it silently matched nothing. (M7)
-- `gh` isn't installed, so there's no GitHub CLI (CI and PRs wait on it).
+- `gh` (GitHub CLI) is installed and logged in as of 2026-11-26.
 - `swift test` prints "Test run with…" twice (once per test runner); that's normal.
 
 ## Signing and App Groups

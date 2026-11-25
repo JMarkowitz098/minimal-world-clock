@@ -12,4 +12,4 @@ Known issues and unscheduled ideas, one line each. When something is scheduled, 
 - iPhone app reusing WorldClockKit.
 - More than two zones in Compare.
 - Widget edit screen: "Favorites" / "All" sections through `IntentItemCollection` (not tried). Choosing the widget's zone in Settings instead was offered; the user said keep macOS's list "for now".
-- CI and pull requests, once `gh` is installed.
+- CI on GitHub (`gh` is installed now).
