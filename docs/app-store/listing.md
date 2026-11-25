@@ -111,3 +111,12 @@ Beta App Description [4000]:
     Please report anything that looks wrong, clips, or doesn't follow your settings.
 
 Feedback email: apps@jaredmarkowitz.com. Marketing URL and privacy policy URL: as above. Beta App Review contact (external testers only): same as the App Review contact.
+
+## Status
+
+- **Live since 2026-11-23:** 1.0.0 (build 2), approved on the first submission; https://apps.apple.com/app/minimal-world-clock/id6833419708. The portfolio's landing page badge and card link to the store (portfolio commit 5094ea6).
+- **Set up 2026-11-11** (by the agent at the user's request): bundle ID registered (no capabilities), app record (Apple ID 6833419708), version page, App Information, price free in all 175 regions, App Privacy "Data Not Collected" (published by the user). The user entered the review phone number.
+- **App Accessibility** published 2026-11-26 (the five features above; can be edited, not unpublished).
+- **China mainland compliance** (2026-11-26, with the user's OK): Security Assessment and AI Generated or Synthetic Content both answered **No** (no end-to-end encrypted messaging, no AI generation offered to users; AI-picked theme colors don't count, since the question is about what the app offers at runtime). No ICP filing number (optional; the app is live in China without one). **Revisit both answers if a feature ever adds networking, messaging or AI generation.**
+- The listing text (subtitle, description, keywords) shipped without an explicit review by the user.
+- Outside this repo: Minimal Menu Bar Pomodoro's portfolio pages still say "Coming soon" (it wasn't found in the store on 2026-11-26).

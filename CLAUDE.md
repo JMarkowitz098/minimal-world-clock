@@ -1,16 +1,22 @@
 # Minimal World Clock
 
-A minimal macOS world clock (macOS 15+): a Clock window, a Compare window for two time zones, and a desktop widget. Headed for the App Store.
+A minimal macOS world clock (macOS 15+): a Clock window, a Compare window for two time zones, and a desktop widget. On the Mac App Store since 2026-11-23 (1.0.0).
 
-- [ARCHITECTURE.md](ARCHITECTURE.md): file map, layers, invariants, recipes (read before non-trivial changes)
-- [ROADMAP.md](ROADMAP.md): milestones and their acceptance tests
-- [design_doc.md](design_doc.md): requirements and product decisions
+- [HANDOFF.md](HANDOFF.md): where things stand and what's next (**read first**)
+- [ROADMAP.md](ROADMAP.md): the plan only: milestones and their parts, one line each
+- [docs/milestones/](docs/milestones/): working detail for each milestone: tests, "Done when", notes on what differed from the plan
+- [ARCHITECTURE.md](ARCHITECTURE.md): the code **as it is now**: file map, layers, invariants, recipes (read before non-trivial changes)
+- [design_doc.md](design_doc.md): requirements and product decisions, with their reasons
+- [docs/lessons.md](docs/lessons.md): API quirks, gotchas and dead ends, by topic
+- [docs/manual-checks.md](docs/manual-checks.md): steps the user checks in the running app or on the desktop, and their results
+- [docs/backlog.md](docs/backlog.md): known issues and unscheduled ideas
+- [docs/app-store/](docs/app-store/): the store listing, screenshots and App Store Connect status
 
 ## Commands
 
 | Task | Command |
 |---|---|
-| **Run a milestone end to end** | `/milestone` (skill in `.claude/skills/milestone/`) |
+| **Work on a milestone part** | `/milestone` (skill in `.claude/skills/milestone/`) |
 | **Pre-commit check** (all tests + app build + team-signing and privacy-manifest check + snapshot tool build; warnings fail; prints only failures) | `./scripts/check.sh` |
 | Tests only (fast, use for TDD) | `swift test --package-path Packages/WorldClockKit` |
 | Regenerate Xcode project (after editing `project.yml` or adding/removing app files) | `xcodegen generate` |
@@ -41,16 +47,19 @@ A minimal macOS world clock (macOS 15+): a Clock window, a Compare window for tw
 
 ## Workflow
 
+- **One part at a time** from ROADMAP.md, with the `/milestone` skill. **Check in before each part:** review it with the user against what's changed since it was planned (and detail an outlined milestone before its first part); build only after the user's go-ahead. After each commit, ask whether to continue in this session or stop. HANDOFF.md is rewritten in every commit, so any new session can pick up.
+- **Small parts.** One part = one commit = one idea the user can review in about 10–15 minutes. Split anything bigger in ROADMAP.md first.
 - **TDD** for Core and view models: failing test first, then make it pass, then refactor.
-- **Check views yourself with snapshots:** register each new or changed view in `Tools/Snapshots/Sources/Snapshots/Catalog.swift` with fixed dates and zones, render, and Read the PNGs. Ask the user only about what snapshots can't show (window behavior, relaunch, the widget on the desktop).
-- **One milestone from ROADMAP.md at a time. Stop after each one and check in with the user before starting the next.** The milestone's listed tests are its acceptance criteria.
-- **Each milestone runs in a fresh chat.** Start by reading ROADMAP.md → Handoff. Before the final commit of a session, rewrite that Handoff section: what was done, exactly what's next, open questions for the user, and anything learned that isn't obvious from the code (gotchas, decisions, dead ends). Also update ARCHITECTURE.md's file map and record product decisions in design_doc.md. Nothing may live only in the chat or a scratchpad: work in progress goes in the repo (e.g. `docs/handoff/`).
+- **Check views yourself with snapshots:** register each new or changed view in `Tools/Snapshots/Sources/Snapshots/Catalog.swift` with fixed dates and zones, render, and Read the PNGs. What snapshots can't show (window behavior, relaunch, the widget on the desktop) goes in `docs/manual-checks.md` as steps for the user.
+- **Design iterations use option sheets** (`Prototypes.swift`, rendered to `build/prototypes/`), not rebuilds of the app for each round.
+- **Nothing lives only in the chat or a scratchpad:** work in progress goes in the repo (e.g. `docs/handoff/`).
 - Swift 6 language mode; fix concurrency warnings rather than suppressing them.
-- **Docs follow the code in the same commit.** When a change adds, moves, or removes files, commands, rules, or decisions, update the matching doc (ARCHITECTURE.md file map and recipes, README.md and the Commands table here, design_doc.md) before committing. See the `/milestone` skill for the checklist.
+- **Docs describe the code as it is after each commit.** Every commit ticks its part in ROADMAP.md, rewrites HANDOFF.md, and updates every doc its changes affect: ARCHITECTURE.md (file map, recipes), README.md and the Commands table here, design_doc.md (product decisions), docs/lessons.md (gotchas found). Plans belong in `docs/milestones/`, not in ARCHITECTURE.md. See the `/milestone` skill for the checklist.
+- **Keep ROADMAP.md and HANDOFF.md short.** ROADMAP.md is one line per part, with no tests, notes or dates. HANDOFF.md is rewritten each time, never appended (about 10 lines, no history). Detail goes in `docs/milestones/`, lessons in `docs/lessons.md`, issues and ideas in `docs/backlog.md`, and history in commit bodies.
 
 ## Git
 
 - `./scripts/check.sh` runs automatically as a pre-commit hook (`scripts/hooks/`, installed by `scripts/setup.sh`). Never commit failing tests or a broken build, and don't bypass the hook with `--no-verify`.
-- Commit after every milestone (`M<n>: <title>` plus a short body) and check it off in ROADMAP.md in the same commit. Other work gets a descriptive title.
+- Commit after every part (`M<n>.<k>: <title>` plus a short body) and tick it in ROADMAP.md in the same commit; the last part of a milestone also marks the milestone `(done)`. Other work gets a descriptive title.
 - **Push after every commit** (`git push`). Remote: `origin` → github.com/JMarkowitz098/minimal-world-clock.
 - Work on `main` unless told otherwise.

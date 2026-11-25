@@ -6,7 +6,7 @@ A minimal world clock for macOS:
 - **Compare window:** two time zones side by side, with a scrubber to answer "3 pm here is what time there?"
 - **Desktop widget:** the time in a chosen zone, on your desktop.
 
-Status: version 1.0.0 is [on the Mac App Store](https://apps.apple.com/app/minimal-world-clock/id6833419708) (released 2026-11-23). See [ROADMAP.md](ROADMAP.md) for what's done and what's next.
+Status: version 1.0.0 is [on the Mac App Store](https://apps.apple.com/app/minimal-world-clock/id6833419708) (released 2026-11-23). See [HANDOFF.md](HANDOFF.md) for where things stand and [ROADMAP.md](ROADMAP.md) for the plan.
 
 ## Layout
 
@@ -20,7 +20,7 @@ Status: version 1.0.0 is [on the Mac App Store](https://apps.apple.com/app/minim
 - `Tools/Snapshots/`: renders the SwiftUI views to PNG for visual checks, and the App Store screenshots
 - `docs/app-store/`: App Store listing text and screenshots (the privacy policy and support pages live on jaredmarkowitz.com/apps/world-clock, from `~/Projects/portfolio`)
 - `.claude/`: Claude Code settings and the `/milestone` skill
-- `ROADMAP.md`: milestones. `design_doc.md`: requirements and decisions. `ARCHITECTURE.md`: how the code fits together. `CLAUDE.md`: instructions for AI agents working in the repo.
+- `HANDOFF.md`: where things stand. `ROADMAP.md`: the plan, one line per part; `docs/milestones/`: each milestone's tests and notes. `design_doc.md`: requirements and decisions. `ARCHITECTURE.md`: how the code fits together. `docs/lessons.md`: gotchas; `docs/manual-checks.md`: checks done by hand; `docs/backlog.md`: unscheduled ideas. `CLAUDE.md`: instructions for AI agents working in the repo.
 
 ## Setup
 
@@ -78,7 +78,7 @@ rm -rf build Packages/WorldClockKit/.build
 
 ## Working with Claude Code
 
-The repo is built one roadmap milestone per chat. Start a new chat and run `/milestone` (or say "start M1"). Claude reads ROADMAP.md → Handoff, builds the milestone test-first, checks the UI with snapshots, updates the docs and handoff, commits, pushes, and stops for you to review. Routine build and test commands are pre-approved in `.claude/settings.json`.
+Milestones are built in small parts (`M12.1`, `M12.2`…), one commit each. Run `/milestone` (or say "next part"). Claude reads HANDOFF.md, checks the part with you before building, builds it test-first, checks the UI with snapshots, updates the docs and HANDOFF.md, commits, pushes, and asks whether to continue. Any new chat can pick up from HANDOFF.md. Routine build and test commands are pre-approved in `.claude/settings.json`.
 
 ## Deploying
 

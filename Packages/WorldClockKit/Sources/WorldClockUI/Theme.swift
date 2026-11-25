@@ -42,7 +42,7 @@ public struct Theme: Sendable, Equatable, Identifiable {
     // Light and dark themes from the same palette sit side by side. Palettes are by their
     // authors (Solarized: Ethan Schoonover; Nord: Sven Greb; Rosé Pine; Gruvbox: Pavel
     // Pertsev; Dracula), MIT licensed and credited in the About window (Apps/Mac/Credits.rtf);
-    // in-app names are to be checked before release (ROADMAP Handoff). Navy on Cream, Paper and
+    // names kept with credit (design_doc.md → Color themes). Navy on Cream, Paper and
     // the retro looks (generic names) are plain color choices of our own.
 
     // Accents marked "AA" were darkened or lightened from the palette's color (same hue) to reach

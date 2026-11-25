@@ -1,6 +1,6 @@
 # Architecture
 
-How the code fits together and where things live. Rules are in [CLAUDE.md](CLAUDE.md); milestones are in [ROADMAP.md](ROADMAP.md).
+How the code fits together and where things live. Rules are in [CLAUDE.md](CLAUDE.md); the current state is in [HANDOFF.md](HANDOFF.md), milestones in [ROADMAP.md](ROADMAP.md) and [docs/milestones/](docs/milestones/).
 
 ## Layers
 
@@ -87,7 +87,10 @@ Dependencies only point right. An iOS app would sit beside `Apps/Mac` and use th
 | One-time setup after cloning (installs the hook, generates the Xcode project) | `scripts/setup.sh` |
 | Commands pre-approved for Claude Code | `.claude/settings.json` |
 | The `/milestone` workflow | `.claude/skills/milestone/SKILL.md` |
-| Work handed from one session to the next (e.g. draft tests; create when needed) | `docs/handoff/` (see ROADMAP.md → Handoff) |
+| Where things stand and what's next (rewritten every commit) | `HANDOFF.md` |
+| The plan (one line per part) and each milestone's detail | `ROADMAP.md`, `docs/milestones/M<n>.md` |
+| Gotchas, manual checks for the user, backlog | `docs/lessons.md`, `docs/manual-checks.md`, `docs/backlog.md` |
+| Work in progress handed from one session to the next (e.g. draft tests; create when needed) | `docs/handoff/` |
 
 Update this table as milestones add files.
 

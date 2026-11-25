@@ -9,7 +9,7 @@
 - A non-intrusive prompt asking users to buy the app, like the one planned for `~/Projects/pomodoro_timer` (its ROADMAP M13): the app stays fully usable either way.
 
 ## Technical requirements
-- Built and designed by AI, so the repo is optimized for that (CLAUDE.md, a roadmap with tests as acceptance criteria, small files)
+- Built and designed by AI, so the repo is optimized for that (CLAUDE.md, a handoff doc, a roadmap with tests as acceptance criteria in milestone pages, small files)
 - TDD
 - Work from a roadmap ([ROADMAP.md](ROADMAP.md))
 - README for humans: local testing and deploying
