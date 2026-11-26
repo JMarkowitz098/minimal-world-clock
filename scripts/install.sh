@@ -23,11 +23,15 @@ while pgrep -x "$NAME" > /dev/null; do sleep 0.2; done
 rm -rf "/Applications/$NAME.app"
 cp -R "$APP" /Applications/
 
-# Only /Applications' widget should be registered (Xcode registers the build copies too), and
-# the running extension keeps the old code until it exits; macOS relaunches it when needed.
+# Only /Applications' copy should be registered (Xcode registers the build copies too): with
+# several copies in LaunchServices, the desktop sometimes can't look up the widget and leaves
+# it on its grey placeholder (docs/lessons.md → Widget). The running extension keeps the old
+# code until it exits; macOS relaunches it when needed.
+LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
 for config in Debug Release; do
-    appex="build/Build/Products/$config/$NAME.app/Contents/PlugIns/$WIDGET.appex"
-    [ -d "$appex" ] && pluginkit -r "$appex" 2>/dev/null || true
+    app="build/Build/Products/$config/$NAME.app"
+    [ -d "$app/Contents/PlugIns/$WIDGET.appex" ] && pluginkit -r "$app/Contents/PlugIns/$WIDGET.appex" 2>/dev/null || true
+    [ -d "$app" ] && "$LSREGISTER" -u "$app" 2>/dev/null || true
 done
 pkill -x "$WIDGET" || true
 

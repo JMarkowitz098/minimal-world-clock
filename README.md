@@ -56,6 +56,7 @@ pkill -x "Minimal World Clock"; pkill -x MinimalWorldClockWidget; rm -rf "/Appli
 cp -R "build/Build/Products/Debug/Minimal World Clock.app" /Applications/
 open "/Applications/Minimal World Clock.app"
 pluginkit -r "build/Build/Products/Debug/Minimal World Clock.app/Contents/PlugIns/MinimalWorldClockWidget.appex"  # only /Applications' copy stays registered
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -u "build/Build/Products/Debug/Minimal World Clock.app"  # and only it in LaunchServices (stray copies leave widgets on the placeholder)
 pluginkit -m -p com.apple.widgetkit-extension | grep worldclock   # registered?
 # Then right-click the desktop → Edit Widgets → search "Minimal World Clock".
 # After a signing change, remove and re-add the widget before judging it.

@@ -16,3 +16,4 @@ Checked by the user; details in the milestone pages.
 ## Open
 
 - [ ] **Widget at midnight and noon** (covered by tests, never seen live). Leave a widget on the desktop for a zone where midnight or noon is coming soon: at midnight its date changes to the next day; in 12-hour time, AM/PM flips at noon.
+- [ ] **Widgets stay off the grey placeholder** (stray LaunchServices registrations removed 2026-11-27, docs/lessons.md → Widget). Over the next days, including after login and waking the Mac: the widgets keep showing the time. If one sticks, note the time so the logs can be matched.
